@@ -1,0 +1,9 @@
+[SddmGreeterTheme]
+Name=Afterglow
+Description=Midnight blue sign-in
+Type=sddm-theme
+Version=1.0
+Theme-Id=afterglow
+Theme-API=2.0
+QtVersion=6
+MainScript=Main.qml

@@ -52,6 +52,11 @@ PanelWindow {
         shellState: root.shellState
         alertsOnly: true
     }
+    QuotaBadge {
+        screen: root.screen
+        available: !root.fullscreenActive
+        quota: root.shellState?.codexQuota ?? ({})
+    }
     PanelWindow {
         screen: root.screen
         visible: !root.fullscreenActive

@@ -9,6 +9,19 @@ import QtQuick
 
 ShellRoot {
     id: root
+    property var codexQuota: ({})
+    Process {
+        id: quotaReader
+        running: true
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/main/codex-quota.py"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { root.codexQuota = JSON.parse(text); }
+                catch (_) { root.codexQuota = {}; }
+            }
+        }
+    }
+    Timer { interval: 60000; running: true; repeat: true; onTriggered: quotaReader.running = true }
     property var notificationHistory: []
     property int unreadNotifications: 0
     property bool doNotDisturb: false

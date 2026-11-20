@@ -169,7 +169,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: opened && (detailPage === "Daily Tools" || detailPage === "Clipboard" || detailPage === "Network") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.layer: WlrLayer.Overlay
     mask: root.opened ? panelInput : emptyInput
-    Region { id: panelInput; item: panel }
+    Region { id: panelInput; item: reveal }
     Region { id: emptyInput; width: 0; height: 0 }
     IpcHandler {
         target: "quickTools_" + (root.screen?.name ?? "unknown")
@@ -178,18 +178,33 @@ PanelWindow {
 
     Timer {
         id: closeTimer
-        interval: 220
+        interval: Theme.motion.exit + 20
         onTriggered: root.closing = false
+    }
+
+    Item {
+        id: reveal
+        x: Theme.shape.railWidth
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        readonly property real panelWidth: Math.min(380, Math.max(1, parent.width - x))
+        width: root.opened ? panelWidth : 0
+        clip: true
+        Behavior on width {
+            NumberAnimation {
+                duration: root.opened ? Theme.motion.standard : Theme.motion.exit
+                easing.type: root.opened ? Easing.OutCubic : Easing.InOutCubic
+            }
+        }
     }
 
     Rectangle {
         id: panel
-        readonly property real targetX: Theme.shape.railWidth
-
-        x: root.opened ? targetX : (targetX - 28)
+        parent: reveal
+        anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: Math.min(380, Math.max(1, parent.width - targetX))
+        width: reveal.panelWidth
         radius: 20
         topLeftRadius: 0
         bottomLeftRadius: 0
@@ -214,22 +229,6 @@ PanelWindow {
                 root.translateText = true;
                 root.closeTools();
                 captureDelay.restart();
-            }
-        }
-
-        // Smooth horizontal slide from left rail + fade
-        opacity: root.opened ? 1 : 0
-
-        Behavior on x {
-            NumberAnimation {
-                duration: root.opened ? 260 : 180
-                easing.type: root.opened ? Easing.OutCubic : Easing.InCubic
-            }
-        }
-        Behavior on opacity {
-            NumberAnimation {
-                duration: root.opened ? 220 : 160
-                easing.type: Easing.OutCubic
             }
         }
 

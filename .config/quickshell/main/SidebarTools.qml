@@ -829,6 +829,20 @@ PanelWindow {
                             connectBluetooth.running = true;
                         }
                     }
+                    SettingsActionButton {
+                        text: "Pair New Device in Terminal"
+                        onClicked: {
+                            root.closeTools();
+                            Quickshell.execDetached(["kitty", "--title", "Bluetooth pairing",
+                                "bluetoothctl", "--agent", "KeyboardDisplay"]);
+                        }
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        text: "In the terminal: run scan on, then pair followed by the device address. Follow the pairing prompts."
+                        color: LivePalette.color.onSurfaceVariant
+                    }
                     Label {
                         Layout.fillWidth: true
                         visible: !!root.bluetoothError

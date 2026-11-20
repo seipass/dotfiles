@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import "Theme.js" as Theme
 
 PanelWindow {
@@ -9,8 +10,6 @@ PanelWindow {
     required property bool available
     required property var quota
     readonly property var windows: quota.windows ?? []
-    readonly property bool stale: windows.length > 0 && windows[0].reset > 0
-        && windows[0].reset * 1000 <= clock.date.getTime()
     SystemClock { id: clock; precision: SystemClock.Minutes }
     property bool opened: false
     visible: available
@@ -41,13 +40,44 @@ PanelWindow {
         Row {
             anchors.centerIn: parent
             spacing: 6
-            SymbolIcon { width: 16; height: 16; iconName: "utilities-terminal-symbolic"; tint: LivePalette.color.onSurface }
-            Text {
+            Image {
+                id: codexIcon
+                width: 16
+                height: 16
+                // The monochrome provider mark is from YapCap (MPL-2.0).
+                source: Qt.resolvedUrl("codex-badge.svg")
+                sourceSize: Qt.size(32, 32)
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    colorization: 1
+                    colorizationColor: LivePalette.color.onSurface
+                }
+            }
+            Column {
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.windows.length && !root.stale ? Math.round(root.windows[0].used) + "%" : "—"
-                font.family: uiFont.name || Qt.application.font.family
-                font.pixelSize: 12
-                color: LivePalette.color.onSurface
+                spacing: 4
+                Repeater {
+                    model: [300, 10080]
+                    delegate: Rectangle {
+                        id: track
+                        required property int modelData
+                        readonly property var window: root.windows.find(item => Number(item.minutes) === modelData)
+                        readonly property bool known: !!window && !(window.reset > 0 && window.reset * 1000 <= clock.date.getTime())
+                        width: 34
+                        height: 4
+                        radius: 2
+                        color: known ? LivePalette.color.surfaceContainerHigh : "transparent"
+                        border.width: known ? 0 : 1
+                        border.color: LivePalette.color.onSurfaceVariant
+                        Rectangle {
+                            width: track.known ? track.width * track.window.used / 100 : 0
+                            height: track.height
+                            radius: 2
+                            color: LivePalette.color.primary
+                            Behavior on width { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                        }
+                    }
+                }
             }
         }
         MouseArea {
@@ -55,7 +85,7 @@ PanelWindow {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            Accessible.name: "Codex quota"
+            Accessible.name: "Codex usage: 5-hour limit above, weekly limit below"
             onClicked: root.opened = !root.opened
         }
     }

@@ -172,9 +172,15 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: opened && (detailPage === "Daily Tools" || detailPage === "Clipboard" || detailPage === "Network") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.layer: WlrLayer.Overlay
-    mask: root.opened ? panelInput : emptyInput
+    mask: root.opened ? (root.alertsOnly ? null : panelInput) : emptyInput
     Region { id: panelInput; item: reveal }
     Region { id: emptyInput; width: 0; height: 0 }
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.alertsOnly && root.opened
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onClicked: root.closeTools()
+    }
     IpcHandler {
         target: (root.alertsOnly ? "alerts_" : "quickTools_") + (root.screen?.name ?? "unknown")
         function toggle(): void { root.toggle(); }
@@ -217,6 +223,11 @@ PanelWindow {
         bottomRightRadius: root.alertsOnly ? 0 : radius
         color: LivePalette.color.surface
         clip: true
+        MouseArea {
+            anchors.fill: parent
+            enabled: root.alertsOnly
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        }
         Dialog {
             id: translationConsent
             anchors.centerIn: parent

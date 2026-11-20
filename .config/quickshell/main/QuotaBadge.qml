@@ -15,23 +15,26 @@ PanelWindow {
     property bool opened: false
     visible: available
     onAvailableChanged: if (!available) opened = false
-    anchors { top: true; right: true }
-    margins { top: 4; right: 54 }
-    implicitWidth: 224
-    implicitHeight: 220
+    anchors { top: true; right: true; bottom: true; left: true }
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     color: "transparent"
     focusable: false
-    mask: Region {
-        item: badge
-        Region { item: root.opened ? card : null; width: 0; height: 0 }
-    }
+    mask: root.opened ? null : badgeInput
+    Region { id: badgeInput; item: badge }
     FontLoader { id: uiFont; source: "fonts/GoogleSansFlex.ttf" }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.opened
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onClicked: root.opened = false
+    }
     Rectangle {
         id: badge
         anchors.right: parent.right
+        anchors.rightMargin: 54
+        y: 4
         width: 77; height: 32; radius: 12
         color: badgeMouse.containsMouse || root.opened ? LivePalette.color.surfaceContainerHigh : LivePalette.color.surface
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
@@ -59,8 +62,9 @@ PanelWindow {
 
     Rectangle {
         id: card
-        width: parent.width
-        y: root.opened ? 40 : 34
+        anchors.right: badge.right
+        width: 224
+        y: root.opened ? 44 : 38
         height: details.implicitHeight + 28
         radius: 16
         color: LivePalette.color.surface
@@ -68,6 +72,10 @@ PanelWindow {
         visible: opacity > 0
         Behavior on y { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        }
 
         ColumnLayout {
             id: details

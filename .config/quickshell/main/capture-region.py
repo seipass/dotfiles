@@ -5,10 +5,12 @@ import subprocess
 import shutil
 import sys
 import tempfile
+from urllib.parse import urlencode
 
 
 def main():
-    ocr = "--ocr" in sys.argv
+    translate = "--translate" in sys.argv
+    ocr = "--ocr" in sys.argv or translate
     if ocr and not shutil.which("tesseract"):
         subprocess.run(["notify-send", "Screen text recognition", "Install tesseract and its English language data."], check=False)
         return
@@ -23,6 +25,13 @@ def main():
             image = str(Path(temp) / "region.png")
             subprocess.run(["grim", "-g", picker.stdout.strip(), image], check=True)
             result = subprocess.check_output(["tesseract", image, "stdout"], text=True, timeout=30)
+        if translate:
+            if not result.strip():
+                subprocess.run(["notify-send", "Screen translation", "No text detected."], check=False)
+                return
+            params = urlencode({"sl": "auto", "tl": "ja", "text": result.strip()[:3000], "op": "translate"})
+            subprocess.run(["xdg-open", "https://translate.google.com/?" + params], check=True)
+            return
         text_path = path.with_suffix(".txt")
         text_path.write_text(result, encoding="utf-8")
         subprocess.run(["xdg-open", str(text_path)], check=False)

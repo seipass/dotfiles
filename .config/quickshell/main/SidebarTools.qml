@@ -119,6 +119,7 @@ PanelWindow {
     property bool capturePending: false
     property bool captureWithoutEditor: false
     property bool captureText: false
+    property bool translateText: false
     Timer {
         id: captureDelay
         interval: 270
@@ -126,7 +127,9 @@ PanelWindow {
             root.capturePending = false;
             const path = root.captureWithoutEditor
                 ? "/.config/quickshell/main/capture-region.py" : "/.config/hypr/flameshot-screen.py";
-            Quickshell.execDetached(["python3", Quickshell.env("HOME") + path, ...(root.captureText ? ["--ocr"] : [])]);
+            const args = ["python3", Quickshell.env("HOME") + path];
+            if (root.captureText) args.push(root.translateText ? "--translate" : "--ocr");
+            Quickshell.execDetached(args);
         }
     }
     onOpenedChanged: if (opened) detailPage = ""
@@ -193,6 +196,26 @@ PanelWindow {
         border.color: Qt.alpha(LivePalette.color.onSurface, 0.08)
         border.width: 1
         clip: true
+        Dialog {
+            id: translationConsent
+            anchors.centerIn: parent
+            width: parent.width - 24
+            modal: true
+            title: "Translate Screen Text"
+            standardButtons: Dialog.Ok | Dialog.Cancel
+            contentItem: Label {
+                text: "The text recognized in the area you select will be sent to Google Translate. The screenshot is not uploaded."
+                wrapMode: Text.Wrap
+            }
+            onAccepted: {
+                root.capturePending = true;
+                root.captureWithoutEditor = true;
+                root.captureText = true;
+                root.translateText = true;
+                root.closeTools();
+                captureDelay.restart();
+            }
+        }
 
         // Catch clicks inside panel so they don't trigger outside dismiss
         MouseArea {
@@ -429,15 +452,22 @@ PanelWindow {
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Read Screen Text"
+                             text: "Read Screen Text"
                             enabled: !root.capturePending
                             onClicked: {
                                 root.capturePending = true;
                                 root.captureWithoutEditor = true;
-                                root.captureText = true;
+                                 root.captureText = true;
+                                 root.translateText = false;
                                 root.closeTools();
                                 captureDelay.restart();
-                            }
+                         }
+                         SettingsActionButton {
+                             Layout.fillWidth: true
+                             text: "Translate Screen Text"
+                             enabled: !root.capturePending
+                             onClicked: translationConsent.open()
+                         }
                         }
 
                         SettingsActionButton {

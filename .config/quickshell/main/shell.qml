@@ -21,7 +21,16 @@ ShellRoot {
             }
         }
     }
-    Timer { interval: 60000; running: true; repeat: true; onTriggered: quotaReader.running = true }
+    Timer {
+        interval: Math.max(15, settings.quotaInterval || 60) * 1000
+        running: true
+        repeat: true
+        onTriggered: quotaReader.running = true
+    }
+    Connections {
+        target: settings
+        function onQuotaIntervalChanged() { quotaReader.running = true; }
+    }
     property var notificationHistory: []
     property int unreadNotifications: 0
     property bool doNotDisturb: false

@@ -3,6 +3,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import QtCore
 import "Theme.js" as Theme
 
@@ -18,6 +19,7 @@ Window {
     property alias showTaskbar: saved.showTaskbar
     property alias islandDisplay: saved.islandDisplay
     property alias islandPlugin: saved.islandPlugin
+    property alias quotaInterval: saved.quotaInterval
     property alias page: persisted.page
 
     property string pendingPaletteMode: ""
@@ -205,6 +207,12 @@ Window {
         saved.sync();
     }
 
+    function setQuotaInterval(seconds) {
+        saved.quotaInterval = seconds;
+        saved.setValue("quotaInterval", seconds);
+        saved.sync();
+    }
+
     Settings {
         id: saved
         location: "file://" + Quickshell.env("HOME") + "/.config/quickshell/main/dashboard.ini"
@@ -218,6 +226,7 @@ Window {
         property string paletteColors: ""
         property string islandDisplay: "music"
         property string islandPlugin: ""
+        property int quotaInterval: 60
     }
 
     ColorQuantizer {
@@ -1328,6 +1337,117 @@ Window {
                                             Layout.fillWidth: true
                                         }
                                     }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            radius: 14
+                            color: LivePalette.color.surfaceContainer
+                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
+                            border.width: 1
+                            implicitHeight: quotaCol.implicitHeight + 36
+
+                            ColumnLayout {
+                                id: quotaCol
+                                anchors.fill: parent
+                                anchors.margins: 18
+                                spacing: 16
+
+                                RowLayout {
+                                    spacing: 12
+                                    Rectangle {
+                                        width: 36
+                                        height: 36
+                                        radius: 10
+                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        Image {
+                                            anchors.centerIn: parent
+                                            width: 20
+                                            height: 20
+                                            source: Qt.resolvedUrl("codex-badge.svg")
+                                            sourceSize: Qt.size(40, 40)
+                                            layer.enabled: true
+                                            layer.effect: MultiEffect {
+                                                colorization: 1
+                                                colorizationColor: LivePalette.color.primary
+                                            }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        spacing: 2
+                                        Text {
+                                            font.family: root.uiFont
+                                            text: "Codex Usage Indicator"
+                                            color: LivePalette.color.onSurface
+                                            font.pixelSize: 14
+                                            font.weight: Font.DemiBold
+                                        }
+                                        Text {
+                                            font.family: root.uiFont
+                                            text: "Choose how often the top-bar badge checks your Codex limits."
+                                            color: LivePalette.color.onSurfaceVariant
+                                            font.pixelSize: 12
+                                        }
+                                    }
+                                }
+
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+
+                                    Repeater {
+                                        model: [
+                                            { label: "30 s", value: 30 },
+                                            { label: "1 min", value: 60 },
+                                            { label: "5 min", value: 300 },
+                                            { label: "15 min", value: 900 },
+                                            { label: "30 min", value: 1800 }
+                                        ]
+                                        delegate: Rectangle {
+                                            id: quotaOption
+                                            required property var modelData
+                                            readonly property bool selected: saved.quotaInterval === modelData.value
+                                            width: quotaOptionText.implicitWidth + 28
+                                            height: 36
+                                            radius: 18
+                                            color: selected ? Qt.alpha(LivePalette.color.primary, 0.15)
+                                                : quotaOptionMouse.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05)
+                                                : LivePalette.color.surface
+                                            border.width: selected ? 1.5 : 1
+                                            border.color: selected ? LivePalette.color.primary : Qt.alpha(LivePalette.color.onSurface, 0.08)
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                                            Text {
+                                                id: quotaOptionText
+                                                anchors.centerIn: parent
+                                                text: quotaOption.modelData.label
+                                                font.family: root.uiFont
+                                                font.pixelSize: 12
+                                                font.weight: quotaOption.selected ? Font.DemiBold : Font.Normal
+                                                color: quotaOption.selected ? LivePalette.color.primary : LivePalette.color.onSurface
+                                            }
+
+                                            MouseArea {
+                                                id: quotaOptionMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.setQuotaInterval(quotaOption.modelData.value)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    font.family: root.uiFont
+                                    text: "Reads current limits from the local Codex app server. No account data leaves this machine."
+                                    color: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.8)
+                                    font.pixelSize: 11
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
                                 }
                             }
                         }

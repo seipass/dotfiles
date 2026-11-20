@@ -309,16 +309,18 @@ PanelWindow {
                 clip: true
 
                 // ================= VIEW: QUICK TOOLS =================
-                ColumnLayout {
-                    id: toolsView
+                ScrollView {
                     anchors.fill: parent
-                    spacing: 12
                     opacity: !root.notificationsOpen && !root.detailPage ? 1 : 0
                     visible: opacity > 0
-                    y: !root.notificationsOpen ? 0 : 8
+                    enabled: !root.notificationsOpen && !root.detailPage
+                    contentWidth: availableWidth
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
                     Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                    Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 12
 
                     // Quick Launch Grid (4 Action Buttons)
                     GridLayout {
@@ -553,7 +555,7 @@ PanelWindow {
                         }
                     }
 
-                    Item { Layout.fillHeight: true }
+                    }
                 }
 
                 ColumnLayout {

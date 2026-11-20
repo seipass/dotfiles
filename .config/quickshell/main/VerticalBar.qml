@@ -11,6 +11,7 @@ PanelWindow {
     id: root
 
     property var launcherController
+    property var shellState
     property var taskbarController
     property var panelDate: new Date()
     property int volumePercent: 0
@@ -37,6 +38,12 @@ PanelWindow {
 
     TrayMenuPopup { id: trayMenu; screen: root.screen }
     PowerMenu { id: powerMenu; screen: root.screen }
+    SidebarTools {
+        id: tools
+        screen: root.screen
+        shellState: root.shellState
+        launcher: root.launcherController
+    }
     Timer {
         id: trayCloseDelay
         interval: 450
@@ -253,6 +260,37 @@ PanelWindow {
             }
 
             Rectangle {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                radius: 20
+                color: tools.opened || toolsMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : LivePalette.color.surfaceContainer
+                SymbolIcon {
+                    anchors.centerIn: parent
+                    iconName: "view-more-symbolic"
+                    tint: LivePalette.color.onSurface
+                }
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 6
+                    width: 7; height: 7; radius: 4
+                    visible: (root.shellState?.unreadNotifications ?? 0) > 0
+                    color: LivePalette.color.primary
+                }
+                MouseArea {
+                    id: toolsMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        trayMenu.closeMenu();
+                        powerMenu.closeMenu();
+                        tools.opened = !tools.opened;
+                    }
+                }
+            }
+            Rectangle {
                 id: powerButton
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 40
@@ -280,7 +318,7 @@ PanelWindow {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: { trayMenu.closeMenu(); powerMenu.toggle(); }
+                    onClicked: { tools.opened = false; trayMenu.closeMenu(); powerMenu.toggle(); }
                 }
             }
 

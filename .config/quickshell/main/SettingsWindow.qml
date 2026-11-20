@@ -12,6 +12,7 @@ Window {
     readonly property string uiFont: settingsFont.status === FontLoader.Ready ? settingsFont.name : Qt.application.font.family
     property alias weatherCity: saved.weatherCity
     property alias wallpaper: saved.wallpaper
+    property alias desktopClock: saved.desktopClock
     property alias islandDisplay: saved.islandDisplay
     property alias islandPlugin: saved.islandPlugin
     property alias page: persisted.page
@@ -140,6 +141,7 @@ Window {
         category: "Dashboard"
         property string weatherCity: ""
         property string wallpaper: ""
+        property bool desktopClock: false
         property string paletteMode: "pink"
         property string paletteColors: ""
         property string islandDisplay: "music"

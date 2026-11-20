@@ -9,6 +9,12 @@ import QtQuick
 
 ShellRoot {
     id: root
+    property var notificationHistory: []
+    property int unreadNotifications: 0
+    property bool doNotDisturb: false
+    readonly property bool desktopClock: settings.desktopClock
+    function setDesktopClock(enabled) { settings.desktopClock = enabled; }
+    function openSettings(screen) { settings.open(screen); }
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property int volumePercent: sink && sink.audio ? Math.round(sink.audio.volume * 100) : 0
@@ -58,6 +64,8 @@ ShellRoot {
             required property var modelData
             screen: modelData
             imagePath: settings.wallpaper
+            showClock: settings.desktopClock
+            clockDate: clock.date
         }
     }
 
@@ -78,6 +86,18 @@ ShellRoot {
         id: notificationServer
         actionsSupported: true
         onNotification: function(notification) {
+            root.notificationHistory = [{
+                app: notification.appName || "Notification",
+                title: notification.summary,
+                body: notification.body,
+                time: Qt.formatTime(new Date(), "HH:mm")
+            }, ...root.notificationHistory].slice(0, 50);
+            root.unreadNotifications++;
+            if (root.doNotDisturb) {
+                notification.tracked = true;
+                notification.dismiss();
+                return;
+            }
             if (trackedNotifications.values.length === 0 && !root.selectingNotificationScreen) {
                 root.selectingNotificationScreen = true;
                 notificationMonitorProcess.running = true;
@@ -106,6 +126,17 @@ ShellRoot {
             }
         }
         onExited: root.selectingNotificationScreen = false
+    }
+
+    Variants {
+        model: Quickshell.screens
+        VolumeOsd {
+            required property var modelData
+            screen: modelData
+            percent: root.volumePercent
+            muted: root.volumeMuted
+            available: root.volumeAvailable
+        }
     }
 
     NotificationPopup {
@@ -178,6 +209,7 @@ ShellRoot {
             required property var modelData
 
             screen: modelData
+            shellState: root
             launcherController: launcher
             taskbarController: sharedTaskbar
             panelDate: clock.date

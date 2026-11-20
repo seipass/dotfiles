@@ -115,7 +115,7 @@ PanelWindow {
     }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.keyboardFocus: opened && detailPage === "Daily Tools" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: opened && (detailPage === "Daily Tools" || detailPage === "Clipboard") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.layer: WlrLayer.Overlay
     mask: null
 
@@ -333,6 +333,11 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: "Bar Appearance"
                             onClicked: root.detailPage = "Bar Appearance"
+                        }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Clipboard"
+                            onClicked: root.detailPage = "Clipboard"
                         }
 
                         SettingsActionButton {
@@ -598,6 +603,10 @@ PanelWindow {
                 DailyTools {
                     anchors.fill: parent
                     visible: root.detailPage === "Daily Tools"
+                }
+                ClipboardTools {
+                    anchors.fill: parent
+                    visible: root.opened && root.detailPage === "Clipboard"
                 }
                 WallpaperBrowser {
                     anchors.fill: parent

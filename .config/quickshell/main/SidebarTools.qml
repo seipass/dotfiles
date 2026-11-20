@@ -27,6 +27,25 @@ PanelWindow {
     property string detailPage: ""
     property string bluetoothStatus: ""
     property string wifiStatus: ""
+    property string wifiError: ""
+    property var wifiProfiles: []
+    Process {
+        id: savedWifi
+        command: ["nmcli", "-t", "--escape", "no", "-f", "UUID,TYPE,NAME", "connection", "show"]
+        stdout: StdioCollector {
+            onStreamFinished: root.wifiProfiles = text.split("\n").map(line =>
+                line.match(/^([a-f0-9-]{36}):(?:802-11-wireless|wifi):(.+)$/i)).filter(Boolean)
+        }
+    }
+    Process {
+        id: connectWifi
+        property string uuid: ""
+        command: ["nmcli", "--wait", "20", "connection", "up", "uuid", uuid]
+        onExited: code => {
+            root.wifiError = code === 0 ? "" : "Could not connect. Check the saved profile in Connections.";
+            wifiScan.running = true;
+        }
+    }
     Process {
         id: wifiScan
         command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "auto"]
@@ -47,7 +66,10 @@ PanelWindow {
     }
     onDetailPageChanged: {
         if (detailPage === "Bluetooth") bluetooth.running = true;
-        if (detailPage === "Network") wifiScan.running = true;
+        if (detailPage === "Network") {
+            wifiScan.running = true;
+            savedWifi.running = true;
+        }
     }
     property bool capturePending: false
     property bool captureWithoutEditor: false
@@ -564,6 +586,28 @@ PanelWindow {
                 ColumnLayout {
                     anchors.fill: parent
                     visible: root.detailPage === "Network"
+                    ComboBox {
+                        id: profile
+                        Layout.fillWidth: true
+                        model: root.wifiProfiles.map(item => item[2])
+                        displayText: count ? currentText : "No saved Wi-Fi profiles"
+                    }
+                    SettingsActionButton {
+                        text: connectWifi.running ? "Connecting…" : "Connect to Saved Network"
+                        enabled: profile.currentIndex >= 0 && !connectWifi.running
+                        onClicked: {
+                            root.wifiError = "";
+                            connectWifi.uuid = root.wifiProfiles[profile.currentIndex][1];
+                            connectWifi.running = true;
+                        }
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        visible: !!root.wifiError
+                        text: root.wifiError
+                        wrapMode: Text.Wrap
+                        color: LivePalette.color.error
+                    }
                     RowLayout {
                         SettingsActionButton {
                             text: "Refresh Wi-Fi"

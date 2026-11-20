@@ -41,12 +41,15 @@ PanelWindow {
     }
     onDetailPageChanged: if (detailPage === "Bluetooth") bluetooth.running = true
     property bool capturePending: false
+    property bool captureWithoutEditor: false
     Timer {
         id: captureDelay
         interval: 270
         onTriggered: {
             root.capturePending = false;
-            Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/hypr/flameshot-screen.py"]);
+            const path = root.captureWithoutEditor
+                ? "/.config/quickshell/main/capture-region.py" : "/.config/hypr/flameshot-screen.py";
+            Quickshell.execDetached(["python3", Quickshell.env("HOME") + path]);
         }
     }
     onOpenedChanged: if (opened) detailPage = ""
@@ -312,9 +315,21 @@ PanelWindow {
                              enabled: !root.capturePending
                              onClicked: {
                                  root.capturePending = true;
+                                 root.captureWithoutEditor = false;
                                  root.closeTools();
                                  captureDelay.restart();
                              }
+                        }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Save Region"
+                            enabled: !root.capturePending
+                            onClicked: {
+                                root.capturePending = true;
+                                root.captureWithoutEditor = true;
+                                root.closeTools();
+                                captureDelay.restart();
+                            }
                         }
 
                         SettingsActionButton {

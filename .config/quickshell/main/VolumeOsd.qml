@@ -8,6 +8,7 @@ PanelWindow {
     required property int percent
     required property bool muted
     required property bool available
+    property string label: "Volume"
     property bool ready: false
     property bool showing: false
     readonly property var monitor: Hyprland.monitorFor(screen)
@@ -39,7 +40,7 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
         Text {
             anchors.centerIn: parent
-            text: root.muted ? "Volume muted" : "Volume · " + root.percent + "%"
+            text: root.muted ? root.label + " muted" : root.label + " · " + root.percent + "%"
             color: LivePalette.color.onSurface
         }
     }

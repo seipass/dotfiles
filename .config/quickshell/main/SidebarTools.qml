@@ -25,6 +25,31 @@ PanelWindow {
         return result;
     }
     property string detailPage: ""
+    property int brightness: -1
+    VolumeOsd {
+        screen: root.screen
+        label: "Brightness"
+        percent: Math.max(0, root.brightness)
+        muted: false
+        available: root.brightness >= 0
+    }
+    Process {
+        id: readBrightness
+        command: ["brightnessctl", "-m", "-c", "backlight", "info"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const match = text.match(/,(\d+)%,/);
+                root.brightness = match ? Number(match[1]) : -1;
+            }
+        }
+        onExited: code => { if (code !== 0) root.brightness = -1; }
+    }
+    Process {
+        id: setBrightness
+        property string step: ""
+        command: ["brightnessctl", "-c", "backlight", "--min-value=1", "set", step]
+        onExited: readBrightness.running = true
+    }
     property string bluetoothStatus: ""
     property var bluetoothDevices: []
     property string bluetoothError: ""
@@ -81,6 +106,7 @@ PanelWindow {
         onExited: bluetooth.running = true
     }
     onDetailPageChanged: {
+        if (detailPage === "Brightness") readBrightness.running = true;
         if (detailPage === "Bluetooth") {
             bluetooth.running = true;
             pairedDevices.running = true;
@@ -354,6 +380,11 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: "Bar Appearance"
                             onClicked: root.detailPage = "Bar Appearance"
+                        }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Brightness"
+                            onClicked: root.detailPage = "Brightness"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
@@ -634,6 +665,30 @@ PanelWindow {
                     visible: root.detailPage === "Wallpapers"
                     selected: root.shellState?.wallpaperPath ?? ""
                     onChosen: path => root.shellState.setWallpaper(path)
+                }
+                ColumnLayout {
+                    anchors.fill: parent
+                    visible: root.detailPage === "Brightness"
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        text: readBrightness.running ? "Checking backlight…" : root.brightness < 0
+                            ? "No supported backlight. This control requires brightnessctl and a backlight device."
+                            : "Brightness · " + root.brightness + "%"
+                        color: LivePalette.color.onSurface
+                    }
+                    RowLayout {
+                        enabled: root.brightness >= 0 && !setBrightness.running && !readBrightness.running
+                        SettingsActionButton {
+                            text: "− 5%"
+                            onClicked: { setBrightness.step = "5%-"; setBrightness.running = true; }
+                        }
+                        SettingsActionButton {
+                            text: "+ 5%"
+                            onClicked: { setBrightness.step = "+5%"; setBrightness.running = true; }
+                        }
+                    }
+                    Item { Layout.fillHeight: true }
                 }
                 ColumnLayout {
                     anchors.fill: parent

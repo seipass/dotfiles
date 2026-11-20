@@ -13,7 +13,8 @@ PanelWindow {
     property var launcher
     property bool opened: false
     property bool closing: false
-    property bool notificationsOpen: false
+    property bool alertsOnly: false
+    readonly property bool notificationsOpen: alertsOnly
     function groupNotifications(items) {
         const groups = new Map();
         for (const item of items) {
@@ -136,7 +137,10 @@ PanelWindow {
             Quickshell.execDetached(args);
         }
     }
-    onOpenedChanged: if (opened) detailPage = ""
+    onOpenedChanged: if (opened) {
+        detailPage = "";
+        if (alertsOnly && shellState) shellState.unreadNotifications = 0;
+    }
 
     function toggle() {
         if (opened) closeTools();
@@ -156,7 +160,6 @@ PanelWindow {
         closeTimer.restart();
     }
 
-    onVisibleChanged: if (!visible) { notificationsOpen = false; }
 
     visible: opened || closing
     anchors {
@@ -173,7 +176,7 @@ PanelWindow {
     Region { id: panelInput; item: reveal }
     Region { id: emptyInput; width: 0; height: 0 }
     IpcHandler {
-        target: "quickTools_" + (root.screen?.name ?? "unknown")
+        target: (root.alertsOnly ? "alerts_" : "quickTools_") + (root.screen?.name ?? "unknown")
         function toggle(): void { root.toggle(); }
     }
 
@@ -185,10 +188,11 @@ PanelWindow {
 
     Item {
         id: reveal
-        x: Theme.shape.railWidth
+        x: root.alertsOnly ? parent.width - width : Theme.shape.railWidth
         anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        readonly property real panelWidth: Math.min(380, Math.max(1, parent.width - x))
+        anchors.topMargin: root.alertsOnly ? Theme.shape.islandReservation : 0
+        height: root.alertsOnly ? Math.min(560, parent.height - y) : parent.height
+        readonly property real panelWidth: Math.min(380, Math.max(1, parent.width - Theme.shape.railWidth))
         width: root.opened ? panelWidth : 0
         clip: true
         Behavior on width {
@@ -202,13 +206,15 @@ PanelWindow {
     Rectangle {
         id: panel
         parent: reveal
-        anchors.right: parent.right
+        x: root.alertsOnly ? 0 : parent.width - width
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: reveal.panelWidth
         radius: 20
-        topLeftRadius: 0
-        bottomLeftRadius: 0
+        topLeftRadius: root.alertsOnly ? radius : 0
+        bottomLeftRadius: root.alertsOnly ? radius : 0
+        topRightRadius: root.alertsOnly ? 0 : radius
+        bottomRightRadius: root.alertsOnly ? 0 : radius
         color: LivePalette.color.surface
         clip: true
         Dialog {
@@ -295,6 +301,7 @@ PanelWindow {
             // Notification / Quick Tools Sliding Pill Tab
             Rectangle {
                 id: tabContainer
+                visible: false
                 Layout.fillWidth: true
                 height: 40
                 radius: 10
@@ -345,7 +352,6 @@ PanelWindow {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: { root.detailPage = ""; root.notificationsOpen = false; }
                         }
                     }
 
@@ -367,11 +373,6 @@ PanelWindow {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.detailPage = "";
-                                root.notificationsOpen = true;
-                                if (root.shellState) root.shellState.unreadNotifications = 0;
-                            }
                         }
                     }
                 }

@@ -33,7 +33,9 @@ PanelWindow {
     property var hyprMonitor: Hyprland.monitorFor(root.screen)
     readonly property bool fullscreenActive: !!(hyprMonitor && hyprMonitor.activeWorkspace && hyprMonitor.activeWorkspace.hasFullscreen)
     visible: !fullscreenActive
-    onFullscreenActiveChanged: if (fullscreenActive) { trayMenu.closeMenu(); powerMenu.closeMenu(); }
+    onFullscreenActiveChanged: if (fullscreenActive) {
+        trayMenu.closeMenu(); powerMenu.closeMenu(); alerts.closeTools();
+    }
     property bool trayHovered: false
 
     TrayMenuPopup { id: trayMenu; screen: root.screen }
@@ -43,6 +45,49 @@ PanelWindow {
         screen: root.screen
         shellState: root.shellState
         launcher: root.launcherController
+    }
+    SidebarTools {
+        id: alerts
+        screen: root.screen
+        shellState: root.shellState
+        alertsOnly: true
+    }
+    PanelWindow {
+        screen: root.screen
+        visible: !root.fullscreenActive
+        anchors { top: true; right: true }
+        margins { top: 4; right: 8 }
+        implicitWidth: 40
+        implicitHeight: 32
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.layer: WlrLayer.Overlay
+        color: "transparent"
+        focusable: false
+        Rectangle {
+            anchors.fill: parent
+            radius: 12
+            color: alertMouse.containsMouse || alerts.opened ? LivePalette.color.surfaceContainerHigh : LivePalette.color.surface
+            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+            SymbolIcon {
+                anchors.centerIn: parent
+                iconName: "preferences-system-notifications-symbolic"
+                tint: LivePalette.color.onSurface
+            }
+            Rectangle {
+                anchors { top: parent.top; right: parent.right; margins: 5 }
+                width: 7; height: 7; radius: 4
+                visible: (root.shellState?.unreadNotifications ?? 0) > 0
+                color: LivePalette.color.primary
+            }
+            MouseArea {
+                id: alertMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                Accessible.name: "Alerts"
+                onClicked: alerts.toggle()
+            }
+        }
     }
     Timer {
         id: trayCloseDelay
@@ -271,14 +316,6 @@ PanelWindow {
                     anchors.centerIn: parent
                     iconName: "view-more-symbolic"
                     tint: LivePalette.color.onSurface
-                }
-                Rectangle {
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: 6
-                    width: 7; height: 7; radius: 4
-                    visible: (root.shellState?.unreadNotifications ?? 0) > 0
-                    color: LivePalette.color.primary
                 }
                 MouseArea {
                     id: toolsMouse

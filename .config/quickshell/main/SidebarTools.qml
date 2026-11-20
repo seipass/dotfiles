@@ -14,6 +14,15 @@ PanelWindow {
     property bool closing: false
     property bool notificationsOpen: false
     property string detailPage: ""
+    property bool capturePending: false
+    Timer {
+        id: captureDelay
+        interval: 270
+        onTriggered: {
+            root.capturePending = false;
+            Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/hypr/flameshot-screen.py"]);
+        }
+    }
     onOpenedChanged: if (opened) detailPage = ""
 
     function toggle() {
@@ -92,7 +101,7 @@ PanelWindow {
         Behavior on x {
             NumberAnimation {
                 duration: root.opened ? 260 : 180
-                easing.type: root.opened ? Easing.OutQuint : Easing.InCubic
+                easing.type: root.opened ? Easing.OutCubic : Easing.InCubic
             }
         }
         Behavior on opacity {
@@ -263,11 +272,13 @@ PanelWindow {
                         SettingsActionButton {
                             Layout.fillWidth: true
                             iconName: "camera-photo-symbolic"
-                            text: "Screenshot"
-                            onClicked: {
-                                root.closeTools();
-                                Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/hypr/flameshot-screen.py"]);
-                            }
+                             text: "Screenshot"
+                             enabled: !root.capturePending
+                             onClicked: {
+                                 root.capturePending = true;
+                                 root.closeTools();
+                                 captureDelay.restart();
+                             }
                         }
 
                         SettingsActionButton {

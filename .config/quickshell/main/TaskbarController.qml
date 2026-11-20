@@ -70,6 +70,17 @@ Scope {
         ids.splice(to, 0, item);
         saved.order = JSON.stringify(ids);
     }
+    function closeWindows(entry) {
+        for (const win of entry.windows.slice()) {
+            if (win.wayland) win.wayland.close();
+            else {
+                const address = win.address.startsWith("0x") ? win.address : "0x" + win.address;
+                if (Hyprland.usingLua)
+                    Hyprland.dispatch("hl.dsp.window.close({ window = 'address:" + address + "' })");
+                else Hyprland.dispatch("closewindow address:" + address);
+            }
+        }
+    }
     function activate(entry) {
         if (!entry) return;
         const win = entry.windows.find(w => w.activated) || entry.windows[0];

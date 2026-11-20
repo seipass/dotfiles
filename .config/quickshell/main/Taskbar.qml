@@ -75,6 +75,8 @@ Item {
                         id: entryMenu
                         pinned: root.controller.isPinned(entry.modelData.id)
                         canPin: !!entry.desktop
+                        canClose: entry.modelData.windows.length > 0
+                        onCloseRequested: root.controller.closeWindows(entry.modelData)
                         onToggleRequested: root.controller.togglePin(entry.modelData.id)
                     }
                     MouseArea {

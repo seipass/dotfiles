@@ -73,6 +73,7 @@ PanelWindow {
     }
     property bool capturePending: false
     property bool captureWithoutEditor: false
+    property bool captureText: false
     Timer {
         id: captureDelay
         interval: 270
@@ -80,7 +81,7 @@ PanelWindow {
             root.capturePending = false;
             const path = root.captureWithoutEditor
                 ? "/.config/quickshell/main/capture-region.py" : "/.config/hypr/flameshot-screen.py";
-            Quickshell.execDetached(["python3", Quickshell.env("HOME") + path]);
+            Quickshell.execDetached(["python3", Quickshell.env("HOME") + path, ...(root.captureText ? ["--ocr"] : [])]);
         }
     }
     onOpenedChanged: if (opened) detailPage = ""
@@ -352,6 +353,7 @@ PanelWindow {
                              onClicked: {
                                  root.capturePending = true;
                                  root.captureWithoutEditor = false;
+                                 root.captureText = false;
                                  root.closeTools();
                                  captureDelay.restart();
                              }
@@ -363,6 +365,19 @@ PanelWindow {
                             onClicked: {
                                 root.capturePending = true;
                                 root.captureWithoutEditor = true;
+                                root.captureText = false;
+                                root.closeTools();
+                                captureDelay.restart();
+                            }
+                        }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Read Screen Text"
+                            enabled: !root.capturePending
+                            onClicked: {
+                                root.capturePending = true;
+                                root.captureWithoutEditor = true;
+                                root.captureText = true;
                                 root.closeTools();
                                 captureDelay.restart();
                             }

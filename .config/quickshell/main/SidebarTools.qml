@@ -19,7 +19,9 @@ PanelWindow {
             if (!groups.has(item.app)) groups.set(item.app, []);
             groups.get(item.app).push(item);
         }
-        return Array.from(groups.values()).flat();
+        const result = [];
+        groups.forEach(group => group.forEach(item => result.push(item)));
+        return result;
     }
     property string detailPage: ""
     property bool capturePending: false

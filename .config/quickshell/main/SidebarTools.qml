@@ -258,6 +258,11 @@ PanelWindow {
                             text: "Windows"
                             onClicked: root.detailPage = "Windows"
                         }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Wallpapers"
+                            onClicked: root.detailPage = "Wallpapers"
+                        }
 
                         SettingsActionButton {
                             Layout.fillWidth: true
@@ -459,6 +464,12 @@ PanelWindow {
                 DailyTools {
                     anchors.fill: parent
                     visible: root.detailPage === "Daily Tools"
+                }
+                WallpaperBrowser {
+                    anchors.fill: parent
+                    visible: root.detailPage === "Wallpapers"
+                    selected: root.shellState?.wallpaperPath ?? ""
+                    onChosen: path => root.shellState.setWallpaper(path)
                 }
 
                 // ================= VIEW: NOTIFICATIONS =================

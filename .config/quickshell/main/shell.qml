@@ -14,6 +14,8 @@ ShellRoot {
     property bool doNotDisturb: false
     readonly property bool desktopClock: settings.desktopClock
     function setDesktopClock(enabled) { settings.desktopClock = enabled; }
+    readonly property string wallpaperPath: settings.wallpaper
+    function setWallpaper(path) { settings.setWallpaper(path); }
     function openSettings(screen) { settings.open(screen); }
 
     readonly property var sink: Pipewire.defaultAudioSink

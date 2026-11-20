@@ -106,6 +106,7 @@ PanelWindow {
         onExited: bluetooth.running = true
     }
     onDetailPageChanged: {
+        if (opened && !notificationsOpen) detailMotion.restart();
         if (detailPage === "Brightness") readBrightness.running = true;
         if (detailPage === "Bluetooth") {
             bluetooth.running = true;
@@ -361,6 +362,23 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
+                Item {
+                    id: pageContent
+                    anchors.fill: parent
+                    transform: Translate { id: pageOffset }
+                    ParallelAnimation {
+                        id: detailMotion
+                        NumberAnimation {
+                            target: pageContent; property: "opacity"
+                            from: 0.45; to: 1
+                            duration: Theme.motion.fast; easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            target: pageOffset; property: "x"
+                            from: root.detailPage ? 12 : -8; to: 0
+                            duration: Theme.motion.standard; easing.type: Easing.OutQuint
+                        }
+                    }
 
                 // ================= VIEW: QUICK TOOLS =================
                 ScrollView {
@@ -376,8 +394,14 @@ PanelWindow {
                         width: parent.width
                         spacing: 12
 
-                    // Quick Launch Grid (4 Action Buttons)
-                    GridLayout {
+                     Text {
+                         Layout.fillWidth: true
+                         text: "QUICK ACTIONS"
+                         font.pixelSize: 11
+                         font.letterSpacing: 1.1
+                         color: LivePalette.color.onSurfaceVariant
+                     }
+                     GridLayout {
                         Layout.fillWidth: true
                         columns: 2
                         rowSpacing: 8
@@ -385,43 +409,51 @@ PanelWindow {
 
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Daily Tools"
+                             text: "Daily Tools"
+                             iconName: "preferences-system-time-symbolic"
                             onClicked: root.detailPage = "Daily Tools"
                         }
 
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Windows"
+                             text: "Windows"
+                             iconName: "view-grid-symbolic"
                             onClicked: root.detailPage = "Windows"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Wallpapers"
+                             text: "Wallpapers"
+                             iconName: "image-x-generic-symbolic"
                             onClicked: root.detailPage = "Wallpapers"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Bluetooth"
+                             text: "Bluetooth"
+                             iconName: "bluetooth-symbolic"
                             onClicked: root.detailPage = "Bluetooth"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Bar Appearance"
+                             text: "Bar Appearance"
+                             iconName: "preferences-desktop-theme-symbolic"
                             onClicked: root.detailPage = "Bar Appearance"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Brightness"
+                             text: "Brightness"
+                             iconName: "display-brightness-symbolic"
                             onClicked: root.detailPage = "Brightness"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "System"
+                             text: "System"
+                             iconName: "computer-symbolic"
                             onClicked: root.detailPage = "System"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Clipboard"
+                             text: "Clipboard"
+                             iconName: "edit-paste-symbolic"
                             onClicked: root.detailPage = "Clipboard"
                         }
 
@@ -450,7 +482,8 @@ PanelWindow {
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                            text: "Save Region"
+                             text: "Save Region"
+                             iconName: "document-save-symbolic"
                             enabled: !root.capturePending
                             onClicked: {
                                 root.capturePending = true;
@@ -928,6 +961,7 @@ PanelWindow {
                     anchors.fill: parent
                     spacing: 10
                     opacity: root.notificationsOpen ? 1 : 0
+                    enabled: root.notificationsOpen
                     visible: opacity > 0
                     y: root.notificationsOpen ? 0 : 8
 
@@ -1056,6 +1090,12 @@ PanelWindow {
                         Layout.fillHeight: true
                         clip: true
                         spacing: 8
+                        add: Transition {
+                            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.standard; easing.type: Easing.OutCubic }
+                        }
+                        displaced: Transition {
+                            NumberAnimation { property: "y"; duration: Theme.motion.standard; easing.type: Easing.OutQuint }
+                        }
                          model: root.groupNotifications(root.shellState?.notificationHistory ?? [])
                         ScrollBar.vertical: ScrollBar { active: true }
 
@@ -1121,5 +1161,6 @@ PanelWindow {
             }
         }
     }
+}
 }
 }

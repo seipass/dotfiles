@@ -26,6 +26,12 @@ PanelWindow {
     }
     property string detailPage: ""
     property string bluetoothStatus: ""
+    property string wifiStatus: ""
+    Process {
+        id: wifiScan
+        command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "auto"]
+        stdout: StdioCollector { onStreamFinished: root.wifiStatus = text.trim() }
+    }
     Process {
         id: bluetooth
         command: ["bluetoothctl", "show"]
@@ -39,7 +45,10 @@ PanelWindow {
         command: ["bluetoothctl", "power", enable ? "on" : "off"]
         onExited: bluetooth.running = true
     }
-    onDetailPageChanged: if (detailPage === "Bluetooth") bluetooth.running = true
+    onDetailPageChanged: {
+        if (detailPage === "Bluetooth") bluetooth.running = true;
+        if (detailPage === "Network") wifiScan.running = true;
+    }
     property bool capturePending: false
     property bool captureWithoutEditor: false
     Timer {
@@ -335,11 +344,8 @@ PanelWindow {
                         SettingsActionButton {
                             Layout.fillWidth: true
                             iconName: "network-wireless-symbolic"
-                            text: "Network"
-                            onClicked: {
-                                root.closeTools();
-                                Quickshell.execDetached(["nm-connection-editor"]);
-                            }
+                             text: "Network"
+                             onClicked: root.detailPage = "Network"
                         }
 
                         SettingsActionButton {
@@ -488,6 +494,24 @@ PanelWindow {
                     id: windowList
                     anchors.fill: parent
                     visible: root.detailPage === "Windows"
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Repeater {
+                            model: windowList.visible ? Hyprland.workspaces.values.filter(ws => ws.id > 0) : []
+                            delegate: SettingsActionButton {
+                                required property var modelData
+                                text: String(modelData.id)
+                                primary: modelData.focused
+                                onClicked: {
+                                    Hyprland.dispatch(Hyprland.usingLua
+                                        ? "hl.dsp.focus({ workspace = " + modelData.id + " })"
+                                        : "workspace " + modelData.id);
+                                    root.closeTools();
+                                }
+                            }
+                        }
+                    }
                     Repeater {
                         // The live model includes windows from every workspace.
                         model: windowList.visible ? Hyprland.toplevels.values.slice(0, 10) : []
@@ -516,6 +540,33 @@ PanelWindow {
                     visible: root.detailPage === "Wallpapers"
                     selected: root.shellState?.wallpaperPath ?? ""
                     onChosen: path => root.shellState.setWallpaper(path)
+                }
+                ColumnLayout {
+                    anchors.fill: parent
+                    visible: root.detailPage === "Network"
+                    RowLayout {
+                        SettingsActionButton {
+                            text: "Refresh Wi-Fi"
+                            enabled: !wifiScan.running
+                            onClicked: wifiScan.running = true
+                        }
+                        SettingsActionButton {
+                            text: "Connections"
+                            onClicked: {
+                                root.closeTools();
+                                Quickshell.execDetached(["nm-connection-editor"]);
+                            }
+                        }
+                    }
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Label {
+                            text: wifiScan.running ? "Checking Wi-Fi…" : root.wifiStatus || "No Wi-Fi networks found."
+                            textFormat: Text.PlainText
+                            color: LivePalette.color.onSurface
+                        }
+                    }
                 }
                 ColumnLayout {
                     anchors.fill: parent

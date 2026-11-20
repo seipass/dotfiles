@@ -152,7 +152,8 @@ PanelWindow {
             }
             Text {
                 visible: !!root.quota.timestamp
-                text: visible ? "Last recorded · " + Qt.formatDateTime(new Date(root.quota.timestamp), "MMM d HH:mm") : ""
+                text: visible ? (root.quota.live ? "Updated · " : "Local record · ")
+                    + Qt.formatDateTime(new Date(root.quota.timestamp), "MMM d HH:mm") : ""
                 font.family: uiFont.name
                 font.pixelSize: 11
                 color: LivePalette.color.onSurfaceVariant

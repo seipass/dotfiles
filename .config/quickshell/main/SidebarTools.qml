@@ -168,14 +168,12 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: opened && (detailPage === "Daily Tools" || detailPage === "Clipboard" || detailPage === "Network") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.layer: WlrLayer.Overlay
-    mask: null
-
-    // Click outside to dismiss (not a modal blocker: only captures outside click to dismiss)
-    MouseArea {
-        anchors.fill: parent
-        enabled: root.opened
-        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        onClicked: root.closeTools()
+    mask: root.opened ? panelInput : emptyInput
+    Region { id: panelInput; item: panel }
+    Region { id: emptyInput; width: 0; height: 0 }
+    IpcHandler {
+        target: "quickTools_" + (root.screen?.name ?? "unknown")
+        function toggle(): void { root.toggle(); }
     }
 
     Timer {
@@ -187,13 +185,12 @@ PanelWindow {
     Rectangle {
         id: panel
         readonly property real targetX: Theme.shape.railWidth + 8
-        readonly property real targetY: Math.max(12, parent.height - height - 12)
 
         x: root.opened ? targetX : (targetX - 28)
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 12
-        width: 380
-        height: Math.min(560, (root.screen?.height ?? 600) - 40)
+        width: Math.min(380, Math.max(1, parent.width - targetX - 12))
+        height: Math.min(560, Math.max(1, parent.height - 24))
         radius: 20
         color: LivePalette.color.surfaceContainer
         border.color: Qt.alpha(LivePalette.color.onSurface, 0.08)
@@ -203,6 +200,7 @@ PanelWindow {
             id: translationConsent
             anchors.centerIn: parent
             width: parent.width - 24
+            height: 190
             modal: true
             title: "Translate Screen Text"
             standardButtons: Dialog.Ok | Dialog.Cancel
@@ -218,13 +216,6 @@ PanelWindow {
                 root.closeTools();
                 captureDelay.restart();
             }
-        }
-
-        // Catch clicks inside panel so they don't trigger outside dismiss
-        MouseArea {
-            anchors.fill: parent
-            preventStealing: true
-            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         }
 
         // Smooth horizontal slide from left rail + fade
@@ -248,24 +239,37 @@ PanelWindow {
             anchors.margins: 18
             spacing: 14
 
-            // Header Section (Clean typography, no left logo, no close button)
-            ColumnLayout {
+            RowLayout {
                 Layout.fillWidth: true
-                spacing: 2
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
 
-                Text {
-                    id: headerTitle
-                    text: root.detailPage || (root.notificationsOpen ? "Notifications" : "Quick Tools")
-                    color: LivePalette.color.onSurface
-                    font.pixelSize: 18
-                    font.weight: Font.DemiBold
-
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.detailPage || (root.notificationsOpen ? "Notifications" : "Quick Tools")
+                        color: LivePalette.color.onSurface
+                        font.pixelSize: 20
+                        font.weight: Font.DemiBold
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.notificationsOpen ? "Recent activity and alerts" : "Quick actions & system settings"
+                        color: LivePalette.color.onSurfaceVariant
+                        font.pixelSize: 12
+                        elide: Text.ElideRight
+                    }
                 }
-                Text {
-                    text: root.notificationsOpen ? "Recent activity and alerts" : "Quick actions & system settings"
-                    color: LivePalette.color.onSurfaceVariant
-                    font.pixelSize: 12
+                SettingsActionButton {
+                    visible: !!root.detailPage
+                    text: "Back"
+                    onClicked: root.detailPage = ""
+                }
+                SettingsActionButton {
+                    text: "×"
+                    Accessible.name: "Close quick tools"
+                    onClicked: root.closeTools()
                 }
             }
 
@@ -458,56 +462,28 @@ PanelWindow {
                                 captureDelay.restart();
                             }
                         }
-                        SettingsActionButton {
-                            Layout.fillWidth: true
-                             text: "Read Screen Text"
-                            enabled: !root.capturePending
-                            onClicked: {
-                                root.capturePending = true;
-                                root.captureWithoutEditor = true;
-                                 root.captureText = true;
-                                 root.translateText = false;
-                                root.closeTools();
-                                captureDelay.restart();
+                         SettingsActionButton {
+                             Layout.fillWidth: true
+                             iconName: "camera-photo-symbolic"
+                             text: "Capture"
+                             onClicked: root.detailPage = "Capture"
                          }
                          SettingsActionButton {
                              Layout.fillWidth: true
-                             text: "Translate Screen Text"
-                             enabled: !root.capturePending
-                             onClicked: translationConsent.open()
-                         }
-                         SettingsActionButton {
-                             Layout.fillWidth: true
-                             text: "Capture for Image Search"
-                             enabled: !root.capturePending
-                             onClicked: {
-                                 root.capturePending = true;
-                                 root.captureWithoutEditor = true;
-                                 root.captureText = false;
-                                 root.imageSearch = true;
-                                 root.closeTools();
-                                 captureDelay.restart();
-                             }
-                         }
-                        }
-
-                        SettingsActionButton {
-                            Layout.fillWidth: true
-                            iconName: "network-wireless-symbolic"
+                             iconName: "network-wireless-symbolic"
                              text: "Network"
                              onClicked: root.detailPage = "Network"
-                        }
-
-                        SettingsActionButton {
-                            Layout.fillWidth: true
-                            iconName: "preferences-system-symbolic"
-                            text: "Settings"
-                            onClicked: {
-                                root.closeTools();
-                                root.shellState.openSettings(root.screen);
-                            }
-                        }
-                    }
+                         }
+                         SettingsActionButton {
+                             Layout.fillWidth: true
+                             iconName: "preferences-system-symbolic"
+                             text: "Settings"
+                             onClicked: {
+                                 root.closeTools();
+                                 root.shellState.openSettings(root.screen);
+                             }
+                         }
+                     }
 
                     // Volume Card
                     Rectangle {
@@ -702,6 +678,34 @@ PanelWindow {
                         }
                         ScrollBar.vertical: ScrollBar {}
                     }
+                }
+                ColumnLayout {
+                    anchors.fill: parent
+                    visible: root.detailPage === "Capture"
+                    Repeater {
+                        model: ["Read Screen Text", "Translate Text", "Image Search"]
+                        delegate: SettingsActionButton {
+                            required property int index
+                            required property string modelData
+                            Layout.fillWidth: true
+                            text: modelData
+                            enabled: !root.capturePending
+                            onClicked: {
+                                if (index === 1) {
+                                    translationConsent.open();
+                                    return;
+                                }
+                                root.capturePending = true;
+                                root.captureWithoutEditor = true;
+                                root.captureText = index === 0;
+                                root.translateText = false;
+                                root.imageSearch = index === 2;
+                                root.closeTools();
+                                captureDelay.restart();
+                            }
+                        }
+                    }
+                    Item { Layout.fillHeight: true }
                 }
                 DailyTools {
                     anchors.fill: parent

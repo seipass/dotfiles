@@ -26,6 +26,22 @@ PanelWindow {
     }
     property string detailPage: ""
     property string bluetoothStatus: ""
+    property var bluetoothDevices: []
+    property string bluetoothError: ""
+    Process {
+        id: pairedDevices
+        command: ["bluetoothctl", "devices", "Paired"]
+        stdout: StdioCollector {
+            onStreamFinished: root.bluetoothDevices = text.split("\n").map(line =>
+                line.match(/^Device ([0-9a-f:]{17}) (.+)$/i)).filter(Boolean)
+        }
+    }
+    Process {
+        id: connectBluetooth
+        property string address: ""
+        command: ["timeout", "20s", "bluetoothctl", "connect", address]
+        onExited: code => root.bluetoothError = code === 0 ? "" : "Could not connect to the selected device."
+    }
     property string wifiStatus: ""
     property string wifiError: ""
     property var wifiProfiles: []
@@ -65,7 +81,10 @@ PanelWindow {
         onExited: bluetooth.running = true
     }
     onDetailPageChanged: {
-        if (detailPage === "Bluetooth") bluetooth.running = true;
+        if (detailPage === "Bluetooth") {
+            bluetooth.running = true;
+            pairedDevices.running = true;
+        }
         if (detailPage === "Network") {
             wifiScan.running = true;
             savedWifi.running = true;
@@ -690,7 +709,29 @@ PanelWindow {
                     SettingsActionButton {
                         text: "Refresh"
                         enabled: !bluetooth.running
-                        onClicked: bluetooth.running = true
+                        onClicked: { bluetooth.running = true; pairedDevices.running = true; }
+                    }
+                    ComboBox {
+                        id: pairedDevice
+                        Layout.fillWidth: true
+                        model: root.bluetoothDevices.map(item => item[2])
+                        displayText: count ? currentText : "No paired devices"
+                    }
+                    SettingsActionButton {
+                        text: connectBluetooth.running ? "Connecting…" : "Connect Paired Device"
+                        enabled: pairedDevice.currentIndex >= 0 && !connectBluetooth.running
+                        onClicked: {
+                            root.bluetoothError = "";
+                            connectBluetooth.address = root.bluetoothDevices[pairedDevice.currentIndex][1];
+                            connectBluetooth.running = true;
+                        }
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        visible: !!root.bluetoothError
+                        text: root.bluetoothError
+                        wrapMode: Text.Wrap
+                        color: LivePalette.color.error
                     }
                     SettingsActionButton {
                         readonly property bool powered: /Powered:\s+yes/.test(root.bluetoothStatus)

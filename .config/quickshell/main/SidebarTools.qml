@@ -392,9 +392,9 @@ PanelWindow {
                 // ================= VIEW: QUICK TOOLS =================
                 ScrollView {
                     anchors.fill: parent
-                    opacity: !root.notificationsOpen && !root.detailPage ? 1 : 0
+                     opacity: !root.notificationsOpen && (!root.detailPage || root.detailPage === "More Tools") ? 1 : 0
                     visible: opacity > 0
-                    enabled: !root.notificationsOpen && !root.detailPage
+                     enabled: !root.notificationsOpen && (!root.detailPage || root.detailPage === "More Tools")
                     contentWidth: availableWidth
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
@@ -405,7 +405,7 @@ PanelWindow {
 
                      Text {
                          Layout.fillWidth: true
-                         text: "QUICK ACTIONS"
+                          text: root.detailPage ? "ADDITIONAL ACTIONS" : "QUICK ACTIONS"
                          font.family: toolsFont.name || Qt.application.font.family
                          font.pixelSize: 11
                          font.letterSpacing: 1.1
@@ -419,50 +419,58 @@ PanelWindow {
 
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Daily Tools"
+                              text: "Daily Tools"
+                              visible: root.detailPage === "More Tools"
                              iconName: "preferences-system-time-symbolic"
                             onClicked: root.detailPage = "Daily Tools"
                         }
 
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Windows"
+                              text: "Windows"
+                              visible: root.detailPage === "More Tools"
                              iconName: "view-grid-symbolic"
                             onClicked: root.detailPage = "Windows"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Wallpapers"
+                              text: "Wallpapers"
+                              visible: root.detailPage === "More Tools"
                              iconName: "image-x-generic-symbolic"
                             onClicked: root.detailPage = "Wallpapers"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Bluetooth"
+                              text: "Bluetooth"
+                              visible: root.detailPage === "More Tools"
                              iconName: "bluetooth-symbolic"
                             onClicked: root.detailPage = "Bluetooth"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Bar Appearance"
+                              text: "Bar Appearance"
+                              visible: root.detailPage === "More Tools"
                              iconName: "preferences-desktop-theme-symbolic"
                             onClicked: root.detailPage = "Bar Appearance"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Brightness"
+                              text: "Brightness"
+                              visible: !root.detailPage
                              iconName: "display-brightness-symbolic"
                             onClicked: root.detailPage = "Brightness"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "System"
+                              text: "System"
+                              visible: root.detailPage === "More Tools"
                              iconName: "computer-symbolic"
                             onClicked: root.detailPage = "System"
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Clipboard"
+                              text: "Clipboard"
+                              visible: root.detailPage === "More Tools"
                              iconName: "edit-paste-symbolic"
                             onClicked: root.detailPage = "Clipboard"
                         }
@@ -470,7 +478,8 @@ PanelWindow {
                         SettingsActionButton {
                             Layout.fillWidth: true
                             iconName: "system-search-symbolic"
-                            text: "App Launcher"
+                             text: "App Launcher"
+                             visible: !root.detailPage
                             onClicked: {
                                 root.closeTools();
                                 root.launcher.toggleLauncher(false);
@@ -480,7 +489,8 @@ PanelWindow {
                         SettingsActionButton {
                             Layout.fillWidth: true
                             iconName: "camera-photo-symbolic"
-                             text: "Screenshot"
+                              text: "Screenshot"
+                              visible: root.detailPage === "More Tools"
                              enabled: !root.capturePending
                              onClicked: {
                                  root.capturePending = true;
@@ -492,7 +502,8 @@ PanelWindow {
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
-                             text: "Save Region"
+                              text: "Save Region"
+                              visible: root.detailPage === "More Tools"
                              iconName: "document-save-symbolic"
                             enabled: !root.capturePending
                             onClicked: {
@@ -506,28 +517,39 @@ PanelWindow {
                          SettingsActionButton {
                              Layout.fillWidth: true
                              iconName: "camera-photo-symbolic"
-                             text: "Capture"
+                              text: "Capture"
+                              visible: !root.detailPage
                              onClicked: root.detailPage = "Capture"
                          }
                          SettingsActionButton {
                              Layout.fillWidth: true
                              iconName: "network-wireless-symbolic"
-                             text: "Network"
+                              text: "Network"
+                              visible: !root.detailPage
                              onClicked: root.detailPage = "Network"
                          }
                          SettingsActionButton {
                              Layout.fillWidth: true
                              iconName: "preferences-system-symbolic"
-                             text: "Settings"
+                              text: "Settings"
+                              visible: !root.detailPage
                              onClicked: {
                                  root.closeTools();
                                  root.shellState.openSettings(root.screen);
                              }
                          }
-                     }
+                         SettingsActionButton {
+                             Layout.fillWidth: true
+                             text: "More Tools"
+                             iconName: "view-more-symbolic"
+                             visible: !root.detailPage
+                             onClicked: root.detailPage = "More Tools"
+                         }
+                      }
 
-                    // Volume Card
-                    Rectangle {
+                     // Volume Card
+                     Rectangle {
+                         visible: !root.detailPage
                         Layout.fillWidth: true
                         radius: 12
                         color: LivePalette.color.surface

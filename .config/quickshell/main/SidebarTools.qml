@@ -217,6 +217,10 @@ PanelWindow {
             width: parent.width - 24
             height: 190
             modal: true
+            palette.window: LivePalette.color.surfaceContainer
+            palette.button: LivePalette.color.surfaceContainerHigh
+            palette.windowText: LivePalette.color.onSurface
+            palette.buttonText: LivePalette.color.onSurface
             title: "Translate Screen Text"
             standardButtons: Dialog.Ok | Dialog.Cancel
             contentItem: Label {
@@ -237,6 +241,15 @@ PanelWindow {
             anchors.fill: parent
             padding: 18
             font.family: toolsFont.status === FontLoader.Ready ? toolsFont.name : Qt.application.font.family
+            palette.window: LivePalette.color.surfaceContainer
+            palette.base: LivePalette.color.surface
+            palette.button: LivePalette.color.surfaceContainerHigh
+            palette.windowText: LivePalette.color.onSurface
+            palette.buttonText: LivePalette.color.onSurface
+            palette.text: LivePalette.color.onSurface
+            palette.highlight: LivePalette.color.primaryContainer
+            palette.highlightedText: LivePalette.color.onSurface
+            palette.placeholderText: LivePalette.color.onSurfaceVariant
 
             FontLoader { id: toolsFont; source: "fonts/GoogleSansFlex.ttf" }
 
@@ -850,14 +863,32 @@ PanelWindow {
                     anchors.fill: parent
                     visible: root.detailPage === "Bar Appearance"
                     Switch {
+                        id: taskbarSwitch
+                        Layout.fillWidth: true
+                        implicitHeight: 44
+                        padding: 12
                         text: "Show Taskbar"
                         checked: root.shellState?.showTaskbar ?? true
                         onToggled: root.shellState.showTaskbar = checked
+                        background: Rectangle {
+                            radius: 12
+                            color: LivePalette.color.surfaceContainer
+                            border.color: taskbarSwitch.visualFocus ? LivePalette.color.primary : "transparent"
+                        }
                     }
                     Switch {
+                        id: traySwitch
+                        Layout.fillWidth: true
+                        implicitHeight: 44
+                        padding: 12
                         text: "Show System Tray"
                         checked: root.shellState?.showTray ?? true
                         onToggled: root.shellState.showTray = checked
+                        background: Rectangle {
+                            radius: 12
+                            color: LivePalette.color.surfaceContainer
+                            border.color: traySwitch.visualFocus ? LivePalette.color.primary : "transparent"
+                        }
                     }
                     Item { Layout.fillHeight: true }
                 }
@@ -871,6 +902,14 @@ PanelWindow {
                             Layout.fillWidth: true
                             placeholderText: "New network name (SSID)"
                             Accessible.name: "New network name"
+                            implicitHeight: 38
+                            leftPadding: 12
+                            background: Rectangle {
+                                radius: 10
+                                color: LivePalette.color.surfaceContainer
+                                border.color: newSsid.activeFocus ? LivePalette.color.primary : LivePalette.color.outlineVariant
+                                Behavior on border.color { ColorAnimation { duration: Theme.motion.fast } }
+                            }
                         }
                         SettingsActionButton {
                             text: "Join"
@@ -885,6 +924,13 @@ PanelWindow {
                     ComboBox {
                         id: profile
                         Layout.fillWidth: true
+                        implicitHeight: 38
+                        background: Rectangle {
+                            radius: 10
+                            color: LivePalette.color.surfaceContainer
+                            border.color: profile.visualFocus ? LivePalette.color.primary : LivePalette.color.outlineVariant
+                            Behavior on border.color { ColorAnimation { duration: Theme.motion.fast } }
+                        }
                         model: root.wifiProfiles.map(item => item[2])
                         displayText: count ? currentText : "No saved Wi-Fi profiles"
                     }
@@ -945,6 +991,13 @@ PanelWindow {
                     ComboBox {
                         id: pairedDevice
                         Layout.fillWidth: true
+                        implicitHeight: 38
+                        background: Rectangle {
+                            radius: 10
+                            color: LivePalette.color.surfaceContainer
+                            border.color: pairedDevice.visualFocus ? LivePalette.color.primary : LivePalette.color.outlineVariant
+                            Behavior on border.color { ColorAnimation { duration: Theme.motion.fast } }
+                        }
                         model: root.bluetoothDevices.map(item => item[2])
                         displayText: count ? currentText : "No paired devices"
                     }

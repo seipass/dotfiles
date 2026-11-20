@@ -13,6 +13,14 @@ PanelWindow {
     property bool opened: false
     property bool closing: false
     property bool notificationsOpen: false
+    function groupNotifications(items) {
+        const groups = new Map();
+        for (const item of items) {
+            if (!groups.has(item.app)) groups.set(item.app, []);
+            groups.get(item.app).push(item);
+        }
+        return Array.from(groups.values()).flat();
+    }
     property string detailPage: ""
     property bool capturePending: false
     Timer {
@@ -606,7 +614,7 @@ PanelWindow {
                         Layout.fillHeight: true
                         clip: true
                         spacing: 8
-                        model: root.shellState?.notificationHistory ?? []
+                         model: root.groupNotifications(root.shellState?.notificationHistory ?? [])
                         ScrollBar.vertical: ScrollBar { active: true }
 
                         delegate: Rectangle {
@@ -629,7 +637,8 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 spacing: 8
                                 Text {
-                                    text: modelData.app
+                                    text: index === 0 || history.model[index - 1]?.app !== modelData.app ? modelData.app : ""
+                                    textFormat: Text.PlainText
                                     color: LivePalette.color.primary
                                     font.pixelSize: 11
                                     font.weight: Font.DemiBold
@@ -646,6 +655,7 @@ PanelWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData.title
+                                textFormat: Text.PlainText
                                 color: LivePalette.color.onSurface
                                 font.pixelSize: 13
                                 font.weight: Font.Medium
@@ -656,6 +666,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 visible: !!text
                                 text: modelData.body
+                                textFormat: Text.PlainText
                                 color: LivePalette.color.onSurfaceVariant
                                 font.pixelSize: 11
                                 wrapMode: Text.Wrap

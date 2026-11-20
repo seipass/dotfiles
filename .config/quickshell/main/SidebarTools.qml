@@ -306,6 +306,11 @@ PanelWindow {
                             text: "Bluetooth"
                             onClicked: root.detailPage = "Bluetooth"
                         }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Bar Appearance"
+                            onClicked: root.detailPage = "Bar Appearance"
+                        }
 
                         SettingsActionButton {
                             Layout.fillWidth: true
@@ -540,6 +545,21 @@ PanelWindow {
                     visible: root.detailPage === "Wallpapers"
                     selected: root.shellState?.wallpaperPath ?? ""
                     onChosen: path => root.shellState.setWallpaper(path)
+                }
+                ColumnLayout {
+                    anchors.fill: parent
+                    visible: root.detailPage === "Bar Appearance"
+                    Switch {
+                        text: "Show Taskbar"
+                        checked: root.shellState?.showTaskbar ?? true
+                        onToggled: root.shellState.showTaskbar = checked
+                    }
+                    Switch {
+                        text: "Show System Tray"
+                        checked: root.shellState?.showTray ?? true
+                        onToggled: root.shellState.showTray = checked
+                    }
+                    Item { Layout.fillHeight: true }
                 }
                 ColumnLayout {
                     anchors.fill: parent

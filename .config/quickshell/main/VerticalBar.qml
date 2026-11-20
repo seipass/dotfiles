@@ -186,6 +186,7 @@ PanelWindow {
                 Layout.fillWidth: true
 
                 Taskbar {
+                    visible: root.shellState?.showTaskbar ?? true
                     anchors.fill: parent
                     monitor: root.hyprMonitor
                     controller: root.taskbarController
@@ -195,6 +196,7 @@ PanelWindow {
 
             ColumnLayout {
                 id: trayItems
+                visible: root.shellState?.showTray ?? true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillWidth: true
                 Layout.topMargin: 4

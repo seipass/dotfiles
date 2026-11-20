@@ -233,10 +233,15 @@ PanelWindow {
             }
         }
 
-        ColumnLayout {
+        Control {
             anchors.fill: parent
-            anchors.margins: 18
-            spacing: 14
+            padding: 18
+            font.family: toolsFont.status === FontLoader.Ready ? toolsFont.name : Qt.application.font.family
+
+            FontLoader { id: toolsFont; source: "fonts/GoogleSansFlex.ttf" }
+
+            contentItem: ColumnLayout {
+                spacing: 14
 
             RowLayout {
                 Layout.fillWidth: true
@@ -247,6 +252,7 @@ PanelWindow {
                     Text {
                         Layout.fillWidth: true
                         text: root.detailPage || (root.notificationsOpen ? "Notifications" : "Quick Tools")
+                        font.family: toolsFont.name || Qt.application.font.family
                         color: LivePalette.color.onSurface
                         font.pixelSize: 20
                         font.weight: Font.DemiBold
@@ -255,6 +261,7 @@ PanelWindow {
                     Text {
                         Layout.fillWidth: true
                         text: root.notificationsOpen ? "Recent activity and alerts" : "Quick actions & system settings"
+                        font.family: toolsFont.name || Qt.application.font.family
                         color: LivePalette.color.onSurfaceVariant
                         font.pixelSize: 12
                         elide: Text.ElideRight
@@ -313,7 +320,8 @@ PanelWindow {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "Tools"
+                             text: "Tools"
+                             font.family: toolsFont.name || Qt.application.font.family
                             font.pixelSize: 13
                              font.weight: Font.Normal
                             color: !root.notificationsOpen ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
@@ -335,6 +343,7 @@ PanelWindow {
                         Text {
                             anchors.centerIn: parent
                             text: "Alerts" + ((root.shellState?.unreadNotifications ?? 0) ? " (" + root.shellState.unreadNotifications + ")" : "")
+                            font.family: toolsFont.name || Qt.application.font.family
                             font.pixelSize: 13
                              font.weight: Font.Normal
                             color: root.notificationsOpen ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
@@ -397,6 +406,7 @@ PanelWindow {
                      Text {
                          Layout.fillWidth: true
                          text: "QUICK ACTIONS"
+                         font.family: toolsFont.name || Qt.application.font.family
                          font.pixelSize: 11
                          font.letterSpacing: 1.1
                          color: LivePalette.color.onSurfaceVariant
@@ -550,6 +560,7 @@ PanelWindow {
 
                                 Text {
                                     text: "Master Volume"
+                                    font.family: toolsFont.name || Qt.application.font.family
                                     color: LivePalette.color.onSurface
                                     font.pixelSize: 12
                                     font.weight: Font.Medium
@@ -559,6 +570,7 @@ PanelWindow {
 
                                 Text {
                                     text: root.shellState?.volumeMuted ? "Muted" : (root.shellState?.volumePercent ?? 0) + "%"
+                                    font.family: toolsFont.name || Qt.application.font.family
                                     color: LivePalette.color.onSurfaceVariant
                                     font.pixelSize: 12
                                 }
@@ -599,6 +611,7 @@ PanelWindow {
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Desktop Clock Widget"
+                                    font.family: toolsFont.name || Qt.application.font.family
                                     color: LivePalette.color.onSurface
                                     font.pixelSize: 13
                                     font.weight: Font.Medium
@@ -992,6 +1005,7 @@ PanelWindow {
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Do Not Disturb"
+                                    font.family: toolsFont.name || Qt.application.font.family
                                     color: LivePalette.color.onSurface
                                     font.pixelSize: 13
                                     font.weight: Font.Medium
@@ -1041,6 +1055,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         Text {
                             text: "Recent Notifications"
+                            font.family: toolsFont.name || Qt.application.font.family
                             color: LivePalette.color.onSurfaceVariant
                             font.pixelSize: 12
                             font.weight: Font.DemiBold
@@ -1076,6 +1091,7 @@ PanelWindow {
                             }
                             Text {
                                 text: "No notifications yet"
+                                font.family: toolsFont.name || Qt.application.font.family
                                 color: LivePalette.color.onSurfaceVariant
                                 font.pixelSize: 12
                             }
@@ -1120,6 +1136,7 @@ PanelWindow {
                                 spacing: 8
                                 Text {
                                     text: index === 0 || history.model[index - 1]?.app !== modelData.app ? modelData.app : ""
+                                    font.family: toolsFont.name || Qt.application.font.family
                                     textFormat: Text.PlainText
                                     color: LivePalette.color.primary
                                     font.pixelSize: 11
@@ -1129,6 +1146,7 @@ PanelWindow {
                                 Item { Layout.fillWidth: true }
                                 Text {
                                     text: modelData.time
+                                    font.family: toolsFont.name || Qt.application.font.family
                                     color: LivePalette.color.onSurfaceVariant
                                     font.pixelSize: 10
                                 }
@@ -1137,6 +1155,7 @@ PanelWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData.title
+                                font.family: toolsFont.name || Qt.application.font.family
                                 textFormat: Text.PlainText
                                 color: LivePalette.color.onSurface
                                 font.pixelSize: 13
@@ -1148,6 +1167,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 visible: !!text
                                 text: modelData.body
+                                font.family: toolsFont.name || Qt.application.font.family
                                 textFormat: Text.PlainText
                                 color: LivePalette.color.onSurfaceVariant
                                 font.pixelSize: 11
@@ -1161,6 +1181,7 @@ PanelWindow {
             }
         }
     }
+}
 }
 }
 }

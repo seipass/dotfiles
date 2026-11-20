@@ -184,17 +184,16 @@ PanelWindow {
 
     Rectangle {
         id: panel
-        readonly property real targetX: Theme.shape.railWidth + 8
+        readonly property real targetX: Theme.shape.railWidth
 
         x: root.opened ? targetX : (targetX - 28)
+        anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 12
-        width: Math.min(380, Math.max(1, parent.width - targetX - 12))
-        height: Math.min(560, Math.max(1, parent.height - 24))
+        width: Math.min(380, Math.max(1, parent.width - targetX))
         radius: 20
-        color: LivePalette.color.surfaceContainer
-        border.color: Qt.alpha(LivePalette.color.onSurface, 0.08)
-        border.width: 1
+        topLeftRadius: 0
+        bottomLeftRadius: 0
+        color: LivePalette.color.surface
         clip: true
         Dialog {
             id: translationConsent
@@ -316,7 +315,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: "Tools"
                             font.pixelSize: 13
-                            font.weight: !root.notificationsOpen ? Font.DemiBold : Font.Normal
+                             font.weight: Font.Normal
                             color: !root.notificationsOpen ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
 
                             Behavior on color { ColorAnimation { duration: 180 } }
@@ -337,7 +336,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: "Alerts" + ((root.shellState?.unreadNotifications ?? 0) ? " (" + root.shellState.unreadNotifications + ")" : "")
                             font.pixelSize: 13
-                            font.weight: root.notificationsOpen ? Font.DemiBold : Font.Normal
+                             font.weight: Font.Normal
                             color: root.notificationsOpen ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
 
                             Behavior on color { ColorAnimation { duration: 180 } }

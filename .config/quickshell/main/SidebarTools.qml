@@ -14,6 +14,8 @@ PanelWindow {
     property bool opened: false
     property bool closing: false
     property bool alertsOnly: false
+    property real alertsLeft: 0
+    readonly property real panelRight: reveal.x + reveal.panelWidth
     readonly property bool notificationsOpen: alertsOnly
     function groupNotifications(items) {
         const groups = new Map();
@@ -188,11 +190,11 @@ PanelWindow {
 
     Item {
         id: reveal
-        x: root.alertsOnly ? parent.width - width : Theme.shape.railWidth
+        x: root.alertsOnly ? root.alertsLeft : Theme.shape.railWidth
         anchors.top: parent.top
         anchors.topMargin: root.alertsOnly ? Theme.shape.islandReservation : 0
         height: root.alertsOnly ? Math.min(560, parent.height - y) : parent.height
-        readonly property real panelWidth: Math.min(380, Math.max(1, parent.width - Theme.shape.railWidth))
+        readonly property real panelWidth: Math.min(380, Math.max(1, parent.width - x))
         width: root.opened ? panelWidth : 0
         clip: true
         Behavior on width {
@@ -206,15 +208,13 @@ PanelWindow {
     Rectangle {
         id: panel
         parent: reveal
-        x: root.alertsOnly ? 0 : parent.width - width
+        x: parent.width - width
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: reveal.panelWidth
         radius: 20
         topLeftRadius: root.alertsOnly ? radius : 0
         bottomLeftRadius: root.alertsOnly ? radius : 0
-        topRightRadius: root.alertsOnly ? 0 : radius
-        bottomRightRadius: root.alertsOnly ? 0 : radius
         color: LivePalette.color.surface
         clip: true
         Dialog {

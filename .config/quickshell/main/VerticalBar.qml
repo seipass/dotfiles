@@ -45,18 +45,20 @@ PanelWindow {
         screen: root.screen
         shellState: root.shellState
         launcher: root.launcherController
+        onOpenedChanged: if (!opened) alerts.closeTools()
     }
     SidebarTools {
         id: alerts
         screen: root.screen
         shellState: root.shellState
         alertsOnly: true
+        alertsLeft: tools.panelRight + 8
     }
     PanelWindow {
         screen: root.screen
-        visible: !root.fullscreenActive
-        anchors { top: true; right: true }
-        margins { top: 4; right: 8 }
+        visible: tools.opened && !root.fullscreenActive
+        anchors { top: true; left: true }
+        margins { top: 4; left: tools.panelRight + 8 }
         implicitWidth: 40
         implicitHeight: 32
         exclusionMode: ExclusionMode.Ignore

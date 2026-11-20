@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Io
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -24,6 +25,21 @@ PanelWindow {
         return result;
     }
     property string detailPage: ""
+    property string bluetoothStatus: ""
+    Process {
+        id: bluetooth
+        command: ["bluetoothctl", "show"]
+        stdout: StdioCollector {
+            onStreamFinished: root.bluetoothStatus = text.trim()
+        }
+    }
+    Process {
+        id: bluetoothPower
+        property bool enable: false
+        command: ["bluetoothctl", "power", enable ? "on" : "off"]
+        onExited: bluetooth.running = true
+    }
+    onDetailPageChanged: if (detailPage === "Bluetooth") bluetooth.running = true
     property bool capturePending: false
     Timer {
         id: captureDelay
@@ -273,6 +289,11 @@ PanelWindow {
                             text: "Wallpapers"
                             onClicked: root.detailPage = "Wallpapers"
                         }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
+                            text: "Bluetooth"
+                            onClicked: root.detailPage = "Bluetooth"
+                        }
 
                         SettingsActionButton {
                             Layout.fillWidth: true
@@ -480,6 +501,31 @@ PanelWindow {
                     visible: root.detailPage === "Wallpapers"
                     selected: root.shellState?.wallpaperPath ?? ""
                     onChosen: path => root.shellState.setWallpaper(path)
+                }
+                ColumnLayout {
+                    anchors.fill: parent
+                    visible: root.detailPage === "Bluetooth"
+                    Label {
+                        text: bluetooth.running ? "Checking Bluetooth…"
+                            : !root.bluetoothStatus ? "No controller found"
+                            : /Powered:\s+yes/.test(root.bluetoothStatus) ? "Bluetooth is on" : "Bluetooth is off"
+                        color: LivePalette.color.onSurface
+                    }
+                    SettingsActionButton {
+                        text: "Refresh"
+                        enabled: !bluetooth.running
+                        onClicked: bluetooth.running = true
+                    }
+                    SettingsActionButton {
+                        readonly property bool powered: /Powered:\s+yes/.test(root.bluetoothStatus)
+                        text: powered ? "Turn Bluetooth Off" : "Turn Bluetooth On"
+                        enabled: !!root.bluetoothStatus && !bluetooth.running && !bluetoothPower.running
+                        onClicked: {
+                            bluetoothPower.enable = !powered;
+                            bluetoothPower.running = true;
+                        }
+                    }
+                    Item { Layout.fillHeight: true }
                 }
 
                 // ================= VIEW: NOTIFICATIONS =================

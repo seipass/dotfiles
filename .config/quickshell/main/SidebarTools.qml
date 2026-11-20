@@ -120,6 +120,7 @@ PanelWindow {
     property bool captureWithoutEditor: false
     property bool captureText: false
     property bool translateText: false
+    property bool imageSearch: false
     Timer {
         id: captureDelay
         interval: 270
@@ -129,6 +130,8 @@ PanelWindow {
                 ? "/.config/quickshell/main/capture-region.py" : "/.config/hypr/flameshot-screen.py";
             const args = ["python3", Quickshell.env("HOME") + path];
             if (root.captureText) args.push(root.translateText ? "--translate" : "--ocr");
+            if (root.imageSearch) args.push("--image-search");
+            root.imageSearch = false;
             Quickshell.execDetached(args);
         }
     }
@@ -467,6 +470,19 @@ PanelWindow {
                              text: "Translate Screen Text"
                              enabled: !root.capturePending
                              onClicked: translationConsent.open()
+                         }
+                         SettingsActionButton {
+                             Layout.fillWidth: true
+                             text: "Capture for Image Search"
+                             enabled: !root.capturePending
+                             onClicked: {
+                                 root.capturePending = true;
+                                 root.captureWithoutEditor = true;
+                                 root.captureText = false;
+                                 root.imageSearch = true;
+                                 root.closeTools();
+                                 captureDelay.restart();
+                             }
                          }
                         }
 

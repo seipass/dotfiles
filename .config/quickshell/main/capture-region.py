@@ -37,6 +37,10 @@ def main():
         subprocess.run(["xdg-open", str(text_path)], check=False)
         return
     subprocess.run(["grim", "-g", picker.stdout.strip(), str(path)], check=True)
+    if "--image-search" in sys.argv:
+        subprocess.run(["xdg-open", "https://lens.google.com/"], check=True)
+        subprocess.run(["notify-send", "Image search", f"Upload this image in your browser:\n{path}"], check=False)
+        return
     subprocess.run(["notify-send", "Screenshot saved", str(path)], check=False)
 
 

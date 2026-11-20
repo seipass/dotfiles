@@ -19,6 +19,7 @@ ShellRoot {
     readonly property string wallpaperPath: settings.wallpaper
     function setWallpaper(path) { settings.setWallpaper(path); }
     function openSettings(screen) { settings.open(screen); }
+    function openSystemInfo(screen) { settings.open(screen); settings.page = 5; }
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property int volumePercent: sink && sink.audio ? Math.round(sink.audio.volume * 100) : 0

@@ -414,6 +414,11 @@ PanelWindow {
                         }
                         SettingsActionButton {
                             Layout.fillWidth: true
+                            text: "System"
+                            onClicked: root.detailPage = "System"
+                        }
+                        SettingsActionButton {
+                            Layout.fillWidth: true
                             text: "Clipboard"
                             onClicked: root.detailPage = "Clipboard"
                         }
@@ -711,6 +716,41 @@ PanelWindow {
                     visible: root.detailPage === "Wallpapers"
                     selected: root.shellState?.wallpaperPath ?? ""
                     onChosen: path => root.shellState.setWallpaper(path)
+                }
+                ColumnLayout {
+                    anchors.fill: parent
+                    visible: root.detailPage === "System"
+                    Label {
+                        text: "Session and diagnostics"
+                        color: LivePalette.color.onSurface
+                    }
+                    SettingsActionButton {
+                        Layout.fillWidth: true
+                        text: "System Information"
+                        onClicked: {
+                            root.closeTools();
+                            root.shellState.openSystemInfo(root.screen);
+                        }
+                    }
+                    SettingsActionButton {
+                        Layout.fillWidth: true
+                        text: "Session Errors"
+                        onClicked: {
+                            root.closeTools();
+                            Quickshell.execDetached(["kitty", "--hold", "--title", "Session errors",
+                                "journalctl", "--user", "-b", "-p", "warning", "-n", "80", "--no-pager"]);
+                        }
+                    }
+                    SettingsActionButton {
+                        Layout.fillWidth: true
+                        text: "Check System Updates"
+                        onClicked: {
+                            root.closeTools();
+                            Quickshell.execDetached(["kitty", "--hold", "--title", "Check system updates", "sh", "-c",
+                                "if command -v checkupdates >/dev/null; then checkupdates; else echo 'Install pacman-contrib to check for updates.'; fi"]);
+                        }
+                    }
+                    Item { Layout.fillHeight: true }
                 }
                 ColumnLayout {
                     anchors.fill: parent

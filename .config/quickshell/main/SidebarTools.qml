@@ -35,10 +35,10 @@ PanelWindow {
     }
     Process {
         id: readBrightness
-        command: ["brightnessctl", "-m", "-c", "backlight", "info"]
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/main/monitor-brightness.py", root.screen?.name ?? "", "read"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const match = text.match(/,(\d+)%,/);
+                const match = text.trim().match(/^(\d+)$/);
                 root.brightness = match ? Number(match[1]) : -1;
             }
         }
@@ -47,7 +47,7 @@ PanelWindow {
     Process {
         id: setBrightness
         property string step: ""
-        command: ["brightnessctl", "-c", "backlight", "--min-value=1", "set", step]
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/main/monitor-brightness.py", root.screen?.name ?? "", step]
         onExited: readBrightness.running = true
     }
     property string bluetoothStatus: ""
@@ -719,7 +719,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
                         text: readBrightness.running ? "Checking backlight…" : root.brightness < 0
-                            ? "No supported backlight. This control requires brightnessctl and a backlight device."
+                            ? "Brightness unavailable. Check DDC/CI and ddcutil, or brightnessctl for an internal display."
                             : "Brightness · " + root.brightness + "%"
                         color: LivePalette.color.onSurface
                     }
@@ -727,11 +727,11 @@ PanelWindow {
                         enabled: root.brightness >= 0 && !setBrightness.running && !readBrightness.running
                         SettingsActionButton {
                             text: "− 5%"
-                            onClicked: { setBrightness.step = "5%-"; setBrightness.running = true; }
+                            onClicked: { setBrightness.step = "down"; setBrightness.running = true; }
                         }
                         SettingsActionButton {
                             text: "+ 5%"
-                            onClicked: { setBrightness.step = "+5%"; setBrightness.running = true; }
+                            onClicked: { setBrightness.step = "up"; setBrightness.running = true; }
                         }
                     }
                     Item { Layout.fillHeight: true }

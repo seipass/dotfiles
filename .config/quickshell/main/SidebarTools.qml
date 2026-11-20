@@ -166,7 +166,7 @@ PanelWindow {
     }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.keyboardFocus: opened && (detailPage === "Daily Tools" || detailPage === "Clipboard") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: opened && (detailPage === "Daily Tools" || detailPage === "Clipboard" || detailPage === "Network") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.layer: WlrLayer.Overlay
     mask: null
 
@@ -754,6 +754,24 @@ PanelWindow {
                 ColumnLayout {
                     anchors.fill: parent
                     visible: root.detailPage === "Network"
+                    RowLayout {
+                        Layout.fillWidth: true
+                        TextField {
+                            id: newSsid
+                            Layout.fillWidth: true
+                            placeholderText: "New network name (SSID)"
+                            Accessible.name: "New network name"
+                        }
+                        SettingsActionButton {
+                            text: "Join"
+                            enabled: newSsid.text.length > 0 && !newSsid.text.startsWith("-") && !connectWifi.running
+                            onClicked: {
+                                root.closeTools();
+                                Quickshell.execDetached(["kitty", "--hold", "--title", "Join Wi-Fi",
+                                    "nmcli", "--ask", "device", "wifi", "connect", newSsid.text]);
+                            }
+                        }
+                    }
                     ComboBox {
                         id: profile
                         Layout.fillWidth: true

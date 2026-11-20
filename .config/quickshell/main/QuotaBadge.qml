@@ -111,7 +111,7 @@ PanelWindow {
             id: details
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
             spacing: 8
-            Text { text: "Codex usage"; font.family: uiFont.name; font.pixelSize: 16; color: LivePalette.color.onSurface }
+            Text { text: "Codex usage"; font.family: "Ndot 55"; font.pixelSize: 16; color: LivePalette.color.onSurface }
             Text {
                 visible: !root.windows.length
                 text: "No local quota snapshot"

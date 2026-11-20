@@ -97,6 +97,7 @@ PanelWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Qt.formatTime(root.clockDate, "HH:mm")
+                font.family: "Ndot 55"
                 font.pixelSize: 52
                 color: LivePalette.color.onSurface
             }

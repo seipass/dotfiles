@@ -9,6 +9,7 @@ import QtQuick
 
 ShellRoot {
     id: root
+    FontLoader { id: headingFont; source: "Ndot55-Regular.otf" }
     property var codexQuota: ({})
     Process {
         id: quotaReader

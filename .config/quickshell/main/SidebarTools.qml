@@ -282,10 +282,9 @@ PanelWindow {
                     Text {
                         Layout.fillWidth: true
                         text: root.detailPage || (root.notificationsOpen ? "Notifications" : "Quick Tools")
-                        font.family: toolsFont.name || Qt.application.font.family
+                        font.family: "Ndot 55"
                         color: LivePalette.color.onSurface
                         font.pixelSize: 20
-                        font.weight: Font.DemiBold
                         elide: Text.ElideRight
                     }
                     Text {

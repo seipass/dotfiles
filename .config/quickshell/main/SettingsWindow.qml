@@ -442,11 +442,10 @@ Window {
                     ColumnLayout {
                         spacing: 4
                         Text {
-                            font.family: root.uiFont
+                            font.family: "Ndot 55"
                             text: ["Dashboard", "Weather", "Wallpaper", "Colors", "Top Bar", "About"][root.page]
                             color: LivePalette.color.onSurface
                             font.pixelSize: root.isCompact ? 22 : 26
-                            font.weight: Font.DemiBold
                         }
                         Text {
                             font.family: root.uiFont

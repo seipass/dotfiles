@@ -539,13 +539,35 @@ PanelWindow {
                             }
                         }
                     }
-                    Repeater {
-                        // The live model includes windows from every workspace.
-                        model: windowList.visible ? Hyprland.toplevels.values.slice(0, 10) : []
-                        delegate: SettingsActionButton {
+                    GridView {
+                        id: windowGrid
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        cellWidth: width / 2
+                        cellHeight: 112
+                        model: windowList.visible ? Hyprland.toplevels.values : []
+                        delegate: Button {
                             required property var modelData
-                            Layout.fillWidth: true
-                            text: (modelData.title || "Window").slice(0, 42)
+                            id: windowTile
+                            width: windowGrid.cellWidth - 5
+                            height: windowGrid.cellHeight - 5
+                            text: modelData.title || "Window"
+                            contentItem: ColumnLayout {
+                                ScreencopyView {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    captureSource: windowTile.modelData.wayland
+                                    live: false
+                                    paintCursor: false
+                                }
+                                Label {
+                                    Layout.fillWidth: true
+                                    text: windowTile.text
+                                    textFormat: Text.PlainText
+                                    elide: Text.ElideRight
+                                }
+                            }
                             onClicked: {
                                 const raw = modelData.address;
                                 const address = raw.startsWith("0x") ? raw : "0x" + raw;
@@ -555,8 +577,8 @@ PanelWindow {
                                 root.closeTools();
                             }
                         }
+                        ScrollBar.vertical: ScrollBar {}
                     }
-                    Item { Layout.fillHeight: true }
                 }
                 DailyTools {
                     anchors.fill: parent

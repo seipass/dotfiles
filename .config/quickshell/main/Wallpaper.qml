@@ -12,7 +12,7 @@ PanelWindow {
     readonly property var currentImage: front === 0 ? pageA.item : pageB.item
     readonly property var nextImage: front === 0 ? pageB.item : pageA.item
     visible: imagePath.length > 0 || showClock || turn.running
-    color: "#191114"
+    color: LivePalette.color.surface
     exclusionMode: ExclusionMode.Ignore
     focusable: false
     anchors { top: true; bottom: true; left: true; right: true }
@@ -87,10 +87,10 @@ PanelWindow {
         visible: root.showClock
         anchors.horizontalCenter: parent.horizontalCenter
         y: Math.round(parent.height * 0.13)
-        width: 290
-        height: 118
+        width: 296
+        height: 122
         radius: 28
-        color: Qt.alpha(LivePalette.color.surface, 0.85)
+        color: Qt.alpha(LivePalette.color.surfaceContainer, 0.88)
         Column {
             anchors.centerIn: parent
             spacing: 2
@@ -105,7 +105,8 @@ PanelWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Qt.formatDate(root.clockDate, "dddd, MMMM d")
                 font.pixelSize: 15
-                color: LivePalette.color.onSurfaceVariant
+                font.weight: Font.Medium
+                color: LivePalette.color.primary
             }
         }
     }

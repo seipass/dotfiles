@@ -1,9 +1,10 @@
 [SddmGreeterTheme]
 Name=Afterglow
-Description=Midnight blue sign-in
+Description=Material Design 3 sign-in theme matching Quickshell
 Type=sddm-theme
-Version=1.0
+Version=2.0
 Theme-Id=afterglow
 Theme-API=2.0
 QtVersion=6
 MainScript=Main.qml
+ConfigFile=theme.conf

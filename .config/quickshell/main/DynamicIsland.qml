@@ -20,9 +20,15 @@ PanelWindow {
     property string weatherTemp: ""
     property string weatherDescription: ""
     property string weatherIcon: "weather-clear-symbolic"
+    property var earthquakeInfo: ({})
+    property var earthquakeHistory: []
+    property bool earthquakeLoading: false
+    property bool earthquakeLive: false
+    signal earthquakeRefreshRequested()
     property var settingsController
     property bool entered: false
     property bool expanded: false
+    property string expandedView: "dashboard"
     property real dashboardOpacity: 0
     readonly property var player: Mpris.players.values.find(p => p.isPlaying)
         || Mpris.players.values[0] || null
@@ -79,25 +85,10 @@ PanelWindow {
         }
     }
 
-    onExpandedChanged: {
-        opening.stop();
-        closing.stop();
-        if (expanded) opening.start();
-        else closing.start();
-    }
-    ParallelAnimation {
-        id: opening
-        NumberAnimation { target: island; property: "height"; to: Math.min(650, root.height); duration: Theme.motion.emphasized; easing.type: Easing.OutQuint }
-        SequentialAnimation {
-            PauseAnimation { duration: 55 }
-            NumberAnimation { target: root; property: "dashboardOpacity"; to: 1; duration: Theme.motion.standard; easing.type: Easing.OutCubic }
-        }
-    }
-    ParallelAnimation {
-        id: closing
-        NumberAnimation { target: root; property: "dashboardOpacity"; to: 0; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
-        NumberAnimation { target: island; property: "height"; to: Theme.shape.islandHeight; duration: Theme.motion.exit; easing.type: Easing.InOutCubic }
-    }
+    readonly property real maxPanelHeight: root.screen ? root.screen.height - 40 : 1040
+    readonly property real dashboardHeight: Math.min(700, maxPanelHeight)
+    readonly property real earthquakeHeight: Math.min(640, maxPanelHeight)
+    readonly property real targetExpandedHeight: expandedView === "earthquake" ? earthquakeHeight : dashboardHeight
 
     MouseArea {
         anchors.fill: parent
@@ -129,7 +120,7 @@ PanelWindow {
         x: Math.round((root.screen.width - width) / 2 - (root.screen.width - parent.width))
         y: root.entered ? Theme.shape.islandInset : -18
         width: Math.min(parent.width - 32, Theme.shape.islandWidth)
-        height: Theme.shape.islandHeight
+        height: root.expanded ? root.targetExpandedHeight : Theme.shape.islandHeight
         radius: Theme.shape.islandRadius
         color: LivePalette.color.surface
         topLeftRadius: 0
@@ -139,6 +130,13 @@ PanelWindow {
         border.width: 0
         opacity: root.entered ? 1 : 0
         clip: false
+
+        Behavior on height {
+            NumberAnimation {
+                duration: root.expanded ? Theme.motion.emphasized : Theme.motion.exit
+                easing.type: root.expanded ? Easing.OutQuint : Easing.InOutCubic
+            }
+        }
 
         Behavior on x {
             NumberAnimation {
@@ -179,7 +177,10 @@ PanelWindow {
             width: Math.max(0, parent.width - 360)
             height: Theme.shape.islandHeight
             cursorShape: Qt.PointingHandCursor
-            onClicked: if (!root.expanded) root.expanded = true
+            onClicked: {
+                if (root.expanded && root.expandedView === "dashboard") root.expanded = false;
+                else { root.expandedView = "dashboard"; root.expanded = true; }
+            }
         }
 
         Shape {
@@ -220,10 +221,22 @@ PanelWindow {
             width: 165
             height: Theme.shape.islandHeight - 8
             source: root.settingsController.islandDisplay === "music" ? "IslandMusic.qml"
+                : root.settingsController.islandDisplay === "earthquake" ? "IslandEarthquake.qml"
                 : root.settingsController.islandDisplay === "custom" ? root.settingsController.islandPlugin : ""
             onLoaded: {
                 if (item && "paletteColors" in item) item.paletteColors = Qt.binding(() => LivePalette.color);
                 if (item && "player" in item) item.player = Qt.binding(function() { return root.player; });
+                if (item && "earthquakeInfo" in item) item.earthquakeInfo = Qt.binding(() => root.earthquakeInfo);
+                if (item && "loading" in item) item.loading = Qt.binding(() => root.earthquakeLoading);
+                if (item && item.clicked) item.clicked.connect(function() {
+                    if (root.expanded && root.expandedView === "earthquake") {
+                        root.expanded = false;
+                    } else {
+                        root.expandedView = "earthquake";
+                        root.expanded = true;
+                        root.earthquakeRefreshRequested();
+                    }
+                });
             }
         }
 
@@ -322,7 +335,7 @@ PanelWindow {
                     color: LivePalette.color.onSurface
                     font.family: clockFont.name
                     font.pixelSize: 14
-                    MouseArea { anchors.fill: parent; onClicked: if (!root.expanded) root.expanded = true }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { root.expandedView = "dashboard"; root.expanded = true; } }
                 }
             }
 
@@ -383,12 +396,28 @@ PanelWindow {
             height: Math.max(0, island.height - y - 12)
             clip: true
             visible: height > 0
-            opacity: root.dashboardOpacity
+            opacity: root.expanded ? 1 : 0
             enabled: root.expanded
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: root.expanded ? Theme.motion.standard : Theme.motion.fast
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             Dashboard {
+                readonly property bool activeView: root.expandedView === "dashboard"
+                x: activeView ? 0 : 28
+                opacity: activeView ? 1 : 0
+                scale: activeView ? 1 : 0.97
+                visible: opacity > 0
+                enabled: root.expanded && activeView
                 width: parent.width
-                height: Math.min(650, root.height) - 60
+                height: root.dashboardHeight - 62
+                transformOrigin: Item.Top
+                Behavior on x { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint } }
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 50; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
                 panelDate: root.panelDate
                 player: root.player
                 volumePercent: root.volumePercent
@@ -402,6 +431,26 @@ PanelWindow {
                     root.expanded = false;
                     root.settingsController.open(root.screen);
                 }
+            }
+
+            EarthquakePanel {
+                readonly property bool activeView: root.expandedView === "earthquake"
+                x: activeView ? 0 : -28
+                opacity: activeView ? 1 : 0
+                scale: activeView ? 1 : 0.97
+                visible: opacity > 0
+                enabled: root.expanded && activeView
+                width: parent.width
+                height: root.earthquakeHeight - 62
+                transformOrigin: Item.Top
+                Behavior on x { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint } }
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 50; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                history: root.earthquakeHistory
+                loading: root.earthquakeLoading
+                liveMode: root.earthquakeLive
+                onRefreshRequested: root.earthquakeRefreshRequested()
+                onCloseRequested: root.expanded = false
             }
         }
 

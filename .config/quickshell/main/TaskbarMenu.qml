@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import "Theme.js" as Theme
 
 Menu {
@@ -10,52 +11,77 @@ Menu {
     signal toggleRequested()
     signal closeRequested()
     popupType: Popup.Window
-    padding: 6
-    implicitWidth: 205
+    padding: 8
+    implicitWidth: 216
 
+    // M3 Borderless Elevated Menu Container
     background: Rectangle {
-        radius: 16
-        color: LivePalette.color.surfaceContainer
-        border.width: 1
-        border.color: LivePalette.color.outlineVariant
+        radius: 20
+        color: LivePalette.color.surfaceContainerHigh
     }
+
     MenuItem {
         id: pinItem
         text: root.pinned ? "固定を解除" : "タスクバーに固定"
         enabled: root.canPin
-        implicitHeight: 38
+        implicitHeight: 40
         leftPadding: 14
         rightPadding: 14
-        contentItem: Text {
-            text: pinItem.text
-            color: pinItem.enabled ? LivePalette.color.onSurface : LivePalette.color.outlineVariant
-            font.pixelSize: 13
-            verticalAlignment: Text.AlignVCenter
+        contentItem: RowLayout {
+            spacing: 10
+            SymbolIcon {
+                implicitWidth: 16
+                implicitHeight: 16
+                iconName: root.pinned ? "list-remove-symbolic" : "view-pin-symbolic"
+                tint: pinItem.enabled ? LivePalette.color.primary : LivePalette.color.outlineVariant
+            }
+            Text {
+                Layout.fillWidth: true
+                text: pinItem.text
+                color: pinItem.enabled ? LivePalette.color.onSurface : LivePalette.color.outlineVariant
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                verticalAlignment: Text.AlignVCenter
+            }
         }
         background: Rectangle {
-            radius: 12
-            color: pinItem.highlighted ? LivePalette.color.surfaceContainerHigh : "transparent"
-            Behavior on color { ColorAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            radius: height / 2
+            color: pinItem.highlighted ? LivePalette.color.primaryContainer : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
         }
         onTriggered: root.toggleRequested()
     }
+
     MenuItem {
         id: closeItem
         visible: root.canClose
         enabled: root.canClose
         height: visible ? implicitHeight : 0
-        implicitHeight: 38
+        implicitHeight: 40
         leftPadding: 14
+        rightPadding: 14
         text: "終了"
-        contentItem: Text {
-            text: closeItem.text
-            color: LivePalette.color.onSurface
-            font.pixelSize: 13
-            verticalAlignment: Text.AlignVCenter
+        contentItem: RowLayout {
+            spacing: 10
+            SymbolIcon {
+                implicitWidth: 16
+                implicitHeight: 16
+                iconName: "window-close-symbolic"
+                tint: LivePalette.color.error
+            }
+            Text {
+                Layout.fillWidth: true
+                text: closeItem.text
+                color: LivePalette.color.error
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                verticalAlignment: Text.AlignVCenter
+            }
         }
         background: Rectangle {
-            radius: 12
-            color: closeItem.highlighted ? LivePalette.color.surfaceContainerHigh : "transparent"
+            radius: height / 2
+            color: closeItem.highlighted ? LivePalette.color.errorContainer : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
         }
         onTriggered: root.closeRequested()
     }

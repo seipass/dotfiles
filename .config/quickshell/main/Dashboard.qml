@@ -57,7 +57,9 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 12
+
+        // Header
         RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 50
@@ -66,112 +68,253 @@ Item {
             ColumnLayout {
                 Layout.leftMargin: 18
                 spacing: 1
-                Text { text: Qt.formatDateTime(root.panelDate, "dddd"); font.pixelSize: 14; color: LivePalette.color.onSurface }
+                Text { text: Qt.formatDateTime(root.panelDate, "dddd"); font.pixelSize: 14; font.weight: Font.Medium; color: LivePalette.color.onSurface }
                 Text { text: Qt.formatDateTime(root.panelDate, "yyyy年 M月 d日"); font.pixelSize: 12; color: LivePalette.color.onSurfaceVariant }
             }
             Item { Layout.fillWidth: true }
-            SymbolIcon {
+            HeaderIconButton {
+                Layout.alignment: Qt.AlignVCenter
                 iconName: "emblem-system-symbolic"
-                Layout.preferredWidth: 20; Layout.preferredHeight: 20
-                Layout.alignment: Qt.AlignTop
-                tint: LivePalette.color.onSurface
-                MouseArea { anchors.fill: parent; anchors.margins: -9; cursorShape: Qt.PointingHandCursor; onClicked: root.settingsRequested() }
+                label: "Settings"
+                onClicked: root.settingsRequested()
             }
         }
+
+        // Weather & Volume Row (M3 Tonal Cards)
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: false
-            Layout.minimumHeight: 38
-            Layout.preferredHeight: 38
-            Layout.maximumHeight: 38
+            Layout.minimumHeight: 46
+            Layout.preferredHeight: 46
+            Layout.maximumHeight: 46
             spacing: 10
+
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 2
                 Layout.fillHeight: true
-                radius: 18; color: LivePalette.color.surfaceContainer
+                radius: 23
+                color: LivePalette.color.surfaceContainer
+
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 14; anchors.rightMargin: 14
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 16
                     spacing: 10
-                    SymbolIcon {
-                        iconName: root.weatherTemp ? root.weatherIcon : "weather-severe-alert-symbolic"
-                        Layout.preferredWidth: 22; Layout.preferredHeight: 22
-                        tint: LivePalette.color.onSurface
+
+                    Rectangle {
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 32
+                        radius: 16
+                        color: LivePalette.color.primaryContainer
+                        SymbolIcon {
+                            anchors.centerIn: parent
+                            iconName: root.weatherTemp ? root.weatherIcon : "weather-severe-alert-symbolic"
+                            implicitWidth: 18; implicitHeight: 18
+                            tint: LivePalette.color.primary
+                        }
                     }
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 1
                         Text { Layout.fillWidth: true; text: root.weatherCity || "都市未設定"; font.pixelSize: 11; color: LivePalette.color.onSurfaceVariant; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; text: root.weatherDescription || (root.weatherCity ? "天気を取得できません" : "設定から都市を選択"); font.pixelSize: 12; color: LivePalette.color.onSurface; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; text: root.weatherDescription || (root.weatherCity ? "天気を取得できません" : "設定から都市を選択"); font.pixelSize: 12; font.weight: Font.Medium; color: LivePalette.color.onSurface; elide: Text.ElideRight }
                     }
-                    Text { text: root.weatherTemp || "—"; font.family: "Ndot 55"; font.pixelSize: 22; color: LivePalette.color.onSurface }
+                    Text { text: root.weatherTemp || "—"; font.family: "Ndot 55"; font.pixelSize: 22; color: LivePalette.color.primary }
                 }
             }
+
             Rectangle {
-                Layout.fillWidth: true; Layout.preferredWidth: 1; Layout.fillHeight: true
-                radius: 18; color: LivePalette.color.surfaceContainer
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.fillHeight: true
+                radius: 23
+                color: LivePalette.color.surfaceContainer
+
                 RowLayout {
-                    anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 8
-                    SymbolIcon { iconName: root.volumeMuted ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"; tint: LivePalette.color.onSurface
-                        MouseArea { anchors.fill: parent; onClicked: Quickshell.execDetached(["wpctl","set-mute","@DEFAULT_AUDIO_SINK@","toggle"]) }
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 14
+                    spacing: 8
+
+                    Rectangle {
+                        Layout.preferredWidth: 30
+                        Layout.preferredHeight: 30
+                        radius: 15
+                        color: volMuteMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
+                        SymbolIcon {
+                            anchors.centerIn: parent
+                            implicitWidth: 16; implicitHeight: 16
+                            iconName: root.volumeMuted ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
+                            tint: root.volumeMuted ? LivePalette.color.onSurfaceVariant : LivePalette.color.primary
+                        }
+                        MouseArea {
+                            id: volMuteMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Quickshell.execDetached(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+                        }
                     }
                     BarSlider {
-                        id: volume; Layout.fillWidth: true; from: 0; to: 100; stepSize: 1; snapMode: Slider.SnapAlways; value: root.volumePercent; enabled: root.volumeAvailable
-                        onMoved: Quickshell.execDetached(["wpctl","set-volume","-l","1","@DEFAULT_AUDIO_SINK@",(value / 100).toFixed(2)])
+                        id: volume
+                        Layout.fillWidth: true
+                        from: 0; to: 100; stepSize: 1; snapMode: Slider.SnapAlways
+                        value: root.volumePercent
+                        enabled: root.volumeAvailable
+                        onMoved: Quickshell.execDetached(["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", (value / 100).toFixed(2)])
                     }
-                    Text { text: root.volumeMuted ? "MUTE" : root.volumePercent + "%"; color: LivePalette.color.onSurface; font.pixelSize: 12 }
+                    Text {
+                        text: root.volumeMuted ? "MUTE" : root.volumePercent + "%"
+                        color: root.volumeMuted ? LivePalette.color.onSurfaceVariant : LivePalette.color.primary
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                    }
                 }
             }
         }
+
+        // Media Card (M3 Extra Large)
         Rectangle {
-            Layout.fillWidth: true; Layout.preferredHeight: 155; radius: 18; color: LivePalette.color.surfaceContainer; clip: true
-            Image { anchors.fill: parent; source: root.player ? root.player.trackArtUrl : ""; fillMode: Image.PreserveAspectCrop; opacity: 0.35 }
-            Rectangle { anchors.fill: parent; color: "#a0191114" }
+            Layout.fillWidth: true
+            Layout.preferredHeight: 156
+            radius: 24
+            color: LivePalette.color.surfaceContainer
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                source: root.player ? root.player.trackArtUrl : ""
+                fillMode: Image.PreserveAspectCrop
+                opacity: 0.35
+            }
+            Rectangle {
+                anchors.fill: parent
+                color: Qt.alpha(LivePalette.color.surface, 0.72)
+            }
+
             ColumnLayout {
-                anchors.fill: parent; anchors.margins: 16; spacing: 8
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 8
+
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: 10
+
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Text { Layout.fillWidth: true; text: root.player ? (root.player.trackTitle || root.player.identity) : "再生中のメディアはありません"; color: LivePalette.color.onSurface; font.pixelSize: 15; font.bold: true; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; text: root.player ? (root.player.trackArtist || root.player.identity) : "メディアを再生すると表示されます"; color: LivePalette.color.onSurfaceVariant; font.pixelSize: 11; elide: Text.ElideRight }
+                        spacing: 2
+                        Text {
+                            Layout.fillWidth: true
+                            text: root.player ? (root.player.trackTitle || root.player.identity) : "再生中のメディアはありません"
+                            color: LivePalette.color.onSurface
+                            font.pixelSize: 15
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: root.player ? (root.player.trackArtist || root.player.identity) : "メディアを再生すると表示されます"
+                            color: LivePalette.color.onSurfaceVariant
+                            font.pixelSize: 12
+                            elide: Text.ElideRight
+                        }
                     }
-                    Repeater {
-                        model: ["media-skip-backward-symbolic", "media-playback-start-symbolic", "media-skip-forward-symbolic"]
-                        delegate: SymbolIcon {
-                            required property int index
-                            required property string modelData
-                            iconName: index === 1 && root.player && root.player.isPlaying ? "media-playback-pause-symbolic" : modelData
-                            opacity: root.player && (index === 0 ? root.player.canGoPrevious : index === 1 ? root.player.canTogglePlaying : root.player.canGoNext) ? 1 : 0.3
-                            MouseArea { anchors.fill: parent; anchors.margins: -5; enabled: parent.opacity === 1; onClicked: { if (index === 0) root.player.previous(); else if (index === 1) root.player.togglePlaying(); else root.player.next(); } }
+
+                    Row {
+                        spacing: 6
+                        Repeater {
+                            model: ["media-skip-backward-symbolic", "media-playback-start-symbolic", "media-skip-forward-symbolic"]
+                            delegate: Rectangle {
+                                id: mediaBtn
+                                required property int index
+                                required property string modelData
+                                readonly property bool isPlay: index === 1
+                                readonly property bool canAct: !!root.player && (index === 0 ? root.player.canGoPrevious : index === 1 ? root.player.canTogglePlaying : root.player.canGoNext)
+                                width: isPlay ? 40 : 34
+                                height: width
+                                radius: width / 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: isPlay
+                                    ? (canAct ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh)
+                                    : LivePalette.color.surfaceContainerHigh
+                                opacity: canAct ? 1 : 0.4
+                                scale: mediaBtnMouse.pressed ? 0.94 : 1.0
+                                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: parent.radius
+                                    color: mediaBtn.isPlay ? LivePalette.color.onPrimary : LivePalette.color.onSurface
+                                    opacity: mediaBtnMouse.pressed ? 0.14 : mediaBtnMouse.containsMouse ? 0.08 : 0
+                                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                }
+                                SymbolIcon {
+                                    anchors.centerIn: parent
+                                    implicitWidth: mediaBtn.isPlay ? 18 : 16
+                                    implicitHeight: mediaBtn.isPlay ? 18 : 16
+                                    iconName: mediaBtn.isPlay && root.player && root.player.isPlaying ? "media-playback-pause-symbolic" : mediaBtn.modelData
+                                    tint: mediaBtn.isPlay && mediaBtn.canAct ? LivePalette.color.onPrimary : LivePalette.color.onSurface
+                                }
+                                MouseArea {
+                                    id: mediaBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    enabled: mediaBtn.canAct
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (mediaBtn.index === 0) root.player.previous();
+                                        else if (mediaBtn.index === 1) root.player.togglePlaying();
+                                        else root.player.next();
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+
                 Item { Layout.fillHeight: true }
+
                 BarSlider {
-                    id: seek; Layout.fillWidth: true; from: 0; to: root.player ? Math.max(1, root.player.length) : 1
+                    id: seek
+                    Layout.fillWidth: true
+                    from: 0; to: root.player ? Math.max(1, root.player.length) : 1
                     value: root.player ? root.player.position : 0
                     enabled: root.player && root.player.canSeek && root.player.positionSupported
                     onMoved: root.player.position = value
                 }
+
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: root.timeString(root.player ? root.player.position : 0); color: LivePalette.color.onSurfaceVariant; font.pixelSize: 10 }
+                    Text { text: root.timeString(root.player ? root.player.position : 0); color: LivePalette.color.onSurfaceVariant; font.pixelSize: 11 }
                     Item { Layout.fillWidth: true }
-                    Text { text: root.timeString(root.player ? root.player.length : 0); color: LivePalette.color.onSurfaceVariant; font.pixelSize: 10 }
+                    Text { text: root.timeString(root.player ? root.player.length : 0); color: LivePalette.color.onSurfaceVariant; font.pixelSize: 11 }
                 }
             }
         }
+
+        // Calendar & System Row (M3 Extra Large Cards)
         RowLayout {
-            Layout.fillWidth: true; Layout.fillHeight: true; spacing: 10
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 10
+
             Rectangle {
-                Layout.fillWidth: true; Layout.preferredWidth: 5; Layout.fillHeight: true; radius: 18; color: LivePalette.color.surfaceContainer
+                Layout.fillWidth: true
+                Layout.preferredWidth: 5
+                Layout.fillHeight: true
+                radius: 24
+                color: LivePalette.color.surfaceContainer
+
                 ColumnLayout {
-                    anchors.fill: parent; anchors.margins: 15; spacing: 6
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 6
+
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 4
+                        spacing: 6
                         Text {
                             Layout.fillWidth: true
                             text: Qt.formatDate(root.displayedMonth, "yyyy年 M月")
@@ -180,27 +323,40 @@ Item {
                             color: LivePalette.color.onSurface
                         }
                         Rectangle {
-                            Layout.preferredWidth: 40; Layout.preferredHeight: 26; radius: 13
-                            color: todayMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                            Text { anchors.centerIn: parent; text: "今日"; font.pixelSize: 10; color: LivePalette.color.onSurfaceVariant }
+                            Layout.preferredWidth: 46; Layout.preferredHeight: 28; radius: 14
+                            color: LivePalette.color.surfaceContainerHigh
+                            Rectangle {
+                                anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
+                                opacity: todayMouse.pressed ? 0.12 : todayMouse.containsMouse ? 0.08 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                            }
+                            Text { anchors.centerIn: parent; text: "今日"; font.pixelSize: 11; font.weight: Font.Medium; color: LivePalette.color.primary }
                             MouseArea { id: todayMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goToToday() }
                         }
                         Rectangle {
-                            Layout.preferredWidth: 26; Layout.preferredHeight: 26; radius: 13
-                            color: previousMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                            Text { anchors.centerIn: parent; text: "‹"; font.pixelSize: 20; color: LivePalette.color.onSurface }
+                            Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 14
+                            color: LivePalette.color.surfaceContainerHigh
+                            Rectangle {
+                                anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
+                                opacity: previousMouse.pressed ? 0.12 : previousMouse.containsMouse ? 0.08 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                            }
+                            Text { anchors.centerIn: parent; text: "‹"; font.pixelSize: 18; color: LivePalette.color.onSurface }
                             MouseArea { id: previousMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.changeMonth(-1) }
                         }
                         Rectangle {
-                            Layout.preferredWidth: 26; Layout.preferredHeight: 26; radius: 13
-                            color: nextMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                            Text { anchors.centerIn: parent; text: "›"; font.pixelSize: 20; color: LivePalette.color.onSurface }
+                            Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 14
+                            color: LivePalette.color.surfaceContainerHigh
+                            Rectangle {
+                                anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
+                                opacity: nextMouse.pressed ? 0.12 : nextMouse.containsMouse ? 0.08 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                            }
+                            Text { anchors.centerIn: parent; text: "›"; font.pixelSize: 18; color: LivePalette.color.onSurface }
                             MouseArea { id: nextMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.changeMonth(1) }
                         }
                     }
+
                     GridLayout {
                         Layout.fillWidth: true; Layout.fillHeight: true; columns: 7; rowSpacing: 2; columnSpacing: 2
                         Repeater {
@@ -211,7 +367,7 @@ Item {
                                 horizontalAlignment: Text.AlignHCenter
                                 text: Qt.formatDate(new Date(2023, 0, 1 + (index + root.firstWeekday) % 7), "ddd")
                                 color: LivePalette.color.onSurfaceVariant
-                                font.pixelSize: 10
+                                font.pixelSize: 11
                             }
                         }
                         Repeater {
@@ -232,7 +388,7 @@ Item {
                                     height: width
                                     radius: width / 2
                                     color: dayCell.selected ? LivePalette.color.primary : dayMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                                    border.width: dayCell.today && !dayCell.selected ? 1 : 0
+                                    border.width: dayCell.today && !dayCell.selected ? 1.5 : 0
                                     border.color: LivePalette.color.primary
                                     Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
                                 }
@@ -240,8 +396,9 @@ Item {
                                     anchors.centerIn: parent
                                     text: dayCell.date.getDate()
                                     font.pixelSize: 11
+                                    font.weight: dayCell.selected || dayCell.today ? Font.DemiBold : Font.Normal
                                     color: dayCell.selected ? LivePalette.color.onPrimary : dayCell.inMonth ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
-                                    opacity: dayCell.inMonth || dayCell.selected ? 1 : 0.6
+                                    opacity: dayCell.inMonth || dayCell.selected ? 1 : 0.55
                                 }
                                 MouseArea {
                                     id: dayMouse
@@ -256,28 +413,58 @@ Item {
                             }
                         }
                     }
+
                     Text {
                         Layout.fillWidth: true
                         text: Qt.formatDate(root.selectedDate, "M月d日 dddd")
                         color: LivePalette.color.onSurfaceVariant
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                     }
                 }
             }
+
             Rectangle {
-                Layout.fillWidth: true; Layout.preferredWidth: 2; Layout.fillHeight: true; radius: 18; color: LivePalette.color.surfaceContainer
+                Layout.fillWidth: true
+                Layout.preferredWidth: 2
+                Layout.fillHeight: true
+                radius: 24
+                color: LivePalette.color.surfaceContainer
+
                 ColumnLayout {
-                    anchors.fill: parent; anchors.margins: 15; spacing: 9
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 12
+
                     Text { text: "SYSTEM"; font.family: "Ndot 55"; font.pixelSize: 15; color: LivePalette.color.onSurfaceVariant }
+
                     Repeater {
                         model: ["CPU", "RAM", "DISK"]
                         delegate: ColumnLayout {
                             required property int index
                             required property string modelData
-                            Layout.fillWidth: true; spacing: 3
-                            Text { text: modelData + "  " + root.resources.split("|")[index] + "%"; color: LivePalette.color.onSurface; font.pixelSize: 11 }
-                            Rectangle { Layout.fillWidth: true; height: 4; radius: 2; color: LivePalette.color.outlineVariant
-                                Rectangle { width: parent.width * Math.max(0, Math.min(100, Number(root.resources.split("|")[index]) || 0)) / 100; height: parent.height; radius: 2; color: LivePalette.color.primary }
+                            readonly property int pct: Math.max(0, Math.min(100, Number(root.resources.split("|")[index]) || 0))
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text { text: modelData; color: LivePalette.color.onSurface; font.pixelSize: 12; font.weight: Font.Medium }
+                                Item { Layout.fillWidth: true }
+                                Text { text: root.resources.split("|")[index] + "%"; color: LivePalette.color.primary; font.pixelSize: 12; font.weight: Font.DemiBold }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: 8
+                                radius: 4
+                                color: LivePalette.color.surfaceContainerHigh
+                                Rectangle {
+                                    width: parent.width * pct / 100
+                                    height: parent.height
+                                    radius: 4
+                                    color: LivePalette.color.primary
+                                    Behavior on width { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                                }
                             }
                         }
                     }

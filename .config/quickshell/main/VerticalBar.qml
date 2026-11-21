@@ -56,6 +56,8 @@ PanelWindow {
         screen: root.screen
         available: !root.fullscreenActive
         quota: root.shellState?.codexQuota ?? ({})
+        preferredProvider: root.shellState?.quotaProvider ?? "auto"
+        onRefreshRequested: if (root.shellState) root.shellState.refreshQuota()
     }
     PanelWindow {
         screen: root.screen
@@ -70,13 +72,23 @@ PanelWindow {
         focusable: false
         Rectangle {
             anchors.fill: parent
-            radius: 12
-            color: alertMouse.containsMouse || alerts.opened ? LivePalette.color.surfaceContainerHigh : LivePalette.color.surface
+            radius: height / 2
+            color: alerts.opened ? LivePalette.color.primaryContainer : LivePalette.color.surface
+            scale: alertMouse.pressed ? 0.94 : 1.0
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                color: LivePalette.color.onSurface
+                opacity: alertMouse.pressed ? 0.12 : alertMouse.containsMouse ? 0.08 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+            }
             SymbolIcon {
                 anchors.centerIn: parent
                 iconName: "preferences-system-notifications-symbolic"
-                tint: LivePalette.color.onSurface
+                tint: alerts.opened ? LivePalette.color.primary : LivePalette.color.onSurface
             }
             Rectangle {
                 anchors { top: parent.top; right: parent.right; margins: 5 }
@@ -316,11 +328,22 @@ PanelWindow {
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
                 radius: 20
-                color: tools.opened || toolsMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : LivePalette.color.surfaceContainer
+                color: tools.opened ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
+                scale: toolsMouse.pressed ? 0.94 : 1.0
+                Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: parent.radius
+                    color: LivePalette.color.onSurface
+                    opacity: toolsMouse.pressed ? 0.12 : toolsMouse.containsMouse ? 0.08 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                }
                 SymbolIcon {
                     anchors.centerIn: parent
                     iconName: "view-more-symbolic"
-                    tint: LivePalette.color.onSurface
+                    tint: tools.opened ? LivePalette.color.primary : LivePalette.color.onSurface
                 }
                 MouseArea {
                     id: toolsMouse
@@ -340,14 +363,20 @@ PanelWindow {
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
                 radius: 20
-                color: powerMouse.containsMouse || powerMenu.opened
-                    ? LivePalette.color.surfaceContainerHigh : LivePalette.color.surfaceContainer
+                color: powerMenu.opened ? LivePalette.color.errorContainer : LivePalette.color.surfaceContainer
+                scale: powerMouse.pressed ? 0.94 : 1.0
                 border.width: 0
 
-                Behavior on color {
-                    ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic }
-                }
+                Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
+                Rectangle {
+                    anchors.fill: parent
+                    radius: parent.radius
+                    color: LivePalette.color.onSurface
+                    opacity: powerMouse.pressed ? 0.14 : powerMouse.containsMouse ? 0.08 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                }
                 SymbolIcon {
                     anchors.centerIn: parent
                     width: 20

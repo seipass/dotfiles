@@ -152,40 +152,73 @@ PanelWindow {
             spacing: 3
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? 34 : 0
+                Layout.preferredHeight: visible ? 38 : 0
                 visible: root.menuPath.length > 1
-                radius: 17
-                color: backMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                Text { anchors.left: parent.left; anchors.leftMargin: 12; anchors.verticalCenter: parent.verticalCenter; text: "‹   戻る"; color: LivePalette.color.onSurface; font.pixelSize: 13 }
-                MouseArea { id: backMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.goBack() }
+                radius: 19
+                color: LivePalette.color.surfaceContainerHigh
+                Rectangle {
+                    anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
+                    opacity: backMouse.pressed ? 0.12 : backMouse.containsMouse ? 0.08 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 8
+                    SymbolIcon { implicitWidth: 16; implicitHeight: 16; iconName: "go-previous-symbolic"; tint: LivePalette.color.primary }
+                    Text { Layout.fillWidth: true; text: "戻る"; color: LivePalette.color.onSurface; font.pixelSize: 13; font.weight: Font.Medium }
+                }
+                MouseArea { id: backMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goBack() }
             }
             Repeater {
                 model: opener.children
-                delegate: Rectangle {
+                delegate: Item {
                     id: menuRow
                     required property var modelData
                     Layout.fillWidth: true
-                    Layout.preferredHeight: modelData.isSeparator ? 1 : 36
-                    radius: modelData.isSeparator ? 0 : 18
-                    color: modelData.isSeparator ? LivePalette.color.outlineVariant : rowMouse.containsMouse && modelData.enabled ? LivePalette.color.surfaceContainerHigh : "transparent"
-                    Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 10
-                        visible: !menuRow.modelData.isSeparator
-                        IconImage { implicitSize: 18; visible: !!menuRow.modelData.icon; source: menuRow.modelData.icon }
-                        Text { Layout.fillWidth: true; text: menuRow.modelData.text; color: menuRow.modelData.enabled ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant; font.pixelSize: 13; elide: Text.ElideRight }
-                        Text { visible: menuRow.modelData.hasChildren; text: "›"; color: LivePalette.color.onSurfaceVariant; font.pixelSize: 18 }
+                    Layout.preferredHeight: modelData.isSeparator ? 9 : 38
+
+                    Rectangle {
+                        visible: menuRow.modelData.isSeparator
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        height: 1
+                        color: Qt.alpha(LivePalette.color.outlineVariant, 0.55)
                     }
-                    MouseArea {
-                        id: rowMouse
+
+                    Rectangle {
+                        visible: !menuRow.modelData.isSeparator
                         anchors.fill: parent
-                        hoverEnabled: true
-                        enabled: !menuRow.modelData.isSeparator && menuRow.modelData.enabled
-                        onClicked: {
-                            if (menuRow.modelData.hasChildren) root.openSubmenu(menuRow.modelData);
-                            else { menuRow.modelData.triggered(); root.closeMenu(); }
+                        radius: height / 2
+                        color: rowMouse.containsMouse && menuRow.modelData.enabled ? LivePalette.color.primaryContainer : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 10
+                            IconImage { implicitSize: 18; visible: !!menuRow.modelData.icon; source: menuRow.modelData.icon }
+                            Text {
+                                Layout.fillWidth: true
+                                text: menuRow.modelData.text
+                                color: menuRow.modelData.enabled ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
+                                font.pixelSize: 13
+                                font.weight: rowMouse.containsMouse && menuRow.modelData.enabled ? Font.Medium : Font.Normal
+                                elide: Text.ElideRight
+                            }
+                            Text { visible: menuRow.modelData.hasChildren; text: "›"; color: LivePalette.color.onSurfaceVariant; font.pixelSize: 18 }
+                        }
+                        MouseArea {
+                            id: rowMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: menuRow.modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            enabled: !menuRow.modelData.isSeparator && menuRow.modelData.enabled
+                            onClicked: {
+                                if (menuRow.modelData.hasChildren) root.openSubmenu(menuRow.modelData);
+                                else { menuRow.modelData.triggered(); root.closeMenu(); }
+                            }
                         }
                     }
                 }

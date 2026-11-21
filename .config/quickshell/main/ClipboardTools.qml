@@ -1,15 +1,26 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Quickshell.Io
 import "Theme.js" as Theme
 
 ColumnLayout {
     id: root
+    property var shellState
     spacing: 10
-    property var entries: []
-    property string status: ""
     property int copiedIndex: -1
+    readonly property var entries: root.shellState ? (root.shellState.clipboardHistory || []) : []
+
+    function formatSize(bytes) {
+        const b = Number(bytes) || 0;
+        if (b >= 1048576) return (b / 1048576).toFixed(1) + " MB";
+        if (b >= 1024) return Math.round(b / 1024) + " KB";
+        return b + " B";
+    }
+
+    function formatMime(mime) {
+        const parts = String(mime || "image/png").split("/");
+        return (parts.length > 1 ? parts[1] : parts[0]).toUpperCase();
+    }
 
     Timer {
         id: copiedReset
@@ -17,52 +28,10 @@ ColumnLayout {
         onTriggered: root.copiedIndex = -1
     }
 
-    // Collect Toggle Card
-    ToggleRow {
-        Layout.fillWidth: true
-        iconName: "edit-paste-symbolic"
-        title: "Collect Clipboard"
-        subtitle: root.status || "Kept in memory while open"
-        checked: remember.checked
-        onToggled: {
-            remember.checked = !remember.checked;
-            if (remember.checked) reader.running = true;
-        }
-    }
-
-    CheckBox {
-        id: remember
-        visible: false
-        onToggled: if (checked) reader.running = true
-    }
-
-    Process {
-        id: reader
-        command: ["sh", "-c", "exec wl-paste --no-newline --type text"]
-        onExited: code => {
-            if (code === 127) root.status = "Install wl-clipboard to read the clipboard.";
-        }
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const value = text;
-                if (root.visible && remember.checked && value && value.length <= 16384
-                    && root.entries[0] !== value)
-                    root.entries = [value, ...root.entries.filter(entry => entry !== value)].slice(0, 20);
-            }
-        }
-    }
-    Timer {
-        interval: 850
-        repeat: true
-        running: root.visible && remember.checked && !root.status
-        onTriggered: reader.running = true
-    }
-    TextEdit { id: copier; visible: false }
-
     RowLayout {
         Layout.fillWidth: true
         Text {
-            text: "SNIPPETS (" + root.entries.length + ")"
+            text: "HISTORY (" + root.entries.length + ")"
             font.pixelSize: 11
             font.weight: Font.DemiBold
             font.letterSpacing: 1.2
@@ -71,11 +40,18 @@ ColumnLayout {
         Item { Layout.fillWidth: true }
         SettingsActionButton {
             visible: root.entries.length > 0
-            implicitHeight: 30
-            horizontalPadding: 12
+            implicitHeight: 32
+            horizontalPadding: 14
             text: "Clear"
-            onClicked: root.entries = []
+            onClicked: if (root.shellState) root.shellState.clearClipboard()
         }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        text: "テキスト・画像に対応（Win + V でカーソル付近に表示）"
+        font.pixelSize: 11
+        color: LivePalette.color.onSurfaceVariant
     }
 
     ListView {
@@ -87,10 +63,12 @@ ColumnLayout {
         ScrollBar.vertical: ScrollBar {}
 
         delegate: Rectangle {
-            required property string modelData
+            id: entryCard
+            required property var modelData
             required property int index
+            readonly property bool isImage: modelData.type === "image"
             width: ListView.view.width - 4
-            implicitHeight: 52
+            implicitHeight: isImage ? 80 : 54
             radius: 18
             color: root.copiedIndex === index ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
@@ -103,7 +81,9 @@ ColumnLayout {
                 Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
             }
 
+            // Text Row
             RowLayout {
+                visible: !entryCard.isImage
                 anchors.fill: parent
                 anchors.leftMargin: 12
                 anchors.rightMargin: 12
@@ -111,7 +91,7 @@ ColumnLayout {
 
                 Text {
                     Layout.fillWidth: true
-                    text: modelData.replace(/\s+/g, " ")
+                    text: (entryCard.modelData.text || "").replace(/\s+/g, " ")
                     textFormat: Text.PlainText
                     font.pixelSize: 13
                     color: LivePalette.color.onSurface
@@ -119,11 +99,70 @@ ColumnLayout {
                 }
 
                 Text {
-                    visible: root.copiedIndex === index
-                    text: "Copied"
+                    text: root.copiedIndex === entryCard.index ? "Copied" : (entryCard.modelData.time || "")
                     font.pixelSize: 11
-                    font.weight: Font.DemiBold
-                    color: LivePalette.color.primary
+                    font.weight: root.copiedIndex === entryCard.index ? Font.DemiBold : Font.Normal
+                    color: root.copiedIndex === entryCard.index ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                }
+            }
+
+            // Image Row
+            RowLayout {
+                visible: entryCard.isImage
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 10
+
+                Rectangle {
+                    Layout.preferredWidth: 92
+                    Layout.preferredHeight: 64
+                    radius: 12
+                    color: LivePalette.color.surface
+                    clip: true
+
+                    Image {
+                        anchors.fill: parent
+                        source: entryCard.isImage && entryCard.modelData.path ? ("file://" + entryCard.modelData.path) : ""
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        cache: false
+                        smooth: true
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    spacing: 3
+
+                    RowLayout {
+                        spacing: 6
+                        Text {
+                            text: root.formatMime(entryCard.modelData.mime)
+                            font.family: "Ioskeley Mono Term"
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                            color: LivePalette.color.primary
+                        }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: root.copiedIndex === entryCard.index ? "Copied" : (entryCard.modelData.time || "")
+                            font.pixelSize: 11
+                            font.weight: root.copiedIndex === entryCard.index ? Font.DemiBold : Font.Normal
+                            color: root.copiedIndex === entryCard.index ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: ((entryCard.modelData.width > 0 && entryCard.modelData.height > 0)
+                            ? (entryCard.modelData.width + " × " + entryCard.modelData.height + " · ")
+                            : "") + root.formatSize(entryCard.modelData.size)
+                        font.family: "Ioskeley Mono Term"
+                        font.pixelSize: 11
+                        color: LivePalette.color.onSurfaceVariant
+                        elide: Text.ElideRight
+                    }
                 }
             }
 
@@ -133,11 +172,8 @@ ColumnLayout {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    copier.text = modelData;
-                    copier.selectAll();
-                    copier.copy();
-                    copier.text = "";
-                    root.copiedIndex = index;
+                    if (root.shellState) root.shellState.copyClipboardEntry(entryCard.modelData);
+                    root.copiedIndex = entryCard.index;
                     copiedReset.restart();
                 }
             }
@@ -146,7 +182,7 @@ ColumnLayout {
         Label {
             anchors.centerIn: parent
             visible: parent.count === 0
-            text: remember.checked ? "Copy text to see it appear here" : "Enable collection above to track copies"
+            text: "コピーしたテキスト・画像が自動で記録されます"
             color: LivePalette.color.onSurfaceVariant
         }
     }

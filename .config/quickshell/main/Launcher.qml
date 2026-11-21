@@ -269,24 +269,26 @@ PanelWindow {
             columns: 1
             rowSpacing: Theme.spacing.medium
 
+            // M3 Search Bar (54px full pill)
             Rectangle {
                 Layout.row: 1
                 Layout.column: 0
                 Layout.fillWidth: true
-                Layout.preferredHeight: 44
-                radius: Theme.shape.fullRadius
-                color: LivePalette.color.surfaceContainer
+                Layout.preferredHeight: 54
+                radius: height / 2
+                color: LivePalette.color.surfaceContainerHigh
                 border.width: 0
 
                 TextInput {
                     id: searchInput
                     anchors.fill: parent
-                    anchors.leftMargin: 40
-                    anchors.rightMargin: 13
+                    anchors.leftMargin: 46
+                    anchors.rightMargin: searchInput.text.length > 0 ? 44 : 18
                     verticalAlignment: TextInput.AlignVCenter
                     color: LivePalette.color.onSurface
                     selectionColor: LivePalette.color.primaryContainer
                     selectedTextColor: LivePalette.color.onSurface
+                    font.family: "Google Sans Flex"
                     font.pixelSize: 15
                     clip: true
                     onTextChanged: {
@@ -313,7 +315,7 @@ PanelWindow {
 
                 Text {
                     anchors.left: parent.left
-                    anchors.leftMargin: 40
+                    anchors.leftMargin: 46
                     anchors.verticalCenter: parent.verticalCenter
                     text: launcherWindow.emojiMode ? "Search emoji…" : "Search apps or use /calc, /time, /color, /qr, /weather"
                     color: LivePalette.color.onSurfaceVariant
@@ -323,12 +325,37 @@ PanelWindow {
                 }
                 SymbolIcon {
                     anchors.left: parent.left
-                    anchors.leftMargin: 13
+                    anchors.leftMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
                     iconName: "system-search-symbolic"
-                    tint: LivePalette.color.onSurfaceVariant
-                    width: 17
-                    height: 17
+                    tint: LivePalette.color.primary
+                    width: 18
+                    height: 18
+                }
+                Rectangle {
+                    visible: searchInput.text.length > 0
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 30
+                    height: 30
+                    radius: 15
+                    color: clearSearchMouse.containsMouse ? LivePalette.color.surfaceContainer : "transparent"
+
+                    SymbolIcon {
+                        anchors.centerIn: parent
+                        iconName: "window-close-symbolic"
+                        tint: LivePalette.color.onSurfaceVariant
+                        width: 15
+                        height: 15
+                    }
+                    MouseArea {
+                        id: clearSearchMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { searchInput.text = ""; searchInput.forceActiveFocus(); }
+                    }
                 }
             }
 
@@ -344,7 +371,7 @@ PanelWindow {
                 model: launcherWindow.commandPicker ? launcherWindow.commandResults
                     : launcherWindow.emojiMode ? (launcherWindow.toolResult.emoji || []) : appListModel
                 currentIndex: 0
-                highlight: Rectangle { radius: Theme.shape.fullRadius; color: LivePalette.color.surfaceContainerHigh }
+                highlight: Rectangle { radius: height / 2; color: LivePalette.color.primaryContainer }
                 highlightMoveDuration: 180
                 highlightMoveVelocity: -1
                 onCountChanged: if (count && currentIndex < 0) currentIndex = 0
@@ -452,36 +479,47 @@ PanelWindow {
                     font.pixelSize: 13
                 }
             }
-            ColumnLayout {
+            Rectangle {
                 Layout.row: 0
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: !!launcherWindow.mode && !launcherWindow.emojiMode
-                Image {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 200
-                    Layout.preferredHeight: 200
-                    visible: !!launcherWindow.toolResult.image
-                    source: launcherWindow.toolResult.image || ""
-                    fillMode: Image.PreserveAspectFit
-                    smooth: false
-                }
-                Rectangle {
-                    Layout.preferredWidth: 36
-                    Layout.preferredHeight: 36
-                    radius: 9
-                    visible: !!launcherWindow.toolResult.color
-                    color: launcherWindow.toolResult.color || "transparent"
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: toolProcess.running ? "Working…" : (launcherWindow.toolResult.error
-                          || launcherWindow.toolResult.text || launcherWindow.hints[launcherWindow.mode] || "")
-                    textFormat: Text.PlainText
-                    wrapMode: Text.Wrap
-                    color: LivePalette.color.onSurface
-                    font.pixelSize: 16
+                radius: 24
+                color: LivePalette.color.surfaceContainer
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 20
+                    spacing: 12
+
+                    Image {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: 200
+                        Layout.preferredHeight: 200
+                        visible: !!launcherWindow.toolResult.image
+                        source: launcherWindow.toolResult.image || ""
+                        fillMode: Image.PreserveAspectFit
+                        smooth: false
+                    }
+                    Rectangle {
+                        Layout.preferredWidth: 44
+                        Layout.preferredHeight: 44
+                        radius: 22
+                        visible: !!launcherWindow.toolResult.color
+                        color: launcherWindow.toolResult.color || "transparent"
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: toolProcess.running ? "Working…" : (launcherWindow.toolResult.error
+                              || launcherWindow.toolResult.text || launcherWindow.hints[launcherWindow.mode] || "")
+                        textFormat: Text.PlainText
+                        wrapMode: Text.Wrap
+                        color: launcherWindow.toolResult.error ? LivePalette.color.error : LivePalette.color.onSurface
+                        font.pixelSize: 16
+                        font.weight: Font.Medium
+                    }
+                    Item { Layout.fillHeight: true }
                 }
             }
             Text {

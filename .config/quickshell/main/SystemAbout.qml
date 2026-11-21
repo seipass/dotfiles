@@ -8,9 +8,50 @@ import "Theme.js" as Theme
 ColumnLayout {
     id: root
     required property string fontFamily
-    property var info: ({ summary: {}, sections: [] })
+    property var info: ({ summary: {}, fetchRows: [], monitors: [], sections: [] })
     property bool failed: false
-    spacing: 20
+    property string copiedBadge: ""
+
+    readonly property string monoFont: "Ioskeley Mono Term"
+    readonly property string displayFont: "Ndot 55"
+    readonly property bool isNarrow: width < 560
+
+    readonly property string archAscii:
+        "       /\\        \n" +
+        "      /  \\       \n" +
+        "     /\\   \\      \n" +
+        "    /      \\     \n" +
+        "   /   ,,   \\    \n" +
+        "  /   |  |  -\\   \n" +
+        " /_-''    ''-_\\  "
+
+    readonly property var paletteSwatches: [
+        { key: "primary", label: "primary", hex: String(LivePalette.color.primary) },
+        { key: "primaryContainer", label: "pri-cont", hex: String(LivePalette.color.primaryContainer) },
+        { key: "onPrimary", label: "on-pri", hex: String(LivePalette.color.onPrimary) },
+        { key: "surface", label: "surface", hex: String(LivePalette.color.surface) },
+        { key: "surfaceContainer", label: "surf-mid", hex: String(LivePalette.color.surfaceContainer) },
+        { key: "surfaceContainerHigh", label: "surf-hi", hex: String(LivePalette.color.surfaceContainerHigh) },
+        { key: "onSurface", label: "fg", hex: String(LivePalette.color.onSurface) },
+        { key: "onSurfaceVariant", label: "fg-dim", hex: String(LivePalette.color.onSurfaceVariant) },
+        { key: "outlineVariant", label: "outline", hex: String(LivePalette.color.outlineVariant) },
+        { key: "error", label: "error", hex: String(LivePalette.color.error) }
+    ]
+
+    spacing: 16
+
+    function copyToClipboard(text, label) {
+        if (!text) return;
+        Quickshell.clipboardText = text;
+        root.copiedBadge = label || "Copied";
+        copiedTimer.restart();
+    }
+
+    Timer {
+        id: copiedTimer
+        interval: 1800
+        onTriggered: root.copiedBadge = ""
+    }
 
     onVisibleChanged: if (visible) collector.running = true
     Component.onCompleted: if (visible) collector.running = true
@@ -32,20 +73,20 @@ ColumnLayout {
         onExited: code => { if (code !== 0) root.failed = true; }
     }
 
-    // ================= Hero Banner Card (M3 Extra Large) =================
+    // ================= 1. Unix Porn Fastfetch Hero Card =================
     Rectangle {
         Layout.fillWidth: true
-        implicitHeight: heroLayout.implicitHeight + 40
-        radius: 24
+        implicitHeight: fetchCardCol.implicitHeight + 36
+        radius: 26
         color: LivePalette.color.surfaceContainer
         clip: true
 
-        // Ambient subtle background gradient
+        // Subtle ambient corner glow
         Rectangle {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: 260
+            width: Math.min(parent.width * 0.65, 360)
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: Qt.alpha(LivePalette.color.primary, 0.14) }
@@ -53,286 +94,709 @@ ColumnLayout {
             }
         }
 
-        RowLayout {
-            id: heroLayout
+        ColumnLayout {
+            id: fetchCardCol
             anchors.fill: parent
             anchors.margins: 18
-            spacing: 18
+            spacing: 16
 
-            // OS Distro Logo Container
-            Rectangle {
-                Layout.preferredWidth: 64
-                Layout.preferredHeight: 64
-                Layout.alignment: Qt.AlignVCenter
-                radius: 16
-                color: Qt.alpha(LivePalette.color.primary, 0.14)
-                border.color: Qt.alpha(LivePalette.color.primary, 0.3)
-                border.width: 1.5
-
-                Image {
-                    id: distroLogoImg
-                    anchors.centerIn: parent
-                    width: 42
-                    height: 42
-                    fillMode: Image.PreserveAspectFit
-                    source: (root.info.summary && root.info.summary.logoPath) || ""
-                    smooth: true
-                    asynchronous: true
-                    visible: status === Image.Ready
-                }
-
-                SymbolIcon {
-                    anchors.centerIn: parent
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    iconName: "distributor-logo"
-                    tint: LivePalette.color.primary
-                    visible: !distroLogoImg.visible
-                }
-            }
-
-            // Hero Text
-            ColumnLayout {
+            // Terminal Chrome Header Bar
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                spacing: 3
+                spacing: 8
 
-                RowLayout {
-                    spacing: 10
-                    Layout.fillWidth: true
-
-                    Text {
-                        text: (root.info.summary && root.info.summary.osPretty) || "Linux Workstation"
-                        color: LivePalette.color.onSurface
-                        font.family: root.fontFamily
-                        font.pixelSize: 21
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
-                    }
-
-                    Rectangle {
-                        radius: 6
-                        color: Qt.alpha(LivePalette.color.primary, 0.18)
-                        border.color: Qt.alpha(LivePalette.color.primary, 0.3)
-                        border.width: 1
-                        implicitWidth: archText.implicitWidth + 12
-                        implicitHeight: 22
-
-                        Text {
-                            id: archText
-                            anchors.centerIn: parent
-                            text: (root.info.summary && root.info.summary.arch) || "x86_64"
-                            font.family: root.fontFamily
-                            font.pixelSize: 11
-                            font.weight: Font.DemiBold
-                            color: LivePalette.color.primary
+                // Minimal tonal terminal dots
+                Row {
+                    spacing: 6
+                    Repeater {
+                        model: [
+                            LivePalette.color.error,
+                            LivePalette.color.primary,
+                            LivePalette.color.onSurfaceVariant
+                        ]
+                        delegate: Rectangle {
+                            required property var modelData
+                            width: 10
+                            height: 10
+                            radius: 5
+                            color: Qt.alpha(modelData, 0.85)
                         }
                     }
-
-                    Item { Layout.fillWidth: true }
                 }
 
                 Text {
-                    text: {
-                        const s = root.info.summary;
-                        if (!s || !s.hostname) return "Quickshell Desktop Experience";
-                        return s.hostname + " · Up " + (s.uptime || "just now") + " · Kernel " + (s.kernel || "");
-                    }
+                    Layout.leftMargin: 6
+                    text: ((root.info.summary && root.info.summary.userAtHost) || "user@arch") + "  —  fastfetch"
                     color: LivePalette.color.onSurfaceVariant
-                    font.family: root.fontFamily
+                    font.family: root.monoFont
                     font.pixelSize: 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
 
-                Text {
-                    text: (root.info.summary && root.info.summary.cpu) || ""
-                    color: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.8)
-                    font.family: root.fontFamily
-                    font.pixelSize: 11
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
+                // Copied feedback pill
+                Rectangle {
+                    visible: root.copiedBadge !== ""
+                    radius: 999
+                    color: LivePalette.color.primaryContainer
+                    implicitWidth: copiedLbl.implicitWidth + 18
+                    implicitHeight: 26
+
+                    Text {
+                        id: copiedLbl
+                        anchors.centerIn: parent
+                        text: root.copiedBadge
+                        color: LivePalette.color.primary
+                        font.family: root.monoFont
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                    }
+                }
+
+                // Copy Fetch Pill Button
+                Button {
+                    id: copyFetchBtn
+                    implicitHeight: 30
+                    implicitWidth: copyFetchRow.implicitWidth + 20
+                    hoverEnabled: true
+                    background: Rectangle {
+                        radius: 999
+                        color: copyFetchBtn.down ? Qt.alpha(LivePalette.color.primary, 0.28) :
+                               copyFetchBtn.hovered ? Qt.alpha(LivePalette.color.primary, 0.2) :
+                               LivePalette.color.surfaceContainerHigh
+                        Behavior on color { ColorAnimation { duration: 140 } }
+                    }
+                    contentItem: Row {
+                        id: copyFetchRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        SymbolIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            implicitWidth: 13
+                            implicitHeight: 13
+                            iconName: "edit-copy-symbolic"
+                            tint: LivePalette.color.primary
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Copy fetch"
+                            color: LivePalette.color.onSurface
+                            font.family: root.monoFont
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                        }
+                    }
+                    onClicked: {
+                        const txt = root.info.summary && root.info.summary.fetchText;
+                        if (txt) root.copyToClipboard(txt, "Fetch copied");
+                    }
+                }
+
+                // Refresh Button
+                Button {
+                    id: heroRefreshBtn
+                    implicitWidth: 30
+                    implicitHeight: 30
+                    hoverEnabled: true
+                    background: Rectangle {
+                        radius: 999
+                        color: heroRefreshBtn.down ? Qt.alpha(LivePalette.color.onSurface, 0.14) :
+                               heroRefreshBtn.hovered ? LivePalette.color.surfaceContainerHigh : "transparent"
+                        Behavior on color { ColorAnimation { duration: 140 } }
+                    }
+                    contentItem: SymbolIcon {
+                        anchors.centerIn: parent
+                        implicitWidth: 15
+                        implicitHeight: 15
+                        iconName: "view-refresh-symbolic"
+                        tint: heroRefreshBtn.hovered ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                    }
+                    onClicked: collector.running = true
                 }
             }
 
-            // Refresh action
-            Button {
-                id: heroRefreshBtn
-                Layout.alignment: Qt.AlignVCenter
-                implicitWidth: 38
-                implicitHeight: 38
-                hoverEnabled: true
-                background: Rectangle {
-                    radius: 12
-                    color: heroRefreshBtn.down ? Qt.alpha(LivePalette.color.onSurface, 0.1) :
-                           heroRefreshBtn.hovered ? Qt.alpha(LivePalette.color.onSurface, 0.06) : "transparent"
-                    border.color: heroRefreshBtn.hovered ? Qt.alpha(LivePalette.color.onSurface, 0.12) : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
+            // Hairline separator
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: Qt.alpha(LivePalette.color.onSurface, 0.06)
+            }
+
+            // Main Fetch Body: ASCII Art + Spec Table
+            GridLayout {
+                Layout.fillWidth: true
+                columns: root.isNarrow ? 1 : 2
+                columnSpacing: 22
+                rowSpacing: 14
+
+                // Left: Arch ASCII Art Container
+                Rectangle {
+                    Layout.alignment: root.isNarrow ? Qt.AlignHCenter : Qt.AlignVCenter
+                    Layout.preferredWidth: root.isNarrow ? Math.min(parent.width, 260) : 196
+                    Layout.preferredHeight: 172
+                    radius: 20
+                    color: Qt.alpha(LivePalette.color.surface, 0.55)
+
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: root.archAscii
+                            color: LivePalette.color.primary
+                            font.family: root.monoFont
+                            font.pixelSize: 12
+                            font.weight: Font.Bold
+                            lineHeight: 1.05
+                            textFormat: Text.PlainText
+                        }
+
+                        Rectangle {
+                            Layout.alignment: Qt.AlignHCenter
+                            radius: 999
+                            color: LivePalette.color.primaryContainer
+                            implicitWidth: distroTag.implicitWidth + 16
+                            implicitHeight: 22
+
+                            Text {
+                                id: distroTag
+                                anchors.centerIn: parent
+                                text: ((root.info.summary && root.info.summary.osId) || "arch").toUpperCase() + " · " + ((root.info.summary && root.info.summary.arch) || "x86_64")
+                                color: LivePalette.color.primary
+                                font.family: root.monoFont
+                                font.pixelSize: 10
+                                font.weight: Font.Bold
+                            }
+                        }
+                    }
                 }
-                contentItem: SymbolIcon {
-                    anchors.centerIn: parent
-                    implicitWidth: 17
-                    implicitHeight: 17
-                    iconName: "view-refresh-symbolic"
-                    tint: heroRefreshBtn.hovered ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+
+                // Right: Ndot Header + Fastfetch Monospace Key-Value List
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    // user@host in Ndot 55
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        Text {
+                            text: (root.info.summary && root.info.summary.user) || "user"
+                            color: LivePalette.color.primary
+                            font.family: root.displayFont
+                            font.pixelSize: 22
+                        }
+                        Text {
+                            text: "@"
+                            color: LivePalette.color.onSurfaceVariant
+                            font.family: root.displayFont
+                            font.pixelSize: 22
+                        }
+                        Text {
+                            text: (root.info.summary && root.info.summary.hostname) || "desktop"
+                            color: LivePalette.color.onSurface
+                            font.family: root.displayFont
+                            font.pixelSize: 22
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    // Dashed accent rule
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 2
+                        radius: 1
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: LivePalette.color.primary }
+                            GradientStop { position: 0.55; color: Qt.alpha(LivePalette.color.primary, 0.25) }
+                            GradientStop { position: 1.0; color: "transparent" }
+                        }
+                    }
+
+                    // Fastfetch rows
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Repeater {
+                            model: root.info.fetchRows || []
+                            delegate: RowLayout {
+                                id: fetchRowItem
+                                required property var modelData
+                                Layout.fillWidth: true
+                                spacing: 10
+
+                                Text {
+                                    Layout.preferredWidth: 56
+                                    text: fetchRowItem.modelData[0]
+                                    color: LivePalette.color.primary
+                                    font.family: root.monoFont
+                                    font.pixelSize: 12
+                                    font.weight: Font.Bold
+                                }
+
+                                Text {
+                                    text: "▸"
+                                    color: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.45)
+                                    font.family: root.monoFont
+                                    font.pixelSize: 11
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: fetchRowItem.modelData[1] || "—"
+                                    color: LivePalette.color.onSurface
+                                    font.family: root.monoFont
+                                    font.pixelSize: 12
+                                    elide: Text.ElideRight
+                                    textFormat: Text.PlainText
+                                }
+                            }
+                        }
+                    }
                 }
-                onClicked: collector.running = true
+            }
+
+            // Live Material You Palette Swatch Strip (click to copy hex)
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: swatchCol.implicitHeight + 18
+                radius: 18
+                color: Qt.alpha(LivePalette.color.surface, 0.55)
+
+                ColumnLayout {
+                    id: swatchCol
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 8
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text {
+                            text: "LIVE PALETTE"
+                            color: LivePalette.color.onSurfaceVariant
+                            font.family: root.monoFont
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                            font.letterSpacing: 1.2
+                        }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            id: hoveredSwatchHint
+                            text: "click a swatch to copy hex"
+                            color: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.75)
+                            font.family: root.monoFont
+                            font.pixelSize: 10
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        Repeater {
+                            model: root.paletteSwatches
+                            delegate: Rectangle {
+                                id: swatchBlock
+                                required property var modelData
+                                Layout.fillWidth: true
+                                height: swatchHover.containsMouse ? 28 : 24
+                                radius: 8
+                                color: modelData.hex
+                                border.width: 1
+                                border.color: swatchHover.containsMouse
+                                    ? LivePalette.color.onSurface
+                                    : Qt.alpha(LivePalette.color.onSurface, 0.12)
+
+                                Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+
+                                MouseArea {
+                                    id: swatchHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onEntered: hoveredSwatchHint.text = swatchBlock.modelData.label + "  " + swatchBlock.modelData.hex.toUpperCase()
+                                    onExited: hoveredSwatchHint.text = "click a swatch to copy hex"
+                                    onClicked: root.copyToClipboard(swatchBlock.modelData.hex, "Copied " + swatchBlock.modelData.hex.toUpperCase())
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
-    // ================= Hardware KPI Glance Tiles (Responsive Flow/Layout) =================
+    // ================= 2. Live Telemetry Bento Meters =================
     Flow {
         Layout.fillWidth: true
         spacing: 12
 
-        readonly property int colCount: width > 580 ? 3 : width > 360 ? 2 : 1
+        readonly property int colCount: width > 560 ? 3 : width > 360 ? 2 : 1
         readonly property real tileWidth: Math.floor((width - (colCount - 1) * spacing) / colCount)
 
-        // CPU Tile
+        // CPU Meter Card
         Rectangle {
             width: parent.tileWidth
-            height: 72
+            height: 112
             radius: 22
             color: LivePalette.color.surfaceContainer
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 12
+                anchors.margins: 14
+                spacing: 8
 
-                Rectangle {
-                    width: 40
-                    height: 40
-                    radius: 20
-                    color: LivePalette.color.primaryContainer
-                    SymbolIcon {
-                        anchors.centerIn: parent
-                        implicitWidth: 18
-                        implicitHeight: 18
-                        iconName: "cpu-symbolic"
-                        tint: LivePalette.color.primary
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Rectangle {
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: LivePalette.color.primaryContainer
+                        SymbolIcon {
+                            anchors.centerIn: parent
+                            implicitWidth: 15
+                            implicitHeight: 15
+                            iconName: "utilities-system-monitor-symbolic"
+                            tint: LivePalette.color.primary
+                        }
+                    }
+
+                    Text {
+                        text: "CPU"
+                        color: LivePalette.color.onSurfaceVariant
+                        font.family: root.monoFont
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        Layout.fillWidth: true
+                    }
+
+                    Rectangle {
+                        visible: Boolean(root.info.summary && root.info.summary.cpuTemp)
+                        radius: 999
+                        color: LivePalette.color.surfaceContainerHigh
+                        implicitWidth: cpuTempTxt.implicitWidth + 12
+                        implicitHeight: 20
+                        Text {
+                            id: cpuTempTxt
+                            anchors.centerIn: parent
+                            text: (root.info.summary && root.info.summary.cpuTemp) || ""
+                            color: LivePalette.color.primary
+                            font.family: root.monoFont
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                        }
                     }
                 }
 
-                ColumnLayout {
+                RowLayout {
                     Layout.fillWidth: true
-                    spacing: 1
                     Text {
-                        text: "Processor"
+                        text: ((root.info.summary && root.info.summary.cpuLoadPct) || 0) + "%"
+                        color: LivePalette.color.onSurface
+                        font.family: root.displayFont
+                        font.pixelSize: 22
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: "load " + ((root.info.summary && root.info.summary.cpuLoad) || "—")
                         color: LivePalette.color.onSurfaceVariant
-                        font.family: root.fontFamily
+                        font.family: root.monoFont
                         font.pixelSize: 11
                     }
-                    Text {
-                        text: (root.info.summary && root.info.summary.cpuCores) || "Multi-core"
-                        color: LivePalette.color.onSurface
-                        font.family: root.fontFamily
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
+                }
+
+                // M3 Expressive Progress Bar
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 8
+                    radius: 4
+                    color: LivePalette.color.surfaceContainerHigh
+                    clip: true
+
+                    Rectangle {
+                        height: parent.height
+                        radius: 4
+                        width: Math.max(8, parent.width * Math.min(1, ((root.info.summary && root.info.summary.cpuLoadPct) || 0) / 100))
+                        color: LivePalette.color.primary
+                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
                     }
                 }
             }
         }
 
-        // RAM Tile
+        // Memory Meter Card
         Rectangle {
             width: parent.tileWidth
-            height: 72
+            height: 112
             radius: 22
             color: LivePalette.color.surfaceContainer
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 12
+                anchors.margins: 14
+                spacing: 8
 
-                Rectangle {
-                    width: 40
-                    height: 40
-                    radius: 20
-                    color: LivePalette.color.primaryContainer
-                    SymbolIcon {
-                        anchors.centerIn: parent
-                        implicitWidth: 18
-                        implicitHeight: 18
-                        iconName: "drive-harddisk-symbolic"
-                        tint: LivePalette.color.primary
-                    }
-                }
-
-                ColumnLayout {
+                RowLayout {
                     Layout.fillWidth: true
-                    spacing: 1
-                    Text {
-                        text: "Memory (RAM)"
-                        color: LivePalette.color.onSurfaceVariant
-                        font.family: root.fontFamily
-                        font.pixelSize: 11
+                    spacing: 8
+
+                    Rectangle {
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: LivePalette.color.primaryContainer
+                        SymbolIcon {
+                            anchors.centerIn: parent
+                            implicitWidth: 15
+                            implicitHeight: 15
+                            iconName: "drive-harddisk-symbolic"
+                            tint: LivePalette.color.primary
+                        }
                     }
+
+                    Text {
+                        text: "RAM"
+                        color: LivePalette.color.onSurfaceVariant
+                        font.family: root.monoFont
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        Layout.fillWidth: true
+                    }
+
                     Text {
                         text: (root.info.summary && root.info.summary.memory) || "—"
+                        color: LivePalette.color.onSurfaceVariant
+                        font.family: root.monoFont
+                        font.pixelSize: 10
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: ((root.info.summary && root.info.summary.memPct) || 0) + "%"
                         color: LivePalette.color.onSurface
-                        font.family: root.fontFamily
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
+                        font.family: root.displayFont
+                        font.pixelSize: 22
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: "used"
+                        color: LivePalette.color.onSurfaceVariant
+                        font.family: root.monoFont
+                        font.pixelSize: 11
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 8
+                    radius: 4
+                    color: LivePalette.color.surfaceContainerHigh
+                    clip: true
+
+                    Rectangle {
+                        height: parent.height
+                        radius: 4
+                        width: Math.max(8, parent.width * Math.min(1, ((root.info.summary && root.info.summary.memPct) || 0) / 100))
+                        color: LivePalette.color.primary
+                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
                     }
                 }
             }
         }
 
-        // Storage Tile
+        // Storage Meter Card
         Rectangle {
             width: parent.tileWidth
-            height: 72
+            height: 112
             radius: 22
             color: LivePalette.color.surfaceContainer
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 12
+                anchors.margins: 14
+                spacing: 8
 
-                Rectangle {
-                    width: 40
-                    height: 40
-                    radius: 20
-                    color: LivePalette.color.primaryContainer
-                    SymbolIcon {
-                        anchors.centerIn: parent
-                        implicitWidth: 18
-                        implicitHeight: 18
-                        iconName: "folder-symbolic"
-                        tint: LivePalette.color.primary
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Rectangle {
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: LivePalette.color.primaryContainer
+                        SymbolIcon {
+                            anchors.centerIn: parent
+                            implicitWidth: 15
+                            implicitHeight: 15
+                            iconName: "folder-symbolic"
+                            tint: LivePalette.color.primary
+                        }
+                    }
+
+                    Text {
+                        text: "ROOT /"
+                        color: LivePalette.color.onSurfaceVariant
+                        font.family: root.monoFont
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        Layout.fillWidth: true
+                    }
+
+                    Rectangle {
+                        visible: Boolean(root.info.summary && root.info.summary.nvmeTemp)
+                        radius: 999
+                        color: LivePalette.color.surfaceContainerHigh
+                        implicitWidth: nvmeTempTxt.implicitWidth + 12
+                        implicitHeight: 20
+                        Text {
+                            id: nvmeTempTxt
+                            anchors.centerIn: parent
+                            text: (root.info.summary && root.info.summary.nvmeTemp) || ""
+                            color: LivePalette.color.primary
+                            font.family: root.monoFont
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                        }
                     }
                 }
 
-                ColumnLayout {
+                RowLayout {
                     Layout.fillWidth: true
-                    spacing: 1
                     Text {
-                        text: "Root Storage"
-                        color: LivePalette.color.onSurfaceVariant
-                        font.family: root.fontFamily
-                        font.pixelSize: 11
+                        text: ((root.info.summary && root.info.summary.diskPct) || 0) + "%"
+                        color: LivePalette.color.onSurface
+                        font.family: root.displayFont
+                        font.pixelSize: 22
                     }
+                    Item { Layout.fillWidth: true }
                     Text {
                         text: (root.info.summary && root.info.summary.storage) || "—"
-                        color: LivePalette.color.onSurface
-                        font.family: root.fontFamily
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
+                        color: LivePalette.color.onSurfaceVariant
+                        font.family: root.monoFont
+                        font.pixelSize: 11
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 8
+                    radius: 4
+                    color: LivePalette.color.surfaceContainerHigh
+                    clip: true
+
+                    Rectangle {
+                        height: parent.height
+                        radius: 4
+                        width: Math.max(8, parent.width * Math.min(1, ((root.info.summary && root.info.summary.diskPct) || 0) / 100))
+                        color: LivePalette.color.primary
+                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
                     }
                 }
             }
         }
     }
 
-    // ================= Sections Detail Cards =================
+    // ================= 3. Connected Displays Topology Strip =================
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 8
+        visible: (root.info.monitors || []).length > 0
+
+        RowLayout {
+            spacing: 8
+            Layout.leftMargin: 4
+            SymbolIcon {
+                implicitWidth: 15
+                implicitHeight: 15
+                iconName: "video-display-symbolic"
+                tint: LivePalette.color.primary
+            }
+            Text {
+                text: "DISPLAYS"
+                color: LivePalette.color.onSurfaceVariant
+                font.family: root.monoFont
+                font.pixelSize: 11
+                font.weight: Font.Bold
+                font.letterSpacing: 1.2
+            }
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: 10
+            readonly property int monCount: Math.max(1, (root.info.monitors || []).length)
+            readonly property int cols: width > 520 ? Math.min(3, monCount) : width > 320 ? Math.min(2, monCount) : 1
+            readonly property real cardW: Math.floor((width - (cols - 1) * spacing) / cols)
+
+            Repeater {
+                model: root.info.monitors || []
+                delegate: Rectangle {
+                    id: monCard
+                    required property var modelData
+                    width: parent.cardW
+                    height: 76
+                    radius: 20
+                    color: modelData.focused
+                        ? LivePalette.color.primaryContainer
+                        : LivePalette.color.surfaceContainer
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 4
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: monCard.modelData.name
+                                color: monCard.modelData.focused ? LivePalette.color.primary : LivePalette.color.onSurface
+                                font.family: root.displayFont
+                                font.pixelSize: 16
+                                Layout.fillWidth: true
+                            }
+                            Rectangle {
+                                radius: 999
+                                color: monCard.modelData.focused
+                                    ? Qt.alpha(LivePalette.color.primary, 0.22)
+                                    : LivePalette.color.surfaceContainerHigh
+                                implicitWidth: hzTxt.implicitWidth + 12
+                                implicitHeight: 20
+                                Text {
+                                    id: hzTxt
+                                    anchors.centerIn: parent
+                                    text: monCard.modelData.refresh
+                                    color: LivePalette.color.primary
+                                    font.family: root.monoFont
+                                    font.pixelSize: 10
+                                    font.weight: Font.Bold
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: monCard.modelData.res + "  ·  " + monCard.modelData.scale
+                            color: LivePalette.color.onSurfaceVariant
+                            font.family: root.monoFont
+                            font.pixelSize: 11
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ================= 4. Detailed Spec Cards (Click row to copy) =================
     Repeater {
         model: root.info.sections || []
         delegate: ColumnLayout {
@@ -342,26 +806,25 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
 
-            // Section Header
             RowLayout {
                 spacing: 8
                 Layout.leftMargin: 4
                 SymbolIcon {
-                    implicitWidth: 16
-                    implicitHeight: 16
+                    implicitWidth: 15
+                    implicitHeight: 15
                     iconName: sectionItem.modelData.icon || "preferences-system-symbolic"
                     tint: LivePalette.color.primary
                 }
                 Text {
-                    text: sectionItem.modelData.title
-                    color: LivePalette.color.onSurface
-                    font.family: root.fontFamily
-                    font.pixelSize: 14
-                    font.weight: Font.DemiBold
+                    text: (sectionItem.modelData.title || "").toUpperCase()
+                    color: LivePalette.color.onSurfaceVariant
+                    font.family: root.monoFont
+                    font.pixelSize: 11
+                    font.weight: Font.Bold
+                    font.letterSpacing: 1.2
                 }
             }
 
-            // Card Container
             Rectangle {
                 Layout.fillWidth: true
                 radius: 22
@@ -385,15 +848,17 @@ ColumnLayout {
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                implicitHeight: Math.max(42, rowContent.implicitHeight + 16)
-                                radius: 8
-                                color: rowHover.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.04) : "transparent"
+                                implicitHeight: Math.max(40, rowContent.implicitHeight + 14)
+                                radius: 12
+                                color: rowHover.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05) : "transparent"
                                 Behavior on color { ColorAnimation { duration: 120 } }
 
                                 MouseArea {
                                     id: rowHover
                                     anchors.fill: parent
                                     hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.copyToClipboard(rowDelegate.modelData[1], rowDelegate.modelData[0] + " copied")
                                 }
 
                                 RowLayout {
@@ -404,11 +869,11 @@ ColumnLayout {
                                     spacing: 16
 
                                     Text {
-                                        Layout.preferredWidth: Math.min(160, Math.max(100, rowContent.width * 0.32))
+                                        Layout.preferredWidth: Math.min(156, Math.max(100, rowContent.width * 0.30))
                                         Layout.alignment: Qt.AlignVCenter
                                         text: rowDelegate.modelData[0]
                                         color: LivePalette.color.onSurfaceVariant
-                                        font.family: root.fontFamily
+                                        font.family: root.monoFont
                                         font.pixelSize: 12
                                         elide: Text.ElideRight
                                     }
@@ -418,23 +883,21 @@ ColumnLayout {
                                         Layout.alignment: Qt.AlignVCenter
                                         text: rowDelegate.modelData[1] || "Unavailable"
                                         color: LivePalette.color.onSurface
-                                        font.family: root.fontFamily
-                                        font.pixelSize: 13
-                                        font.weight: Font.Medium
+                                        font.family: root.monoFont
+                                        font.pixelSize: 12
                                         wrapMode: Text.Wrap
                                         textFormat: Text.PlainText
                                     }
                                 }
                             }
 
-                            // Divider between rows
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.leftMargin: 14
                                 Layout.rightMargin: 14
                                 height: 1
                                 visible: rowDelegate.index < (sectionItem.modelData.rows.length - 1)
-                                color: Qt.alpha(LivePalette.color.onSurface, 0.04)
+                                color: Qt.alpha(LivePalette.color.onSurface, 0.05)
                             }
                         }
                     }

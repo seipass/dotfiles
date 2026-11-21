@@ -3,7 +3,6 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 import QtCore
 import "Theme.js" as Theme
 
@@ -12,14 +11,23 @@ Window {
     FontLoader { id: settingsFont; source: "fonts/GoogleSansFlex.ttf" }
     readonly property string uiFont: settingsFont.status === FontLoader.Ready ? settingsFont.name : Qt.application.font.family
 
+    // Live audio state passed from shell.qml
+    property int volumePercent: 0
+    property bool volumeMuted: false
+    property bool volumeAvailable: false
+
+    // Shared dotfiles/shell settings (edited from Quick Tools, persisted in dashboard.ini)
     property alias weatherCity: saved.weatherCity
     property alias wallpaper: saved.wallpaper
     property alias desktopClock: saved.desktopClock
     property alias showTray: saved.showTray
     property alias showTaskbar: saved.showTaskbar
+    property alias paletteMode: saved.paletteMode
     property alias islandDisplay: saved.islandDisplay
     property alias islandPlugin: saved.islandPlugin
     property alias quotaInterval: saved.quotaInterval
+    property alias quotaProvider: saved.quotaProvider
+    property alias earthquakeInterval: saved.earthquakeInterval
     property alias page: persisted.page
 
     property string pendingPaletteMode: ""
@@ -27,16 +35,90 @@ Window {
     property bool paletteQueued: false
     property bool paletteFailed: false
 
-    // Responsive breakpoint: compact when window width is under 720
+    // System Settings states
+    property string wifiStatus: ""
+    property string wifiError: ""
+    property var wifiProfiles: []
+    property string bluetoothStatus: ""
+    property var bluetoothDevices: []
+    property var connectedBluetooth: []
+    property string bluetoothError: ""
+    property int brightness: -1
+    property int pendingBrightness: -1
+
+    readonly property bool bluetoothPowered: /Powered:\s+yes/.test(bluetoothStatus)
     readonly property bool isCompact: width < 720
+    readonly property int safePage: Math.max(0, Math.min(4, root.page))
+
+    readonly property var parsedWifiNetworks: {
+        if (!wifiStatus) return [];
+        const bySsid = new Map();
+        for (const raw of wifiStatus.split("\n")) {
+            if (!raw.trim()) continue;
+            const parts = raw.replace(/\\:/g, "\u0000").split(":").map(s => s.replace(/\u0000/g, ":"));
+            if (parts.length < 4) continue;
+            const inUse = parts[0].trim() === "*";
+            const ssid = parts[1].trim();
+            const signal = Number(parts[2]) || 0;
+            const security = parts.slice(3).join(":").trim();
+            if (!ssid) continue;
+            const existing = bySsid.get(ssid);
+            if (!existing || inUse || (!existing.inUse && signal > existing.signal)) {
+                bySsid.set(ssid, { inUse, ssid, signal, security });
+            }
+        }
+        return Array.from(bySsid.values()).sort((a, b) => {
+            if (a.inUse !== b.inUse) return a.inUse ? -1 : 1;
+            return b.signal - a.signal;
+        });
+    }
+
+    function isBluetoothConnected(address) {
+        return connectedBluetooth.some(item => item.address.toLowerCase() === address.toLowerCase());
+    }
+
+    function connectToSsid(ssid) {
+        wifiError = "";
+        const savedProf = wifiProfiles.find(item => item[2] === ssid);
+        if (savedProf) {
+            connectWifi.uuid = savedProf[1];
+            connectWifi.running = true;
+        } else {
+            Quickshell.execDetached(["kitty", "--hold", "--title", "Join Wi-Fi",
+                "nmcli", "--ask", "device", "wifi", "connect", ssid]);
+        }
+    }
+
+    function requestBrightness(percent) {
+        const clamped = Math.max(1, Math.min(100, Math.round(percent)));
+        brightness = clamped;
+        pendingBrightness = clamped;
+        brightnessDebounce.restart();
+    }
+
+    function refreshCurrentPage() {
+        if (safePage === 0) {
+            if (!wifiScan.running) wifiScan.running = true;
+            if (!savedWifi.running) savedWifi.running = true;
+        } else if (safePage === 1) {
+            if (!bluetooth.running) bluetooth.running = true;
+            if (!pairedDevices.running) pairedDevices.running = true;
+            if (!connectedDevices.running) connectedDevices.running = true;
+        } else if (safePage === 2) {
+            if (!readBrightness.running) readBrightness.running = true;
+        }
+    }
 
     Component.onCompleted: {
         if (saved.paletteColors) LivePalette.apply(saved.paletteColors);
         if (saved.paletteMode !== "auto" || !root.wallpaper) root.applyPalette(saved.paletteMode);
+        if (persisted.page > 4) persisted.page = 4;
     }
 
+    // ── Shared dotfiles helpers (used by Quick Tools) ────────────────────────
     property string pickerKind: ""
     property string pickerError: ""
+    readonly property bool pickingFile: filePicker.running
     function chooseFile(kind) {
         if (filePicker.running) return;
         pickerError = "";
@@ -64,7 +146,6 @@ Window {
         }
     }
 
-    // Weather auto-suggest process
     property var citySuggestions: []
     property bool searchingCities: false
     function searchCity(query) {
@@ -82,54 +163,12 @@ Window {
         id: citySearchProcess
         stdout: StdioCollector {
             onStreamFinished: {
-                try {
-                    root.citySuggestions = JSON.parse(this.text.trim());
-                } catch(_) {
-                    root.citySuggestions = [];
-                }
+                try { root.citySuggestions = JSON.parse(this.text.trim()); }
+                catch (_) { root.citySuggestions = []; }
                 root.searchingCities = false;
             }
         }
-        onExited: {
-            root.searchingCities = false;
-        }
-    }
-
-    Timer {
-        id: cityDebounce
-        interval: 320
-        repeat: false
-        onTriggered: root.searchCity(cityInput.text)
-    }
-
-    onPageChanged: {
-        pageAnim.restart();
-    }
-
-    ParallelAnimation {
-        id: pageAnim
-        NumberAnimation {
-            target: pageContent
-            property: "opacity"
-            from: 0.35
-            to: 1
-            duration: 200
-            easing.type: Easing.OutCubic
-        }
-        NumberAnimation {
-            target: pageContent
-            property: "y"
-            from: 14
-            to: 0
-            duration: 240
-            easing.type: Easing.OutCubic
-        }
-    }
-
-    PersistentProperties {
-        id: persisted
-        reloadableId: "settingsWindowState"
-        property int page: 0
+        onExited: root.searchingCities = false
     }
 
     function runPalette() {
@@ -167,13 +206,9 @@ Window {
     Process {
         id: paletteProcess
         property string resultText: ""
-        stdout: StdioCollector {
-            onStreamFinished: paletteProcess.resultText = this.text.trim()
-        }
-        stderr: StdioCollector {
-            onStreamFinished: if (this.text.trim()) console.warn("Could not generate palette: " + this.text.trim())
-        }
-        onExited: function(exitCode, exitStatus) {
+        stdout: StdioCollector { onStreamFinished: paletteProcess.resultText = this.text.trim() }
+        stderr: StdioCollector { onStreamFinished: if (this.text.trim()) console.warn("Could not generate palette: " + this.text.trim()) }
+        onExited: function(exitCode) {
             if (!root.paletteQueued) {
                 root.paletteFailed = exitCode !== 0 || !LivePalette.apply(resultText);
                 if (!root.paletteFailed) {
@@ -187,30 +222,134 @@ Window {
         }
     }
 
+    function setWallpaper(path) { saved.wallpaper = path; saved.setValue("wallpaper", path); saved.sync(); }
+    function setWeatherCity(city) { saved.weatherCity = city; saved.setValue("weatherCity", city); saved.sync(); }
+    function setIslandDisplay(mode) { saved.islandDisplay = mode; saved.setValue("islandDisplay", mode); saved.sync(); }
+    function setQuotaInterval(seconds) { saved.quotaInterval = seconds; saved.setValue("quotaInterval", seconds); saved.sync(); }
+    function setQuotaProvider(providerId) { saved.quotaProvider = providerId; saved.setValue("quotaProvider", providerId); saved.sync(); }
+    function setEarthquakeInterval(seconds) { saved.earthquakeInterval = seconds; saved.setValue("earthquakeInterval", seconds); saved.sync(); }
+
+    // ── System Settings processes ────────────────────────────────────────────
+    Process {
+        id: wifiScan
+        command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "auto"]
+        stdout: StdioCollector { onStreamFinished: root.wifiStatus = text.trim() }
+    }
+    Process {
+        id: savedWifi
+        command: ["nmcli", "-t", "--escape", "no", "-f", "UUID,TYPE,NAME", "connection", "show"]
+        stdout: StdioCollector {
+            onStreamFinished: root.wifiProfiles = text.split("\n").map(line =>
+                line.match(/^([a-f0-9-]{36}):(?:802-11-wireless|wifi):(.+)$/i)).filter(Boolean)
+        }
+    }
+    Process {
+        id: connectWifi
+        property string uuid: ""
+        command: ["nmcli", "--wait", "20", "connection", "up", "uuid", uuid]
+        onExited: code => {
+            root.wifiError = code === 0 ? "" : "Could not connect. Check the saved profile in Connections.";
+            wifiScan.running = true;
+        }
+    }
+    Process {
+        id: bluetooth
+        command: ["bluetoothctl", "show"]
+        stdout: StdioCollector { onStreamFinished: root.bluetoothStatus = text.trim() }
+    }
+    Process {
+        id: pairedDevices
+        command: ["bluetoothctl", "devices", "Paired"]
+        stdout: StdioCollector {
+            onStreamFinished: root.bluetoothDevices = text.split("\n").map(line =>
+                line.match(/^Device ([0-9a-f:]{17}) (.+)$/i)).filter(Boolean)
+        }
+    }
+    Process {
+        id: connectedDevices
+        command: ["bluetoothctl", "devices", "Connected"]
+        stdout: StdioCollector {
+            onStreamFinished: root.connectedBluetooth = text.split("\n").map(line => {
+                const m = line.match(/^Device ([0-9a-f:]{17}) (.+)$/i);
+                return m ? { address: m[1], name: m[2] } : null;
+            }).filter(Boolean)
+        }
+    }
+    Process {
+        id: bluetoothPower
+        property bool enable: false
+        command: ["bluetoothctl", "power", enable ? "on" : "off"]
+        onExited: { bluetooth.running = true; connectedDevices.running = true; }
+    }
+    Process {
+        id: connectBluetooth
+        property string address: ""
+        property string action: "connect"
+        command: ["timeout", "20s", "bluetoothctl", action, address]
+        onExited: code => {
+            root.bluetoothError = code === 0 ? "" : "Could not " + action + " the selected device.";
+            connectedDevices.running = true;
+        }
+    }
+    Process {
+        id: readBrightness
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/main/monitor-brightness.py", root.screen?.name ?? "", "read"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const match = text.trim().match(/^(\d+)$/);
+                root.brightness = match ? Number(match[1]) : -1;
+            }
+        }
+        onExited: code => { if (code !== 0) root.brightness = -1; }
+    }
+    Timer {
+        id: brightnessDebounce
+        interval: 180
+        onTriggered: {
+            if (root.pendingBrightness < 0) return;
+            setBrightness.step = "set";
+            setBrightness.targetValue = String(root.pendingBrightness);
+            setBrightness.running = true;
+        }
+    }
+    Process {
+        id: setBrightness
+        property string step: ""
+        property string targetValue: ""
+        command: step === "set"
+            ? ["python3", Quickshell.env("HOME") + "/.config/quickshell/main/monitor-brightness.py", root.screen?.name ?? "", "set", targetValue]
+            : ["python3", Quickshell.env("HOME") + "/.config/quickshell/main/monitor-brightness.py", root.screen?.name ?? "", step]
+        onExited: readBrightness.running = true
+    }
+
+    onPageChanged: {
+        pageAnim.restart();
+        if (visible) refreshCurrentPage();
+    }
+
+    ParallelAnimation {
+        id: pageAnim
+        NumberAnimation { target: pageContent; property: "opacity"; from: 0.35; to: 1; duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation { target: pageContent; property: "y"; from: 14; to: 0; duration: 240; easing.type: Easing.OutCubic }
+    }
+
+    PersistentProperties {
+        id: persisted
+        reloadableId: "settingsWindowState"
+        property int page: 0
+    }
+
     function open(targetScreen) {
         const target = targetScreen && Array.from(Qt.application.screens).find(display => display.name === targetScreen.name);
         if (target && screen !== target) screen = target;
-        cityInput.text = weatherCity;
-        citySuggestions = [];
         show();
         requestActivate();
+        refreshCurrentPage();
     }
 
     IpcHandler {
         target: "settings"
         function open(): void { root.open(null); }
-    }
-
-    function setWallpaper(path) {
-        saved.wallpaper = path;
-        saved.setValue("wallpaper", path);
-        saved.sync();
-    }
-
-    function setQuotaInterval(seconds) {
-        saved.quotaInterval = seconds;
-        saved.setValue("quotaInterval", seconds);
-        saved.sync();
     }
 
     Settings {
@@ -227,6 +366,8 @@ Window {
         property string islandDisplay: "music"
         property string islandPlugin: ""
         property int quotaInterval: 60
+        property string quotaProvider: "auto"
+        property int earthquakeInterval: 0
     }
 
     ColorQuantizer {
@@ -236,12 +377,11 @@ Window {
         rescaleSize: 64
         onColorsChanged: if (saved.paletteMode === "auto" && root.wallpaper && colors.length) root.applyPalette("auto")
     }
-
     onWallpaperChanged: if (saved.paletteMode === "auto" && !wallpaper) applyPalette("auto")
 
     visible: false
-    title: "Quickshell Settings"
-    width: 980
+    title: "System Settings"
+    width: 960
     height: 660
     minimumWidth: 540
     minimumHeight: 460
@@ -264,7 +404,6 @@ Window {
                 anchors.margins: root.isCompact ? 12 : 16
                 spacing: 6
 
-                // App Branding Header
                 RowLayout {
                     Layout.topMargin: 6
                     Layout.bottomMargin: 16
@@ -291,39 +430,36 @@ Window {
                         spacing: 1
                         Text {
                             font.family: root.uiFont
-                            text: "Settings"
+                            text: "System"
                             color: LivePalette.color.onSurface
                             font.pixelSize: 18
                             font.weight: Font.DemiBold
                         }
                         Text {
                             font.family: root.uiFont
-                            text: "Quickshell Desktop"
+                            text: "Hardware & OS Settings"
                             color: LivePalette.color.onSurfaceVariant
                             font.pixelSize: 11
                         }
                     }
                 }
 
-                // Nav Items (M3 Pill Indicator)
                 Repeater {
                     model: [
-                        { name: "Dashboard", icon: "view-grid-symbolic" },
-                        { name: "Weather", icon: "weather-clear-symbolic" },
-                        { name: "Wallpaper", icon: "image-x-generic-symbolic" },
-                        { name: "Colors", icon: "applications-graphics-symbolic" },
-                        { name: "Top Bar", icon: "view-more-symbolic" },
-                        { name: "About", icon: "help-about-symbolic" }
+                        { name: "Network",         icon: "network-wireless-symbolic" },
+                        { name: "Bluetooth",       icon: "bluetooth-symbolic" },
+                        { name: "Sound & Display", icon: "audio-volume-high-symbolic" },
+                        { name: "Maintenance",     icon: "utilities-system-monitor-symbolic" },
+                        { name: "About",           icon: "computer-symbolic" }
                     ]
                     delegate: Item {
                         id: nav
                         required property int index
                         required property var modelData
-                        readonly property bool selected: root.page === nav.index
+                        readonly property bool selected: root.safePage === nav.index
                         Layout.fillWidth: true
                         Layout.preferredHeight: root.isCompact ? 52 : 48
 
-                        // Full Navigation Drawer Pill
                         Rectangle {
                             visible: !root.isCompact
                             anchors.fill: parent
@@ -363,7 +499,6 @@ Window {
                             }
                         }
 
-                        // Compact M3 Navigation Rail Indicator Pill (56x32)
                         ColumnLayout {
                             visible: root.isCompact
                             anchors.centerIn: parent
@@ -420,11 +555,7 @@ Window {
                 clip: true
                 contentHeight: pageContent.implicitHeight + 80
                 boundsBehavior: Flickable.StopAtBounds
-                ScrollBar.vertical: ScrollBar {
-                    id: vbar
-                    active: true
-                    policy: ScrollBar.AsNeeded
-                }
+                ScrollBar.vertical: ScrollBar { active: true; policy: ScrollBar.AsNeeded }
 
                 Connections {
                     target: root
@@ -438,38 +569,36 @@ Window {
                     width: pageScroll.width - (root.isCompact ? 40 : 72)
                     spacing: 20
 
-                    Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                    Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-
-                    Item { height: root.isCompact ? 16 : 28 }
+                    Item { height: root.isCompact ? 16 : 26 }
 
                     // Page Header
                     ColumnLayout {
                         spacing: 4
                         Text {
                             font.family: "Ndot 55"
-                            text: ["Dashboard", "Weather", "Wallpaper", "Colors", "Top Bar", "About"][root.page]
+                            text: ["Network", "Bluetooth", "Sound & Display", "Maintenance", "About"][root.safePage]
                             color: LivePalette.color.onSurface
                             font.pixelSize: root.isCompact ? 22 : 26
                         }
                         Text {
                             font.family: root.uiFont
                             Layout.fillWidth: true
-                            text: root.page === 0 ? "Configure widgets, quick shortcuts, and interactive features of the dashboard panel."
-                                : root.page === 1 ? "Set your city to receive real-time weather and forecast updates in your panel."
-                                : root.page === 2 ? "Select high-resolution desktop backgrounds across all connected displays."
-                                : root.page === 3 ? "Customize the Material You dynamic theme and system accent colors."
-                                : root.page === 4 ? "Customize the dynamic island and widgets on your top bar."
-                                : "Comprehensive system, hardware, and display specifications."
+                            text: [
+                                "Manage Wi-Fi networks, saved connections, and NetworkManager profiles.",
+                                "Control Bluetooth power, connect paired peripherals, or pair new devices.",
+                                "Adjust PipeWire audio volume and monitor backlight / DDC/CI brightness.",
+                                "Inspect session logs, check Arch package updates, and manage shell services.",
+                                "Hardware, kernel, display, and operating system specifications."
+                            ][root.safePage]
                             color: LivePalette.color.onSurfaceVariant
                             font.pixelSize: 13
                             wrapMode: Text.Wrap
                         }
                     }
 
-                    // ================= PAGE 0: DASHBOARD =================
+                    // ================= PAGE 0: NETWORK =================
                     ColumnLayout {
-                        visible: root.page === 0
+                        visible: root.safePage === 0
                         Layout.fillWidth: true
                         spacing: 16
 
@@ -477,990 +606,395 @@ Window {
                             Layout.fillWidth: true
                             radius: 24
                             color: LivePalette.color.surfaceContainer
-                            implicitHeight: dashQuickCol.implicitHeight + 36
+                            implicitHeight: netCtrlCol.implicitHeight + 36
 
                             ColumnLayout {
-                                id: dashQuickCol
+                                id: netCtrlCol
                                 anchors.fill: parent
                                 anchors.margins: 18
                                 spacing: 14
 
                                 RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        SymbolIcon {
-                                            anchors.centerIn: parent
-                                            implicitWidth: 18
-                                            implicitHeight: 18
-                                            iconName: "system-run-symbolic"
-                                            tint: LivePalette.color.primary
-                                        }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Quick System Actions & Launchers"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Directly open system monitors, sound controls, or restart shell services"
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                        }
-                                    }
-                                }
-
-                                // Responsive Buttons Flow
-                                Flow {
                                     Layout.fillWidth: true
                                     spacing: 10
-                                    readonly property int btnCols: width > 520 ? 3 : 1
-                                    readonly property real btnW: Math.floor((width - (btnCols - 1) * spacing) / btnCols)
-
                                     SettingsActionButton {
-                                        width: parent.btnW
-                                        iconName: "utilities-system-monitor-symbolic"
-                                        text: "Task Manager (htop)"
-                                        onClicked: Quickshell.execDetached(["kitty", "-e", "htop"])
-                                    }
-
-                                    SettingsActionButton {
-                                        width: parent.btnW
-                                        iconName: "audio-volume-high-symbolic"
-                                        text: "Audio Mixer (pavucontrol)"
-                                        onClicked: Quickshell.execDetached(["pavucontrol"])
-                                    }
-
-                                    SettingsActionButton {
-                                        width: parent.btnW
+                                        primary: true
                                         iconName: "view-refresh-symbolic"
-                                        text: "Reload Quickshell"
-                                        onClicked: Quickshell.execDetached(["hyprctl", "dispatch", "exec", "qs -c main"])
+                                        text: wifiScan.running ? "Scanning…" : "Scan Wi-Fi"
+                                        enabled: !wifiScan.running
+                                        onClicked: { wifiScan.running = true; savedWifi.running = true; }
                                     }
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            radius: 24
-                            color: LivePalette.color.surfaceContainer
-                            implicitHeight: dashGuideCol.implicitHeight + 36
-
-                            ColumnLayout {
-                                id: dashGuideCol
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 14
-
-                                RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        SymbolIcon {
-                                            anchors.centerIn: parent
-                                            implicitWidth: 18
-                                            implicitHeight: 18
-                                            iconName: "help-browser-symbolic"
-                                            tint: LivePalette.color.primary
-                                        }
+                                    SettingsActionButton {
+                                        iconName: "preferences-system-network-symbolic"
+                                        text: "Connection Editor"
+                                        onClicked: Quickshell.execDetached(["nm-connection-editor"])
                                     }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Interactive Panel Shortcuts"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Master gesture and mouse shortcuts for the dashboard popover"
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                        }
-                                    }
-                                }
-
-                                Rectangle { Layout.fillWidth: true; height: 1; color: Qt.alpha(LivePalette.color.onSurface, 0.05) }
-
-                                ColumnLayout {
-                                    spacing: 12
-                                    RowLayout {
-                                        spacing: 12
-                                        SymbolIcon { implicitWidth: 16; implicitHeight: 16; iconName: "preferences-system-time-symbolic"; tint: LivePalette.color.primary }
-                                        Text {
-                                            Layout.fillWidth: true
-                                            wrapMode: Text.Wrap
-                                            font.family: root.uiFont
-                                            text: "Clicking the clock toggles the dashboard popover with real-time calendar and media."
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 13
-                                        }
-                                    }
-                                    RowLayout {
-                                        spacing: 12
-                                        SymbolIcon { implicitWidth: 16; implicitHeight: 16; iconName: "audio-volume-high-symbolic"; tint: LivePalette.color.primary }
-                                        Text {
-                                            Layout.fillWidth: true
-                                            wrapMode: Text.Wrap
-                                            font.family: root.uiFont
-                                            text: "Hover the volume bar and scroll the wheel to raise/lower volume smoothly in 1% steps."
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 13
-                                        }
-                                    }
-                                    RowLayout {
-                                        spacing: 12
-                                        SymbolIcon { implicitWidth: 16; implicitHeight: 16; iconName: "media-playback-start-symbolic"; tint: LivePalette.color.primary }
-                                        Text {
-                                            Layout.fillWidth: true
-                                            wrapMode: Text.Wrap
-                                            font.family: root.uiFont
-                                            text: "The built-in media widget controls MPRIS players (Spotify, Brave, MPV) with album art."
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 13
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ================= PAGE 1: WEATHER =================
-                    ColumnLayout {
-                        visible: root.page === 1
-                        Layout.fillWidth: true
-                        spacing: 14
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            radius: 24
-                            color: LivePalette.color.surfaceContainer
-                            implicitHeight: weatherCol.implicitHeight + 36
-
-                            ColumnLayout {
-                                id: weatherCol
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 16
-
-                                RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        SymbolIcon {
-                                            anchors.centerIn: parent
-                                            implicitWidth: 18
-                                            implicitHeight: 18
-                                            iconName: "weather-clear-symbolic"
-                                            tint: LivePalette.color.primary
-                                        }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "City Location & Autocomplete"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Type to view matching cities from Open-Meteo and select your location."
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                        }
-                                    }
+                                    Item { Layout.fillWidth: true }
                                 }
 
                                 RowLayout {
                                     Layout.fillWidth: true
                                     spacing: 10
-
                                     TextField {
-                                        id: cityInput
+                                        id: newSsid
                                         Layout.fillWidth: true
                                         Layout.preferredHeight: 48
                                         font.family: root.uiFont
                                         font.pixelSize: 13
-                                        placeholderText: "Type a city (e.g. Tokyo, Nagoya, London, Paris)..."
+                                        placeholderText: "Join hidden or new SSID…"
                                         color: LivePalette.color.onSurface
-                                        placeholderTextColor: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.6)
-                                        selectionColor: LivePalette.color.primaryContainer
-                                        leftPadding: 14
-                                        rightPadding: 14
-
+                                        placeholderTextColor: LivePalette.color.onSurfaceVariant
+                                        leftPadding: 16
                                         background: Rectangle {
                                             radius: 16
                                             color: LivePalette.color.surfaceContainerHigh
-                                            border.width: cityInput.activeFocus ? 2 : 1
-                                            border.color: cityInput.activeFocus ? LivePalette.color.primary : LivePalette.color.outlineVariant
+                                            border.width: newSsid.activeFocus ? 2 : 1
+                                            border.color: newSsid.activeFocus ? LivePalette.color.primary : LivePalette.color.outlineVariant
                                             Behavior on border.color { ColorAnimation { duration: 150 } }
                                         }
-
-                                        onTextChanged: {
-                                            cityDebounce.restart();
-                                        }
-
-                                        onAccepted: {
-                                            root.weatherCity = text.trim();
-                                            saved.sync();
-                                            root.citySuggestions = [];
-                                        }
-                                        Keys.onEscapePressed: {
-                                            root.citySuggestions = [];
-                                            root.close();
-                                        }
                                     }
-
                                     SettingsActionButton {
+                                        text: "Join"
                                         primary: true
-                                        iconName: "document-save-symbolic"
-                                        text: "Save"
-                                        enabled: cityInput.text.trim() !== root.weatherCity
-                                        onClicked: {
-                                            root.weatherCity = cityInput.text.trim();
-                                            saved.sync();
-                                            root.citySuggestions = [];
-                                        }
-                                    }
-                                }
-
-                                // Suggestions List Box
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    visible: root.citySuggestions.length > 0
-                                    radius: 12
-                                    color: LivePalette.color.surface
-                                    border.color: Qt.alpha(LivePalette.color.primary, 0.3)
-                                    border.width: 1
-                                    implicitHeight: suggestCol.implicitHeight + 12
-
-                                    ColumnLayout {
-                                        id: suggestCol
-                                        anchors.fill: parent
-                                        anchors.margins: 6
-                                        spacing: 2
-
-                                        Repeater {
-                                            model: root.citySuggestions
-                                            delegate: Rectangle {
-                                                id: sugRow
-                                                required property var modelData
-                                                required property int index
-                                                Layout.fillWidth: true
-                                                Layout.preferredHeight: 38
-                                                radius: 8
-                                                color: sugMouse.containsMouse ? Qt.alpha(LivePalette.color.primary, 0.15) : "transparent"
-
-                                                RowLayout {
-                                                    anchors.fill: parent
-                                                    anchors.leftMargin: 12
-                                                    anchors.rightMargin: 12
-                                                    spacing: 10
-
-                                                    SymbolIcon {
-                                                        implicitWidth: 15
-                                                        implicitHeight: 15
-                                                        iconName: "mark-location-symbolic"
-                                                        tint: sugMouse.containsMouse ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
-                                                    }
-
-                                                    Text {
-                                                        font.family: root.uiFont
-                                                        text: sugRow.modelData.name
-                                                        color: LivePalette.color.onSurface
-                                                        font.pixelSize: 13
-                                                        font.weight: Font.Medium
-                                                    }
-
-                                                    Text {
-                                                        font.family: root.uiFont
-                                                        text: (sugRow.modelData.admin ? sugRow.modelData.admin + ", " : "") + sugRow.modelData.country
-                                                        color: LivePalette.color.onSurfaceVariant
-                                                        font.pixelSize: 11
-                                                        elide: Text.ElideRight
-                                                        Layout.fillWidth: true
-                                                    }
-
-                                                    Text {
-                                                        font.family: root.uiFont
-                                                        text: "Select"
-                                                        color: LivePalette.color.primary
-                                                        font.pixelSize: 11
-                                                        font.weight: Font.DemiBold
-                                                        visible: sugMouse.containsMouse
-                                                    }
-                                                }
-
-                                                MouseArea {
-                                                    id: sugMouse
-                                                    anchors.fill: parent
-                                                    hoverEnabled: true
-                                                    cursorShape: Qt.PointingHandCursor
-                                                    onClicked: {
-                                                        cityInput.text = sugRow.modelData.name;
-                                                        root.weatherCity = sugRow.modelData.name;
-                                                        saved.sync();
-                                                        root.citySuggestions = [];
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                RowLayout {
-                                    spacing: 8
-                                    SymbolIcon {
-                                        implicitWidth: 14
-                                        implicitHeight: 14
-                                        iconName: cityInput.text.trim() !== root.weatherCity ? "emblem-important-symbolic" : "emblem-default-symbolic"
-                                        tint: cityInput.text.trim() !== root.weatherCity ? LivePalette.color.primary : "#4ade80"
-                                    }
-                                    Text {
-                                        Layout.fillWidth: true
-                                        wrapMode: Text.Wrap
-                                        font.family: root.uiFont
-                                        text: cityInput.text.trim() !== root.weatherCity ? "Unsaved changes pending"
-                                            : root.weatherCity ? "Currently active city: " + root.weatherCity : "Weather updates are disabled"
-                                        color: LivePalette.color.onSurfaceVariant
-                                        font.pixelSize: 12
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ================= PAGE 2: WALLPAPER =================
-                    ColumnLayout {
-                        visible: root.page === 2
-                        Layout.fillWidth: true
-                        spacing: 14
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            radius: 24
-                            color: LivePalette.color.surfaceContainer
-                            implicitHeight: wallCol.implicitHeight + 36
-
-                            ColumnLayout {
-                                id: wallCol
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 16
-
-                                RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        SymbolIcon {
-                                            anchors.centerIn: parent
-                                            implicitWidth: 18
-                                            implicitHeight: 18
-                                            iconName: "image-x-generic-symbolic"
-                                            tint: LivePalette.color.primary
-                                        }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Current Desktop Wallpaper"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: root.wallpaper ? root.wallpaper.replace("file://", "") : "No wallpaper image configured"
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                            elide: Text.ElideMiddle
-                                            Layout.fillWidth: true
-                                        }
-                                    }
-                                }
-
-                                // Wallpaper Image Preview Card
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: root.isCompact ? 160 : 220
-                                    radius: 20
-                                    clip: true
-                                    color: LivePalette.color.surfaceContainerHigh
-
-                                    Image {
-                                        anchors.fill: parent
-                                        visible: root.wallpaper.length > 0
-                                        source: root.wallpaper
-                                        fillMode: Image.PreserveAspectCrop
-                                        asynchronous: true
-                                        smooth: true
-                                    }
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        visible: root.wallpaper.length > 0
-                                        gradient: Gradient {
-                                            GradientStop { position: 0.0; color: "transparent" }
-                                            GradientStop { position: 1.0; color: Qt.alpha(LivePalette.color.surface, 0.45) }
-                                        }
-                                    }
-
-                                    ColumnLayout {
-                                        anchors.centerIn: parent
-                                        visible: !root.wallpaper
-                                        spacing: 8
-                                        SymbolIcon {
-                                            Layout.alignment: Qt.AlignHCenter
-                                            implicitWidth: 32
-                                            implicitHeight: 32
-                                            iconName: "image-missing-symbolic"
-                                            tint: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.5)
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "No wallpaper selected"
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 13
-                                        }
-                                    }
-                                }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 10
-
-                                    Text {
-                                        visible: !!root.pickerError && root.pickerKind === "wallpaper"
-                                        text: root.pickerError
-                                        color: LivePalette.color.error
-                                        font.family: root.uiFont
-                                        font.pixelSize: 12
-                                        Layout.fillWidth: true
-                                        wrapMode: Text.Wrap
-                                    }
-
-                                    Item { Layout.fillWidth: true; visible: !root.pickerError || root.pickerKind !== "wallpaper" }
-
-                                    SettingsActionButton {
-                                        visible: root.wallpaper.length > 0
-                                        iconName: "edit-delete-symbolic"
-                                        text: "Clear"
-                                        onClicked: root.setWallpaper("")
-                                    }
-
-                                    SettingsActionButton {
-                                        primary: true
-                                        iconName: "document-open-symbolic"
-                                        enabled: !filePicker.running
-                                        text: filePicker.running && root.pickerKind === "wallpaper" ? "Opening Picker…" : "Select Image…"
-                                        onClicked: root.chooseFile("wallpaper")
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ================= PAGE 3: COLORS =================
-                    ColumnLayout {
-                        visible: root.page === 3
-                        Layout.fillWidth: true
-                        spacing: 14
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            radius: 24
-                            color: LivePalette.color.surfaceContainer
-                            implicitHeight: colCol.implicitHeight + 36
-
-                            ColumnLayout {
-                                id: colCol
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 16
-
-                                RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        SymbolIcon {
-                                            anchors.centerIn: parent
-                                            implicitWidth: 18
-                                            implicitHeight: 18
-                                            iconName: "applications-graphics-symbolic"
-                                            tint: LivePalette.color.primary
-                                        }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "System Color Theme"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: root.paletteFailed ? "Failed to generate dynamic palette. Reverting."
-                                                : "Material You dynamic extraction adapts to your current background or preset."
-                                            color: root.paletteFailed ? LivePalette.color.error : LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                        }
-                                    }
-                                }
-
-                                // Responsive M3 Color Swatch Cards
-                                Flow {
-                                    Layout.fillWidth: true
-                                    spacing: 12
-
-                                    readonly property int colCols: width > 540 ? 4 : width > 320 ? 2 : 1
-                                    readonly property real colTileW: Math.floor((width - (colCols - 1) * spacing) / colCols)
-
-                                    Repeater {
-                                        model: [
-                                            { label: "Wallpaper Auto", mode: "auto", color: "#b8a6d9", desc: "Dynamic from image" },
-                                            { label: "Sakura Pink", mode: "pink", color: "#ffb0ca", desc: "Gentle pink accent" },
-                                            { label: "Sky Blue", mode: "blue", color: "#a9c7ff", desc: "Cool serene blue" },
-                                            { label: "Forest Green", mode: "green", color: "#a6d0a0", desc: "Natural soft green" }
-                                        ]
-                                        delegate: Rectangle {
-                                            id: paletteOption
-                                            required property var modelData
-                                            readonly property bool selected: saved.paletteMode === modelData.mode
-                                            width: parent.colTileW
-                                            height: 118
-                                            radius: 22
-                                            color: selected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
-                                            scale: palMouse.pressed ? 0.97 : 1.0
-
-                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-                                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
-
-                                            Rectangle {
-                                                anchors.fill: parent
-                                                radius: parent.radius
-                                                color: LivePalette.color.onSurface
-                                                opacity: palMouse.pressed ? 0.12 : palMouse.containsMouse ? 0.08 : 0
-                                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
-                                            }
-
-                                            ColumnLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 16
-                                                spacing: 8
-
-                                                RowLayout {
-                                                    Layout.fillWidth: true
-                                                    spacing: 8
-                                                    Rectangle {
-                                                        width: 36
-                                                        height: 36
-                                                        radius: 18
-                                                        color: paletteOption.modelData.color
-
-                                                        Text {
-                                                            anchors.centerIn: parent
-                                                            visible: paletteOption.selected
-                                                            text: "✓"
-                                                            font.family: root.uiFont
-                                                            font.pixelSize: 16
-                                                            font.weight: Font.Bold
-                                                            color: "#1b2636"
-                                                        }
-                                                    }
-                                                    Item { Layout.fillWidth: true }
-                                                }
-
-                                                Text {
-                                                    font.family: root.uiFont
-                                                    text: paletteOption.modelData.label
-                                                    color: LivePalette.color.onSurface
-                                                    font.pixelSize: 13
-                                                    font.weight: paletteOption.selected ? Font.DemiBold : Font.Medium
-                                                }
-
-                                                Text {
-                                                    font.family: root.uiFont
-                                                    text: paletteOption.modelData.desc
-                                                    color: LivePalette.color.onSurfaceVariant
-                                                    font.pixelSize: 11
-                                                }
-                                            }
-
-                                            MouseArea {
-                                                id: palMouse
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: root.applyPalette(paletteOption.modelData.mode)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ================= PAGE 4: TOP BAR =================
-                    ColumnLayout {
-                        visible: root.page === 4
-                        Layout.fillWidth: true
-                        spacing: 14
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            radius: 24
-                            color: LivePalette.color.surfaceContainer
-                            implicitHeight: topBarCol.implicitHeight + 36
-
-                            ColumnLayout {
-                                id: topBarCol
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 16
-
-                                RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        SymbolIcon {
-                                            anchors.centerIn: parent
-                                            implicitWidth: 18
-                                            implicitHeight: 18
-                                            iconName: "view-more-symbolic"
-                                            tint: LivePalette.color.primary
-                                        }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Left Island Display Content"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Configure the left segment of your panel dynamic island"
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                        }
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 8
-
-                                    Repeater {
-                                        model: [
-                                            { mode: "music", title: "Music & Active Window", detail: "Displays currently playing media metadata or active application title", icon: "audio-x-generic-symbolic" },
-                                            { mode: "none", title: "Hidden (Blank)", detail: "Keeps the left pill empty for a minimalist compact appearance", icon: "view-conceal-symbolic" },
-                                            { mode: "custom", title: "Custom QML Component", detail: "Loads an external custom QML widget or battery extension", icon: "applications-engineering-symbolic" }
-                                        ]
-                                        delegate: Rectangle {
-                                            id: islandOpt
-                                            required property var modelData
-                                            readonly property bool selected: saved.islandDisplay === modelData.mode
-                                            Layout.fillWidth: true
-                                            Layout.preferredHeight: 68
-                                            radius: 20
-                                            color: selected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
-                                            scale: islandMouse.pressed ? 0.99 : 1.0
-
-                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-                                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
-
-                                            Rectangle {
-                                                anchors.fill: parent
-                                                radius: parent.radius
-                                                color: LivePalette.color.onSurface
-                                                opacity: islandMouse.pressed ? 0.12 : islandMouse.containsMouse ? 0.07 : 0
-                                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
-                                            }
-
-                                            RowLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 14
-                                                spacing: 14
-
-                                                Rectangle {
-                                                    width: 38
-                                                    height: 38
-                                                    radius: 19
-                                                    color: islandOpt.selected ? LivePalette.color.primary : LivePalette.color.surfaceContainer
-                                                    SymbolIcon {
-                                                        anchors.centerIn: parent
-                                                        implicitWidth: 18
-                                                        implicitHeight: 18
-                                                        iconName: islandOpt.modelData.icon
-                                                        tint: islandOpt.selected ? LivePalette.color.onPrimary : LivePalette.color.onSurfaceVariant
-                                                    }
-                                                }
-
-                                                ColumnLayout {
-                                                    Layout.fillWidth: true
-                                                    spacing: 2
-                                                    Text {
-                                                        font.family: root.uiFont
-                                                        text: islandOpt.modelData.title
-                                                        color: LivePalette.color.onSurface
-                                                        font.pixelSize: 14
-                                                        font.weight: islandOpt.selected ? Font.DemiBold : Font.Medium
-                                                    }
-                                                    Text {
-                                                        font.family: root.uiFont
-                                                        text: islandOpt.modelData.detail
-                                                        color: LivePalette.color.onSurfaceVariant
-                                                        font.pixelSize: 12
-                                                        elide: Text.ElideRight
-                                                        Layout.fillWidth: true
-                                                    }
-                                                }
-
-                                                Rectangle {
-                                                    width: 22
-                                                    height: 22
-                                                    radius: 11
-                                                    color: "transparent"
-                                                    border.color: islandOpt.selected ? LivePalette.color.primary : LivePalette.color.outlineVariant
-                                                    border.width: 2
-
-                                                    Rectangle {
-                                                        anchors.centerIn: parent
-                                                        width: 10
-                                                        height: 10
-                                                        radius: 5
-                                                        color: LivePalette.color.primary
-                                                        visible: islandOpt.selected
-                                                    }
-                                                }
-                                            }
-
-                                            MouseArea {
-                                                id: islandMouse
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: {
-                                                    if (islandOpt.modelData.mode === "custom" && !saved.islandPlugin) {
-                                                        root.chooseFile("plugin");
-                                                        return;
-                                                    }
-                                                    saved.islandDisplay = islandOpt.modelData.mode;
-                                                    saved.sync();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    radius: 20
-                                    color: LivePalette.color.surfaceContainerHigh
-                                    implicitHeight: customPlugCol.implicitHeight + 24
-                                    visible: saved.islandDisplay === "custom"
-
-                                    ColumnLayout {
-                                        id: customPlugCol
-                                        anchors.fill: parent
-                                        anchors.margins: 14
-                                        spacing: 10
-
-                                        RowLayout {
-                                            Layout.fillWidth: true
-                                            spacing: 10
-                                            ColumnLayout {
-                                                Layout.fillWidth: true
-                                                spacing: 2
-                                                Text {
-                                                    font.family: root.uiFont
-                                                    text: "Custom QML File"
-                                                    color: LivePalette.color.onSurface
-                                                    font.pixelSize: 13
-                                                    font.weight: Font.DemiBold
-                                                }
-                                                Text {
-                                                    font.family: root.uiFont
-                                                    text: saved.islandPlugin ? saved.islandPlugin.replace("file://", "") : "No QML file configured yet"
-                                                    color: LivePalette.color.onSurfaceVariant
-                                                    font.pixelSize: 11
-                                                    elide: Text.ElideMiddle
-                                                    Layout.fillWidth: true
-                                                }
-                                            }
-
-                                            SettingsActionButton {
-                                                iconName: "document-open-symbolic"
-                                                text: filePicker.running ? "Picking…" : saved.islandPlugin ? "Change…" : "Choose…"
-                                                onClicked: root.chooseFile("plugin")
-                                            }
-                                        }
-
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Notice: Custom QML items run with full Quickshell system privileges. Select trusted files only."
-                                            color: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.8)
-                                            font.pixelSize: 11
-                                            wrapMode: Text.Wrap
-                                            Layout.fillWidth: true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            radius: 24
-                            color: LivePalette.color.surfaceContainer
-                            implicitHeight: quotaCol.implicitHeight + 36
-
-                            ColumnLayout {
-                                id: quotaCol
-                                anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 16
-
-                                RowLayout {
-                                    spacing: 12
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 20
-                                        color: LivePalette.color.primaryContainer
-                                        Image {
-                                            anchors.centerIn: parent
-                                            width: 20
-                                            height: 20
-                                            source: Qt.resolvedUrl("codex-badge.svg")
-                                            sourceSize: Qt.size(40, 40)
-                                            layer.enabled: true
-                                            layer.effect: MultiEffect {
-                                                colorization: 1
-                                                colorizationColor: LivePalette.color.primary
-                                            }
-                                        }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Codex Usage Indicator"
-                                            color: LivePalette.color.onSurface
-                                            font.pixelSize: 14
-                                            font.weight: Font.DemiBold
-                                        }
-                                        Text {
-                                            font.family: root.uiFont
-                                            text: "Choose how often the top-bar badge checks your Codex limits."
-                                            color: LivePalette.color.onSurfaceVariant
-                                            font.pixelSize: 12
-                                        }
-                                    }
-                                }
-
-                                Flow {
-                                    Layout.fillWidth: true
-                                    spacing: 8
-
-                                    Repeater {
-                                        model: [
-                                            { label: "30 s", value: 30 },
-                                            { label: "1 min", value: 60 },
-                                            { label: "5 min", value: 300 },
-                                            { label: "15 min", value: 900 },
-                                            { label: "30 min", value: 1800 }
-                                        ]
-                                        delegate: Rectangle {
-                                            id: quotaOption
-                                            required property var modelData
-                                            readonly property bool selected: saved.quotaInterval === modelData.value
-                                            width: quotaOptionText.implicitWidth + 30
-                                            height: 36
-                                            radius: 18
-                                            color: selected ? LivePalette.color.primaryContainer : "transparent"
-                                            border.width: selected ? 0 : 1
-                                            border.color: LivePalette.color.outlineVariant
-                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-
-                                            Rectangle {
-                                                anchors.fill: parent
-                                                radius: parent.radius
-                                                color: LivePalette.color.onSurface
-                                                opacity: quotaOptionMouse.pressed ? 0.12 : quotaOptionMouse.containsMouse ? 0.08 : 0
-                                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
-                                            }
-
-                                            Text {
-                                                id: quotaOptionText
-                                                anchors.centerIn: parent
-                                                text: (quotaOption.selected ? "✓  " : "") + quotaOption.modelData.label
-                                                font.family: root.uiFont
-                                                font.pixelSize: 13
-                                                font.weight: quotaOption.selected ? Font.DemiBold : Font.Medium
-                                                color: quotaOption.selected ? LivePalette.color.primary : LivePalette.color.onSurface
-                                            }
-
-                                            MouseArea {
-                                                id: quotaOptionMouse
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: root.setQuotaInterval(quotaOption.modelData.value)
-                                            }
-                                        }
+                                        enabled: newSsid.text.length > 0 && !newSsid.text.startsWith("-") && !connectWifi.running
+                                        onClicked: root.connectToSsid(newSsid.text)
                                     }
                                 }
 
                                 Text {
-                                    font.family: root.uiFont
-                                    text: "Reads current limits from the local Codex app server. No account data leaves this machine."
-                                    color: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.8)
-                                    font.pixelSize: 11
-                                    wrapMode: Text.Wrap
+                                    visible: !!root.wifiError
                                     Layout.fillWidth: true
+                                    text: root.wifiError
+                                    color: LivePalette.color.error
+                                    font.family: root.uiFont
+                                    font.pixelSize: 12
+                                    wrapMode: Text.Wrap
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            Text {
+                                text: "AVAILABLE WI-FI NETWORKS"
+                                font.family: root.uiFont
+                                font.pixelSize: 11
+                                font.weight: Font.DemiBold
+                                font.letterSpacing: 1.2
+                                color: LivePalette.color.onSurfaceVariant
+                            }
+
+                            Repeater {
+                                model: root.parsedWifiNetworks
+                                delegate: ToolCard {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    iconName: modelData.signal >= 65 ? "network-wireless-signal-excellent-symbolic"
+                                            : modelData.signal >= 40 ? "network-wireless-signal-good-symbolic"
+                                            : "network-wireless-signal-weak-symbolic"
+                                    title: modelData.ssid
+                                    subtitle: (modelData.security || "Open") + " · Signal " + modelData.signal + "%"
+                                    badge: modelData.inUse ? "Connected" : "Connect"
+                                    active: modelData.inUse
+                                    busy: connectWifi.running
+                                    onClicked: if (!modelData.inUse) root.connectToSsid(modelData.ssid)
+                                }
+                            }
+
+                            Text {
+                                visible: root.parsedWifiNetworks.length === 0
+                                text: wifiScan.running ? "Scanning nearby Wi-Fi networks…" : "No Wi-Fi networks found."
+                                font.family: root.uiFont
+                                font.pixelSize: 13
+                                color: LivePalette.color.onSurfaceVariant
+                            }
+                        }
+                    }
+
+                    // ================= PAGE 1: BLUETOOTH =================
+                    ColumnLayout {
+                        visible: root.safePage === 1
+                        Layout.fillWidth: true
+                        spacing: 16
+
+                        ToggleRow {
+                            Layout.fillWidth: true
+                            iconName: "bluetooth-symbolic"
+                            title: "Bluetooth"
+                            subtitle: bluetooth.running ? "Checking controller…"
+                                    : !root.bluetoothStatus ? "No Bluetooth controller found"
+                                    : root.bluetoothPowered ? "Controller powered on" : "Turned off"
+                            checked: root.bluetoothPowered
+                            enabled: !!root.bluetoothStatus && !bluetooth.running && !bluetoothPower.running
+                            onToggled: {
+                                bluetoothPower.enable = !root.bluetoothPowered;
+                                bluetoothPower.running = true;
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+                            SettingsActionButton {
+                                iconName: "view-refresh-symbolic"
+                                text: "Refresh"
+                                enabled: !bluetooth.running
+                                onClicked: { bluetooth.running = true; pairedDevices.running = true; connectedDevices.running = true; }
+                            }
+                            SettingsActionButton {
+                                primary: true
+                                iconName: "list-add-symbolic"
+                                text: "Pair New Device"
+                                onClicked: Quickshell.execDetached(["kitty", "--title", "Bluetooth pairing",
+                                    "bluetoothctl", "--agent", "KeyboardDisplay"])
+                            }
+                            Item { Layout.fillWidth: true }
+                        }
+
+                        Text {
+                            visible: !!root.bluetoothError
+                            Layout.fillWidth: true
+                            text: root.bluetoothError
+                            color: LivePalette.color.error
+                            font.family: root.uiFont
+                            font.pixelSize: 12
+                            wrapMode: Text.Wrap
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            Text {
+                                text: "PAIRED DEVICES"
+                                font.family: root.uiFont
+                                font.pixelSize: 11
+                                font.weight: Font.DemiBold
+                                font.letterSpacing: 1.2
+                                color: LivePalette.color.onSurfaceVariant
+                            }
+
+                            Repeater {
+                                model: root.bluetoothDevices
+                                delegate: ToolCard {
+                                    required property var modelData
+                                    readonly property bool isConnected: root.isBluetoothConnected(modelData[1])
+                                    readonly property bool isWorking: connectBluetooth.running && connectBluetooth.address === modelData[1]
+                                    Layout.fillWidth: true
+                                    iconName: "bluetooth-symbolic"
+                                    title: modelData[2]
+                                    subtitle: isConnected ? "Connected · Click to disconnect" : modelData[1]
+                                    badge: isWorking ? (connectBluetooth.action === "disconnect" ? "Disconnecting…" : "Connecting…")
+                                         : isConnected ? "Connected" : "Connect"
+                                    active: isConnected
+                                    busy: connectBluetooth.running
+                                    onClicked: {
+                                        root.bluetoothError = "";
+                                        connectBluetooth.address = modelData[1];
+                                        connectBluetooth.action = isConnected ? "disconnect" : "connect";
+                                        connectBluetooth.running = true;
+                                    }
+                                }
+                            }
+
+                            Text {
+                                visible: root.bluetoothDevices.length === 0
+                                text: "No paired devices yet."
+                                font.family: root.uiFont
+                                font.pixelSize: 13
+                                color: LivePalette.color.onSurfaceVariant
+                            }
+                        }
+                    }
+
+                    // ================= PAGE 2: SOUND & DISPLAY =================
+                    ColumnLayout {
+                        visible: root.safePage === 2
+                        Layout.fillWidth: true
+                        spacing: 16
+
+                        // Audio Card
+                        Rectangle {
+                            Layout.fillWidth: true
+                            radius: 24
+                            color: LivePalette.color.surfaceContainer
+                            implicitHeight: audioCardCol.implicitHeight + 36
+
+                            ColumnLayout {
+                                id: audioCardCol
+                                anchors.fill: parent
+                                anchors.margins: 18
+                                spacing: 14
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    Rectangle {
+                                        width: 40; height: 40; radius: 20
+                                        color: LivePalette.color.primaryContainer
+                                        SymbolIcon {
+                                            anchors.centerIn: parent
+                                            implicitWidth: 20; implicitHeight: 20
+                                            iconName: root.volumeMuted ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
+                                            tint: LivePalette.color.primary
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text {
+                                            font.family: root.uiFont
+                                            text: "Master Volume"
+                                            color: LivePalette.color.onSurface
+                                            font.pixelSize: 14
+                                            font.weight: Font.DemiBold
+                                        }
+                                        Text {
+                                            font.family: root.uiFont
+                                            text: root.volumeMuted ? "Muted" : root.volumePercent + "% output level"
+                                            color: LivePalette.color.onSurfaceVariant
+                                            font.pixelSize: 12
+                                        }
+                                    }
+                                    SettingsActionButton {
+                                        text: root.volumeMuted ? "Unmute" : "Mute"
+                                        onClicked: Quickshell.execDetached(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+                                    }
+                                    SettingsActionButton {
+                                        primary: true
+                                        iconName: "audio-volume-high-symbolic"
+                                        text: "Mixer"
+                                        onClicked: Quickshell.execDetached(["pavucontrol"])
+                                    }
+                                }
+
+                                BarSlider {
+                                    Layout.fillWidth: true
+                                    from: 0; to: 100
+                                    value: root.volumePercent
+                                    enabled: root.volumeAvailable
+                                    onMoved: Quickshell.execDetached(["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", (value / 100).toFixed(2)])
+                                }
+                            }
+                        }
+
+                        // Display Brightness Card
+                        Rectangle {
+                            Layout.fillWidth: true
+                            radius: 24
+                            color: LivePalette.color.surfaceContainer
+                            implicitHeight: dispCardCol.implicitHeight + 36
+
+                            ColumnLayout {
+                                id: dispCardCol
+                                anchors.fill: parent
+                                anchors.margins: 18
+                                spacing: 14
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    Rectangle {
+                                        width: 40; height: 40; radius: 20
+                                        color: LivePalette.color.primaryContainer
+                                        SymbolIcon {
+                                            anchors.centerIn: parent
+                                            implicitWidth: 20; implicitHeight: 20
+                                            iconName: "display-brightness-symbolic"
+                                            tint: LivePalette.color.primary
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text {
+                                            font.family: root.uiFont
+                                            text: "Display Brightness (" + (root.screen?.name ?? "Monitor") + ")"
+                                            color: LivePalette.color.onSurface
+                                            font.pixelSize: 14
+                                            font.weight: Font.DemiBold
+                                        }
+                                        Text {
+                                            font.family: root.uiFont
+                                            text: readBrightness.running && root.brightness < 0 ? "Checking DDC/CI & backlight…"
+                                                : root.brightness >= 0 ? root.brightness + "%" : "Unavailable on this display"
+                                            color: LivePalette.color.onSurfaceVariant
+                                            font.pixelSize: 12
+                                        }
+                                    }
+                                }
+
+                                BarSlider {
+                                    visible: root.brightness >= 0
+                                    Layout.fillWidth: true
+                                    from: 1; to: 100
+                                    value: Math.max(1, root.brightness)
+                                    onMoved: root.requestBrightness(value)
+                                }
+
+                                RowLayout {
+                                    visible: root.brightness >= 0
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Repeater {
+                                        model: [25, 50, 75, 100]
+                                        delegate: SettingsActionButton {
+                                            required property int modelData
+                                            Layout.fillWidth: true
+                                            primary: Math.abs(root.brightness - modelData) <= 2
+                                            text: modelData + "%"
+                                            onClicked: root.requestBrightness(modelData)
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // ================= PAGE 5: ABOUT =================
+                    // ================= PAGE 3: MAINTENANCE =================
+                    ColumnLayout {
+                        visible: root.safePage === 3
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        ToolCard {
+                            Layout.fillWidth: true
+                            iconName: "utilities-system-monitor-symbolic"
+                            title: "Task Manager (htop)"
+                            subtitle: "Monitor live CPU, memory, and running processes"
+                            onClicked: Quickshell.execDetached(["kitty", "-e", "htop"])
+                        }
+                        ToolCard {
+                            Layout.fillWidth: true
+                            iconName: "dialog-warning-symbolic"
+                            title: "Session Errors (journalctl)"
+                            subtitle: "Inspect recent user session warnings and errors"
+                            onClicked: Quickshell.execDetached(["kitty", "--hold", "--title", "Session errors",
+                                "journalctl", "--user", "-b", "-p", "warning", "-n", "80", "--no-pager"])
+                        }
+                        ToolCard {
+                            Layout.fillWidth: true
+                            iconName: "software-update-available-symbolic"
+                            title: "Check System Updates"
+                            subtitle: "List pending Arch Linux package updates"
+                            onClicked: Quickshell.execDetached(["kitty", "--hold", "--title", "Check system updates", "sh", "-c",
+                                "if command -v checkupdates >/dev/null; then checkupdates; else echo 'Install pacman-contrib to check for updates.'; fi"])
+                        }
+                        ToolCard {
+                            Layout.fillWidth: true
+                            iconName: "view-refresh-symbolic"
+                            title: "Reload Quickshell"
+                            subtitle: "Restart the shell instance if needed"
+                            onClicked: Quickshell.execDetached(["hyprctl", "dispatch", "exec", "qs -c main"])
+                        }
+                    }
+
+                    // ================= PAGE 4: ABOUT =================
                     SystemAbout {
                         Layout.fillWidth: true
-                        visible: root.page === 5
+                        visible: root.safePage === 4
                         fontFamily: root.uiFont
                     }
 

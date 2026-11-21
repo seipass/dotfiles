@@ -5,7 +5,7 @@ import "Theme.js" as Theme
 
 Item {
     id: root
-    property var paletteColors: Theme.color
+    property var paletteColors: LivePalette.color
 
     width: 165
     height: 24

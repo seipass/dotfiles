@@ -50,20 +50,32 @@ Item {
                     readonly property bool active: modelData.windows.some(w => w.activated)
                     readonly property var desktop: modelData.desktop
 
+                    // M3 Navigation Rail Active Pill Indicator
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 38; height: 38; radius: 14
-                        color: mouse.containsMouse || mouse.dragged ? LivePalette.color.surfaceContainerHigh : "transparent"
+                        width: 40; height: 40; radius: 20
+                        color: entry.active ? LivePalette.color.primaryContainer : "transparent"
+                        scale: mouse.pressed ? 0.94 : 1.0
                         Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: parent.radius
+                            color: LivePalette.color.onSurface
+                            opacity: mouse.pressed ? 0.12 : (mouse.containsMouse || mouse.dragged) ? 0.08 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                        }
                     }
                     Rectangle {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 3
-                        height: entry.active ? 18 : entry.modelData.windows.length ? 6 : 0
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 2
+                        width: entry.active ? 14 : entry.modelData.windows.length ? 6 : 0
+                        height: 3
                         radius: 2
-                        color: entry.active ? LivePalette.color.primary : LivePalette.color.outlineVariant
-                        Behavior on height { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint } }
+                        color: entry.active ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                        Behavior on width { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint } }
                         Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
                     }
                     IconImage {

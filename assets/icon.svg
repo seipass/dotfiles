@@ -1,31 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="HaDE App Icon">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1b222e"/>
-      <stop offset="100%" stop-color="#11151a"/>
-    </linearGradient>
-    <linearGradient id="leftStem" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#9dc2f5"/>
-      <stop offset="100%" stop-color="#4e74b0"/>
-    </linearGradient>
-    <linearGradient id="rightStem" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#7daae8"/>
-      <stop offset="100%" stop-color="#3f6196"/>
-    </linearGradient>
-    <linearGradient id="bridgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#cbe0ff" stop-opacity="0.94"/>
-      <stop offset="100%" stop-color="#7faee9" stop-opacity="0.94"/>
-    </linearGradient>
-    <linearGradient id="dotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffb6cf"/>
-      <stop offset="100%" stop-color="#e56f9a"/>
-    </linearGradient>
-  </defs>
-  <rect x="10" y="10" width="236" height="236" rx="56" fill="url(#bg)" stroke="#384252" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="HaDE Icon">
+  <rect x="10" y="10" width="236" height="236" rx="48" fill="#11151a" stroke="#2c3543" stroke-width="3"/>
   <g transform="translate(26, 26) scale(0.8)">
-    <rect x="44" y="32" width="48" height="192" rx="24" fill="url(#leftStem)"/>
-    <rect x="164" y="102" width="48" height="122" rx="24" fill="url(#rightStem)"/>
-    <rect x="44" y="102" width="168" height="44" rx="22" fill="url(#bridgeGrad)"/>
-    <circle cx="188" cy="56" r="24" fill="url(#dotGrad)"/>
+    <polygon points="62,32 90,32 90,224 42,224 42,52" fill="#f0f4fa"/>
+    <polygon points="90,104 126,104 166,64 166,32 214,32 214,84 146,152 90,152" fill="#9bbbe8"/>
+    <polygon points="166,160 214,112 214,204 194,224 166,224" fill="#f0f4fa"/>
   </g>
 </svg>

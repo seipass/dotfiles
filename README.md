@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="assets/hade-logo.svg" alt="HaDE Logo" width="128"/>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hade-logo-dark.svg"/>
+  <source media="(prefers-color-scheme: light)" srcset="assets/hade-logo-light.svg"/>
+  <img src="assets/hade-logo.svg" alt="HaDE Logo" width="128"/>
+</picture>
 
 # HaDE
 

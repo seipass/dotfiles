@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="HaDE Logo">
+  <polygon points="62,32 90,32 90,224 42,224 42,52" fill="#11151a"/>
+  <polygon points="90,104 126,104 166,64 166,32 214,32 214,84 146,152 90,152" fill="#42679c"/>
+  <polygon points="166,160 214,112 214,204 194,224 166,224" fill="#11151a"/>
+</svg>

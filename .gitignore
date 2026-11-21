@@ -1,0 +1,15 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS / editor artifacts
+.DS_Store
+*.bak
+*.orig
+*~
+
+# Runtime / machine-local generated shell state
+.config/quickshell/main/dashboard.ini
+.config/quickshell/main/taskbar.ini
+.config/quickshell/main/daily-tools.ini

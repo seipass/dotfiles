@@ -11,7 +11,9 @@ import subprocess
 import tempfile
 
 mode = sys.argv[1]
-seed = sys.argv[2] if len(sys.argv) > 2 else ""
+sync_desktop = "--sync-desktop" in sys.argv[2:]
+extra_args = [arg for arg in sys.argv[2:] if arg != "--sync-desktop"]
+seed = extra_args[0] if extra_args else ""
 presets = {"blue": "#a9c7ff", "green": "#a6d0a0", "pink": "#ffb0ca"}
 if mode == "auto":
     seed = seed if re.fullmatch(r"#[0-9a-fA-F]{6}", seed) else presets["pink"]
@@ -64,7 +66,7 @@ def run(*args):
         print(error, file=sys.stderr)
 
 
-if "--sync-desktop" in sys.argv[3:]:
+if sync_desktop:
     home = Path.home()
     try:
         accent = colors["primary"][1:]
@@ -143,6 +145,14 @@ if "--sync-desktop" in sys.argv[3:]:
             f"inactive_colors={', '.join(qt_inactive)}\n"
         )
         update(home / ".config/qt6ct/colors/shell-live.conf", qt_scheme)
+        qt6ct_conf = home / ".config/qt6ct/qt6ct.conf"
+        if qt6ct_conf.is_file():
+            scheme_path = str(home / ".config/qt6ct/colors/shell-live.conf")
+            conf_text = qt6ct_conf.read_text()
+            if re.search(r"(?m)^color_scheme_path=", conf_text):
+                new_conf = re.sub(r"(?m)^color_scheme_path=.*$", f"color_scheme_path={scheme_path}", conf_text)
+                if new_conf != conf_text:
+                    update(qt6ct_conf, new_conf)
 
         gtk3_css = "\n".join([
             f"@define-color accent_bg_color {c['primary']};",

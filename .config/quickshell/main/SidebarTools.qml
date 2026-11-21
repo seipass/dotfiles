@@ -1110,7 +1110,7 @@ PanelWindow {
                                         id: weatherCityInput
                                         Layout.fillWidth: true
                                         implicitHeight: 42
-                                        placeholderText: "City (e.g. Nagoya, Tokyo)…"
+                                        placeholderText: "City (e.g. Tokyo, London)…"
                                         leftPadding: 14
                                         color: LivePalette.color.onSurface
                                         placeholderTextColor: LivePalette.color.onSurfaceVariant

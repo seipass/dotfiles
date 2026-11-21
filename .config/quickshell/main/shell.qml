@@ -135,6 +135,7 @@ ShellRoot {
     function setDesktopClock(enabled) { settings.desktopClock = enabled; }
     property alias showTray: settings.showTray
     property alias showTaskbar: settings.showTaskbar
+    property alias taskbarCurrentMonitorOnly: settings.taskbarCurrentMonitorOnly
     readonly property string wallpaperPath: settings.wallpaper
     function setWallpaper(path) { settings.setWallpaper(path); }
     function openSettings(screen) { settings.open(screen); }

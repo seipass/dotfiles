@@ -314,8 +314,12 @@ PanelWindow {
                 Taskbar {
                     visible: root.shellState?.showTaskbar ?? true
                     anchors.fill: parent
+                    anchors.leftMargin: -8
+                    anchors.rightMargin: -8
+                    screen: root.screen
                     monitor: root.hyprMonitor
                     controller: root.taskbarController
+                    currentMonitorOnly: root.shellState?.taskbarCurrentMonitorOnly ?? false
                     centerY: rail.height / 2 - taskSpace.mapToItem(rail, 0, 0).y
                 }
             }

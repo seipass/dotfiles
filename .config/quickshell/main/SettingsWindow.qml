@@ -22,6 +22,7 @@ Window {
     property alias desktopClock: saved.desktopClock
     property alias showTray: saved.showTray
     property alias showTaskbar: saved.showTaskbar
+    property alias taskbarCurrentMonitorOnly: saved.taskbarCurrentMonitorOnly
     property alias paletteMode: saved.paletteMode
     property alias islandDisplay: saved.islandDisplay
     property alias islandPlugin: saved.islandPlugin
@@ -366,6 +367,7 @@ Window {
         property bool desktopClock: false
         property bool showTray: true
         property bool showTaskbar: true
+        property bool taskbarCurrentMonitorOnly: false
         property string paletteMode: "pink"
         property string paletteColors: ""
         property string islandDisplay: "music"

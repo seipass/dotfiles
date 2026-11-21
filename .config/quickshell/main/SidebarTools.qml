@@ -1081,6 +1081,15 @@ PanelWindow {
                                 }
                                 ToggleRow {
                                     Layout.fillWidth: true
+                                    visible: root.shellState?.showTaskbar ?? true
+                                    iconName: "focus-windows-symbolic"
+                                    title: "Current Monitor Windows Only"
+                                    subtitle: "Filter running taskbar apps per display"
+                                    checked: root.shellState?.taskbarCurrentMonitorOnly ?? false
+                                    onToggled: if (root.shellState) root.shellState.taskbarCurrentMonitorOnly = !root.shellState.taskbarCurrentMonitorOnly
+                                }
+                                ToggleRow {
+                                    Layout.fillWidth: true
                                     iconName: "preferences-system-symbolic"
                                     title: "Show System Tray"
                                     subtitle: "Background app icons in the rail"

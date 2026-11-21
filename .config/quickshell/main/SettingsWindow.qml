@@ -350,6 +350,11 @@ Window {
     IpcHandler {
         target: "settings"
         function open(): void { root.open(null); }
+        function openPage(pageIndex: int): void {
+            root.page = Math.max(0, Math.min(4, pageIndex));
+            root.open(null);
+        }
+        function close(): void { root.close(); }
     }
 
     Settings {

@@ -1,41 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="HaDE Icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="HaDE App Icon">
   <defs>
-    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#19202b"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b222e"/>
       <stop offset="100%" stop-color="#11151a"/>
     </linearGradient>
-    <radialGradient id="iconGlow" cx="30%" cy="25%" r="70%">
-      <stop offset="0%" stop-color="#b6c8e2" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#11151a" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#d8e5f8"/>
-      <stop offset="100%" stop-color="#8eb1df"/>
+    <linearGradient id="leftStem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9dc2f5"/>
+      <stop offset="100%" stop-color="#4e74b0"/>
     </linearGradient>
-    <linearGradient id="subTileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4d678f"/>
-      <stop offset="100%" stop-color="#374c6c"/>
+    <linearGradient id="rightStem" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7daae8"/>
+      <stop offset="100%" stop-color="#3f6196"/>
+    </linearGradient>
+    <linearGradient id="bridgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#cbe0ff" stop-opacity="0.94"/>
+      <stop offset="100%" stop-color="#7faee9" stop-opacity="0.94"/>
+    </linearGradient>
+    <linearGradient id="dotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb6cf"/>
+      <stop offset="100%" stop-color="#e56f9a"/>
     </linearGradient>
   </defs>
-  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#iconBg)" stroke="#3d4758" stroke-width="3"/>
-  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#iconGlow)"/>
-
-  <!-- Left Rail -->
-  <rect x="38" y="38" width="28" height="180" rx="14" fill="#0d1015" stroke="#2c3442" stroke-width="2"/>
-  <circle cx="52" cy="60" r="6" fill="#b6c8e2"/>
-  <circle cx="52" cy="80" r="4" fill="#5e6a7d"/>
-  <circle cx="52" cy="96" r="4" fill="#5e6a7d"/>
-  <rect x="44" y="182" width="16" height="22" rx="8" fill="#374c6c"/>
-
-  <!-- Dynamic Island -->
-  <rect x="82" y="38" width="136" height="28" rx="14" fill="#0d1015" stroke="#364152" stroke-width="2"/>
-  <circle cx="98" cy="52" r="5.5" fill="#b6c8e2"/>
-  <rect x="112" y="48" width="42" height="8" rx="4" fill="#e1e5ea" opacity="0.88"/>
-  <rect x="178" y="48" width="26" height="8" rx="4" fill="#b6c8e2" opacity="0.65"/>
-
-  <!-- Hyprland Tiling H Monogram -->
-  <rect x="82" y="82" width="40" height="136" rx="18" fill="url(#accentGrad)"/>
-  <rect x="108" y="128" width="84" height="28" rx="14" fill="#b6c8e2" opacity="0.94"/>
-  <rect x="178" y="82" width="40" height="42" rx="16" fill="url(#subTileGrad)"/>
-  <rect x="178" y="134" width="40" height="84" rx="16" fill="url(#accentGrad)"/>
+  <rect x="10" y="10" width="236" height="236" rx="56" fill="url(#bg)" stroke="#384252" stroke-width="3"/>
+  <g transform="translate(26, 26) scale(0.8)">
+    <rect x="44" y="32" width="48" height="192" rx="24" fill="url(#leftStem)"/>
+    <rect x="164" y="102" width="48" height="122" rx="24" fill="url(#rightStem)"/>
+    <rect x="44" y="102" width="168" height="44" rx="22" fill="url(#bridgeGrad)"/>
+    <circle cx="188" cy="56" r="24" fill="url(#dotGrad)"/>
+  </g>
 </svg>

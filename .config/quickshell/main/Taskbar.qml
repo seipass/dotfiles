@@ -96,7 +96,7 @@ Item {
                 NumberAnimation { properties: "scale"; from: 0.85; to: 1; duration: Theme.motion.standard; easing.type: Easing.OutBack }
             }
             move: Transition {
-                NumberAnimation { properties: "x,y"; duration: Theme.motion.standard; easing.type: Easing.OutQuint }
+                NumberAnimation { properties: "x,y"; duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
             }
 
             Repeater {
@@ -132,7 +132,7 @@ Item {
                         y: entry.isDragging ? root.dragDeltaY : entry.siblingShift
                         Behavior on y {
                             enabled: !entry.isDragging
-                            NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
                         }
                     }
 

@@ -323,15 +323,19 @@ Window {
         onExited: readBrightness.running = true
     }
 
+    property int lastPage: 0
+    property int pageDirection: 1
     onPageChanged: {
+        pageDirection = safePage >= lastPage ? 1 : -1;
+        lastPage = safePage;
         pageAnim.restart();
         if (visible) refreshCurrentPage();
     }
 
     ParallelAnimation {
         id: pageAnim
-        NumberAnimation { target: pageContent; property: "opacity"; from: 0.35; to: 1; duration: 200; easing.type: Easing.OutCubic }
-        NumberAnimation { target: pageContent; property: "y"; from: 14; to: 0; duration: 240; easing.type: Easing.OutCubic }
+        NumberAnimation { target: pageContent; property: "opacity"; from: 0.35; to: 1; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
+        NumberAnimation { target: pageContent; property: "y"; from: root.pageDirection * 18; to: 0; duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
     }
 
     PersistentProperties {
@@ -404,7 +408,7 @@ Window {
             Layout.fillHeight: true
             color: LivePalette.color.surfaceContainer
 
-            Behavior on Layout.preferredWidth { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            Behavior on Layout.preferredWidth { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -451,98 +455,138 @@ Window {
                     }
                 }
 
-                Repeater {
-                    model: [
-                        { name: "Network",         icon: "network-wireless-symbolic" },
-                        { name: "Bluetooth",       icon: "bluetooth-symbolic" },
-                        { name: "Sound & Display", icon: "audio-volume-high-symbolic" },
-                        { name: "Maintenance",     icon: "utilities-system-monitor-symbolic" },
-                        { name: "About",           icon: "computer-symbolic" }
-                    ]
-                    delegate: Item {
-                        id: nav
-                        required property int index
-                        required property var modelData
-                        readonly property bool selected: root.safePage === nav.index
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.isCompact ? 52 : 48
+                Item {
+                    id: navRailBox
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: navCol.implicitHeight
 
-                        Rectangle {
-                            visible: !root.isCompact
-                            anchors.fill: parent
-                            radius: height / 2
-                            color: nav.selected ? LivePalette.color.primaryContainer : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                    Rectangle {
+                        id: navHighlight
+                        readonly property Item cur: navRepeater.itemAt(root.safePage)
+                        readonly property real pillH: root.isCompact ? 32 : (cur ? cur.height : 48)
+                        readonly property real targetTop: cur ? (cur.y + (cur.height - pillH) / 2) : 0
+                        readonly property real targetBot: targetTop + pillH
+                        property real headTop: targetTop
+                        property real tailTop: targetTop
+                        property real headBot: targetBot
+                        property real tailBot: targetBot
 
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: parent.radius
-                                color: LivePalette.color.onSurface
-                                opacity: navMouse.pressed ? 0.12 : navMouse.containsMouse ? 0.08 : 0
-                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
-                            }
+                        Behavior on headTop { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                        Behavior on tailTop { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
+                        Behavior on headBot { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                        Behavior on tailBot { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 16
-                                anchors.rightMargin: 16
-                                spacing: 12
+                        x: root.isCompact ? (navRailBox.width - 56) / 2 : 0
+                        width: root.isCompact ? 56 : navRailBox.width
+                        y: Math.min(headTop, tailTop)
+                        height: Math.max(0, Math.max(headBot, tailBot) - y)
+                        radius: root.isCompact ? 16 : height / 2
+                        visible: !!cur
+                        color: LivePalette.color.primaryContainer
+                        Behavior on x { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
+                        Behavior on width { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
+                    }
 
-                                SymbolIcon {
-                                    implicitWidth: 18
-                                    implicitHeight: 18
-                                    iconName: nav.modelData.icon
-                                    tint: nav.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
-                                }
+                    Column {
+                        id: navCol
+                        width: parent.width
+                        spacing: 6
 
-                                Text {
-                                    Layout.fillWidth: true
-                                    font.family: root.uiFont
-                                    text: nav.modelData.name
-                                    color: nav.selected ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
-                                    font.pixelSize: 14
-                                    font.weight: nav.selected ? Font.DemiBold : Font.Medium
-                                }
-                            }
-                        }
-
-                        ColumnLayout {
-                            visible: root.isCompact
-                            anchors.centerIn: parent
-                            spacing: 4
-
-                            Rectangle {
-                                Layout.alignment: Qt.AlignHCenter
-                                width: 56
-                                height: 32
-                                radius: 16
-                                color: nav.selected ? LivePalette.color.primaryContainer : "transparent"
-                                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                        Repeater {
+                            id: navRepeater
+                            model: [
+                                { name: "Network",         icon: "network-wireless-symbolic" },
+                                { name: "Bluetooth",       icon: "bluetooth-symbolic" },
+                                { name: "Sound & Display", icon: "audio-volume-high-symbolic" },
+                                { name: "Maintenance",     icon: "utilities-system-monitor-symbolic" },
+                                { name: "About",           icon: "computer-symbolic" }
+                            ]
+                            delegate: Item {
+                                id: nav
+                                required property int index
+                                required property var modelData
+                                readonly property bool selected: root.safePage === nav.index
+                                width: navCol.width
+                                height: root.isCompact ? 52 : 48
+                                scale: navMouse.pressed ? 0.95 : 1.0
+                                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                 Rectangle {
+                                    visible: !root.isCompact
                                     anchors.fill: parent
-                                    radius: parent.radius
-                                    color: LivePalette.color.onSurface
-                                    opacity: navMouse.pressed ? 0.12 : navMouse.containsMouse ? 0.08 : 0
-                                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                    radius: height / 2
+                                    color: "transparent"
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: parent.radius
+                                        color: LivePalette.color.onSurface
+                                        opacity: navMouse.pressed ? 0.12 : navMouse.containsMouse ? 0.08 : 0
+                                        Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                    }
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 16
+                                        anchors.rightMargin: 16
+                                        spacing: 12
+
+                                        SymbolIcon {
+                                            implicitWidth: 18
+                                            implicitHeight: 18
+                                            iconName: nav.modelData.icon
+                                            tint: nav.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            font.family: root.uiFont
+                                            text: nav.modelData.name
+                                            color: nav.selected ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
+                                            font.pixelSize: 14
+                                            font.weight: nav.selected ? Font.DemiBold : Font.Medium
+                                        }
+                                    }
                                 }
 
-                                SymbolIcon {
+                                ColumnLayout {
+                                    visible: root.isCompact
                                     anchors.centerIn: parent
-                                    implicitWidth: 20
-                                    implicitHeight: 20
-                                    iconName: nav.modelData.icon
-                                    tint: nav.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                                    spacing: 4
+
+                                    Rectangle {
+                                        Layout.alignment: Qt.AlignHCenter
+                                        width: 56
+                                        height: 32
+                                        radius: 16
+                                        color: "transparent"
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: parent.radius
+                                            color: LivePalette.color.onSurface
+                                            opacity: navMouse.pressed ? 0.12 : navMouse.containsMouse ? 0.08 : 0
+                                            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                        }
+
+                                        SymbolIcon {
+                                            anchors.centerIn: parent
+                                            implicitWidth: 20
+                                            implicitHeight: 20
+                                            iconName: nav.modelData.icon
+                                            tint: nav.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: navMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.page = nav.index
                                 }
                             }
-                        }
-
-                        MouseArea {
-                            id: navMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.page = nav.index
                         }
                     }
                 }

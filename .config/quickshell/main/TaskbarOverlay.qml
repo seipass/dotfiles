@@ -95,7 +95,7 @@ PanelWindow {
     }
     Behavior on margins.top {
         enabled: root.allowMoveAnim
-        NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
     }
 
     implicitWidth: root.menuOpen ? 268 : Math.min(256, Math.max(132, cardLayout.implicitWidth + 24))
@@ -133,9 +133,9 @@ PanelWindow {
 
         Keys.onEscapePressed: root.closeMenu()
 
-        Behavior on radius { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutBack } }
+        Behavior on scale { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
 
         ColumnLayout {
             id: cardLayout

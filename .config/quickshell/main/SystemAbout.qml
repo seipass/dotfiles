@@ -136,11 +136,15 @@ ColumnLayout {
 
                 // Copied feedback pill
                 Rectangle {
-                    visible: root.copiedBadge !== ""
+                    visible: opacity > 0.01
+                    opacity: root.copiedBadge !== "" ? 1.0 : 0.0
+                    scale: root.copiedBadge !== "" ? 1.0 : 0.72
                     radius: 999
                     color: LivePalette.color.primaryContainer
                     implicitWidth: copiedLbl.implicitWidth + 18
                     implicitHeight: 26
+                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                     Text {
                         id: copiedLbl
@@ -160,11 +164,14 @@ ColumnLayout {
                     implicitWidth: copyFetchRow.implicitWidth + 20
                     hoverEnabled: true
                     background: Rectangle {
-                        radius: 999
+                        radius: copyFetchBtn.down ? 10 : 999
                         color: copyFetchBtn.down ? Qt.alpha(LivePalette.color.primary, 0.28) :
                                copyFetchBtn.hovered ? Qt.alpha(LivePalette.color.primary, 0.2) :
                                LivePalette.color.surfaceContainerHigh
+                        scale: copyFetchBtn.down ? 0.93 : (copyFetchBtn.hovered ? 1.03 : 1.0)
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         Behavior on color { ColorAnimation { duration: 140 } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                     }
                     contentItem: Row {
                         id: copyFetchRow
@@ -199,10 +206,13 @@ ColumnLayout {
                     implicitHeight: 30
                     hoverEnabled: true
                     background: Rectangle {
-                        radius: 999
+                        radius: heroRefreshBtn.down ? 9 : 999
                         color: heroRefreshBtn.down ? Qt.alpha(LivePalette.color.onSurface, 0.14) :
                                heroRefreshBtn.hovered ? LivePalette.color.surfaceContainerHigh : "transparent"
+                        scale: heroRefreshBtn.down ? 0.88 : (heroRefreshBtn.hovered ? 1.06 : 1.0)
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         Behavior on color { ColorAnimation { duration: 140 } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                     }
                     contentItem: SymbolIcon {
                         anchors.centerIn: parent
@@ -412,7 +422,9 @@ ColumnLayout {
                                     ? LivePalette.color.onSurface
                                     : Qt.alpha(LivePalette.color.onSurface, 0.12)
 
-                                Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                                scale: swatchHover.pressed ? 0.90 : 1.0
+                                Behavior on height { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                 MouseArea {
                                     id: swatchHover
@@ -526,7 +538,7 @@ ColumnLayout {
                         radius: 4
                         width: Math.max(8, parent.width * Math.min(1, ((root.info.summary && root.info.summary.cpuLoadPct) || 0) / 100))
                         color: LivePalette.color.primary
-                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on width { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                     }
                 }
             }
@@ -608,7 +620,7 @@ ColumnLayout {
                         radius: 4
                         width: Math.max(8, parent.width * Math.min(1, ((root.info.summary && root.info.summary.memPct) || 0) / 100))
                         color: LivePalette.color.primary
-                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on width { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                     }
                 }
             }
@@ -700,7 +712,7 @@ ColumnLayout {
                         radius: 4
                         width: Math.max(8, parent.width * Math.min(1, ((root.info.summary && root.info.summary.diskPct) || 0) / 100))
                         color: LivePalette.color.primary
-                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on width { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                     }
                 }
             }
@@ -849,9 +861,12 @@ ColumnLayout {
                             Rectangle {
                                 Layout.fillWidth: true
                                 implicitHeight: Math.max(40, rowContent.implicitHeight + 14)
-                                radius: 12
+                                radius: rowHover.pressed ? 16 : 12
                                 color: rowHover.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05) : "transparent"
+                                scale: rowHover.pressed ? 0.985 : 1.0
+                                Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                 Behavior on color { ColorAnimation { duration: 120 } }
+                                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                 MouseArea {
                                     id: rowHover

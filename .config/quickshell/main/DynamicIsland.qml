@@ -115,7 +115,7 @@ PanelWindow {
         id: island
 
         x: Math.round((root.screen.width - width) / 2 - (root.screen.width - parent.width))
-        y: root.entered ? Theme.shape.islandInset : -18
+        y: root.entered ? Theme.shape.islandInset : -Theme.shape.islandHeight
         width: Math.min(parent.width - 32, Theme.shape.islandWidth)
         height: root.expanded ? root.targetExpandedHeight : Theme.shape.islandHeight
         radius: Theme.shape.islandRadius
@@ -130,20 +130,21 @@ PanelWindow {
 
         Behavior on height {
             NumberAnimation {
-                duration: root.expanded ? Theme.motion.emphasized : Theme.motion.exit
-                easing.type: root.expanded ? Easing.OutQuint : Easing.InOutCubic
+                duration: root.expanded ? Theme.motion.spatialSlow : Theme.motion.spatialFast
+                easing.type: root.expanded ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.expanded ? Theme.motion.overshootGentle : 0
             }
         }
 
         Behavior on x {
             NumberAnimation {
-                duration: Theme.motion.standard + 80
+                duration: Theme.motion.spatial
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on y {
             NumberAnimation {
-                duration: Theme.motion.emphasized
+                duration: Theme.motion.spatialSlow
                 easing.type: Easing.OutCubic
             }
         }
@@ -269,8 +270,9 @@ PanelWindow {
 
                         Behavior on width {
                             NumberAnimation {
-                                duration: Theme.motion.standard
-                                easing.type: Easing.OutCubic
+                                duration: Theme.motion.spatial
+                                easing.type: Easing.OutBack
+                                easing.overshoot: Theme.motion.overshootStandard
                             }
                         }
                         Behavior on color {
@@ -317,22 +319,37 @@ PanelWindow {
             y: (Theme.shape.islandHeight - height) / 2
             spacing: 9
 
-            Row {
-                spacing: 5
+            Item {
+                width: weatherRow.implicitWidth
+                height: 28
                 anchors.verticalCenter: parent.verticalCenter
+                scale: weatherMouse.pressed ? 0.92 : (weatherMouse.containsMouse ? 1.04 : 1.0)
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
-                SymbolIcon {
-                    anchors.verticalCenter: parent.verticalCenter
-                    iconName: root.weatherTemp ? root.weatherIcon : "weather-severe-alert-symbolic"
-                    tint: LivePalette.color.onSurface
+                Row {
+                    id: weatherRow
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    SymbolIcon {
+                        anchors.verticalCenter: parent.verticalCenter
+                        iconName: root.weatherTemp ? root.weatherIcon : "weather-severe-alert-symbolic"
+                        tint: LivePalette.color.onSurface
+                    }
+
+                    Text {
+                        text: root.weatherTemp || "—"
+                        color: LivePalette.color.onSurface
+                        font.family: root.clockFontFamily
+                        font.pixelSize: 14
+                    }
                 }
-
-                Text {
-                    text: root.weatherTemp || "—"
-                    color: LivePalette.color.onSurface
-                    font.family: root.clockFontFamily
-                    font.pixelSize: 14
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { root.expandedView = "dashboard"; root.expanded = true; } }
+                MouseArea {
+                    id: weatherMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: { root.expandedView = "dashboard"; root.expanded = true; }
                 }
             }
 
@@ -346,6 +363,8 @@ PanelWindow {
             Item {
                 width: volumeContent.implicitWidth
                 height: 28
+                scale: volMouse.pressed ? 0.92 : (volMouse.containsMouse ? 1.04 : 1.0)
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 Row {
                     id: volumeContent
@@ -368,7 +387,9 @@ PanelWindow {
                 }
 
                 MouseArea {
+                    id: volMouse
                     anchors.fill: parent
+                    hoverEnabled: true
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
@@ -412,9 +433,9 @@ PanelWindow {
                 width: parent.width
                 height: root.dashboardHeight - 62
                 transformOrigin: Item.Top
-                Behavior on x { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint } }
-                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 50; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                Behavior on x { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 30; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                 panelDate: root.panelDate
                 player: root.player
                 volumePercent: root.volumePercent
@@ -440,9 +461,9 @@ PanelWindow {
                 width: parent.width
                 height: root.earthquakeHeight - 62
                 transformOrigin: Item.Top
-                Behavior on x { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint } }
-                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 50; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                Behavior on x { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 30; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                 history: root.earthquakeHistory
                 loading: root.earthquakeLoading
                 liveMode: root.earthquakeLive

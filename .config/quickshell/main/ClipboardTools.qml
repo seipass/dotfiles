@@ -61,6 +61,13 @@ ColumnLayout {
         spacing: 6
         model: root.entries
         ScrollBar.vertical: ScrollBar {}
+        add: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: 0.94; to: 1; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
+        }
+        displaced: Transition {
+            NumberAnimation { properties: "y"; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
+        }
 
         delegate: Rectangle {
             id: entryCard
@@ -69,9 +76,12 @@ ColumnLayout {
             readonly property bool isImage: modelData.type === "image"
             width: ListView.view.width - 4
             implicitHeight: isImage ? 80 : 54
-            radius: 18
+            radius: clipMouse.pressed ? 14 : (root.copiedIndex === index ? 24 : 18)
             color: root.copiedIndex === index ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
+            scale: clipMouse.pressed ? 0.96 : 1.0
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
             Rectangle {
                 anchors.fill: parent

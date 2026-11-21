@@ -30,6 +30,9 @@ Item {
         : maxScale >= 30 ? LivePalette.color.primary
         : LivePalette.color.onSurface
 
+    scale: eqMouse.pressed ? 0.95 : 1.0
+    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+
     Rectangle {
         anchors.fill: parent
         radius: height / 2
@@ -48,8 +51,9 @@ Item {
         Rectangle {
             Layout.preferredWidth: 26
             Layout.preferredHeight: 26
-            radius: 13
+            radius: eqMouse.pressed ? 8 : 13
             color: root.badgeBg
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             Text {

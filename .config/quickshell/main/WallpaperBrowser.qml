@@ -53,15 +53,16 @@ ColumnLayout {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 4
-                radius: 14
+                radius: wpMouse.pressed ? 10 : (tile.isSelected ? 20 : 14)
                 color: LivePalette.color.surfaceContainer
                 border.width: tile.isSelected ? 2 : 1
                 border.color: tile.isSelected ? LivePalette.color.primary
                             : wpMouse.containsMouse ? Qt.alpha(LivePalette.color.primary, 0.5) : Qt.alpha(LivePalette.color.onSurface, 0.08)
                 clip: true
-                scale: wpMouse.pressed ? 0.97 : 1.0
+                scale: wpMouse.pressed ? 0.95 : 1.0
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                 Behavior on border.color { ColorAnimation { duration: Theme.motion.fast } }
-                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 Image {
                     anchors.fill: parent

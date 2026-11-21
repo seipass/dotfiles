@@ -61,11 +61,12 @@ PanelWindow {
         y: 4
         width: badgeRow.implicitWidth + 20
         height: 32
-        radius: 16
+        radius: badgeMouse.pressed ? 10 : (root.opened ? 11 : 16)
         color: root.opened ? LivePalette.color.primaryContainer : LivePalette.color.surface
-        scale: badgeMouse.pressed ? 0.95 : 1.0
+        scale: badgeMouse.pressed ? 0.92 : (badgeMouse.containsMouse ? 1.03 : 1.0)
+        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
         Rectangle {
             anchors.fill: parent
@@ -101,6 +102,7 @@ PanelWindow {
                         width: 34
                         height: 4
                         radius: 2
+                        clip: true
                         color: known ? LivePalette.color.surfaceContainerHigh : "transparent"
                         border.width: known ? 0 : 1
                         border.color: LivePalette.color.outlineVariant
@@ -109,7 +111,7 @@ PanelWindow {
                             height: track.height
                             radius: 2
                             color: track.window && track.window.alert ? LivePalette.color.error : LivePalette.color.primary
-                            Behavior on width { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                            Behavior on width { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                         }
                     }
                 }
@@ -135,8 +137,23 @@ PanelWindow {
         radius: 24
         color: LivePalette.color.surfaceContainer
         opacity: root.opened ? 1 : 0
+        scale: root.opened ? 1.0 : 0.90
+        transformOrigin: Item.TopRight
         visible: opacity > 0
-        Behavior on y { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+        Behavior on y {
+            NumberAnimation {
+                duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.opened ? Theme.motion.overshootGentle : 0
+            }
+        }
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.opened ? Theme.motion.overshootStandard : 0
+            }
+        }
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
 
         MouseArea {
@@ -219,13 +236,16 @@ PanelWindow {
                         required property var modelData
                         readonly property bool selected: root.activeProvider && root.activeProvider.id === modelData.id
                         height: 28
-                        radius: 14
+                        radius: provMouse.pressed ? 8 : (selected ? 10 : 14)
                         width: provChipRow.implicitWidth + 18
                         color: selected ? LivePalette.color.primaryContainer : "transparent"
                         border.width: selected ? 0 : 1
                         border.color: LivePalette.color.outlineVariant
                         opacity: modelData.installed || selected ? 1.0 : 0.48
+                        scale: provMouse.pressed ? 0.92 : 1.0
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                         Rectangle {
                             anchors.fill: parent
@@ -310,13 +330,14 @@ PanelWindow {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 8
                         radius: 4
+                        clip: true
                         color: LivePalette.color.surfaceContainerHigh
                         Rectangle {
                             width: parent.width * Math.max(0, Math.min(100, modelData.used)) / 100
                             height: parent.height
                             radius: 4
                             color: modelData.alert ? LivePalette.color.error : LivePalette.color.primary
-                            Behavior on width { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                            Behavior on width { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                         }
                     }
 

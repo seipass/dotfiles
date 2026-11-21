@@ -9,10 +9,11 @@ Rectangle {
 
     implicitWidth: 38
     implicitHeight: 38
-    radius: height / 2
+    radius: hMouse.pressed ? 11 : height / 2
     color: LivePalette.color.surfaceContainerHigh
-    scale: hMouse.pressed ? 0.94 : 1.0
-    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+    scale: hMouse.pressed ? 0.88 : (hMouse.containsMouse ? 1.05 : 1.0)
+    Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
     Rectangle {
         anchors.fill: parent

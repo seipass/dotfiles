@@ -61,7 +61,7 @@ Slider {
             color: control.enabled ? LivePalette.color.primary : LivePalette.color.outlineVariant
             Behavior on width {
                 enabled: !control.pressed
-                NumberAnimation { duration: 110; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: 0.45 }
             }
         }
 
@@ -114,7 +114,7 @@ Slider {
         height: control.pressed ? 26 : 24
         radius: width / 2
         color: control.enabled ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
-        Behavior on width { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-        Behavior on height { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+        Behavior on height { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
     }
 }

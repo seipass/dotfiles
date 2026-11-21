@@ -145,8 +145,12 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 30
                         Layout.preferredHeight: 30
-                        radius: 15
+                        radius: volMuteMouse.pressed ? 9 : 15
                         color: volMuteMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
+                        scale: volMuteMouse.pressed ? 0.88 : (volMuteMouse.containsMouse ? 1.05 : 1.0)
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         SymbolIcon {
                             anchors.centerIn: parent
                             implicitWidth: 16; implicitHeight: 16
@@ -247,9 +251,9 @@ Item {
                                     ? (canAct ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh)
                                     : LivePalette.color.surfaceContainerHigh
                                 opacity: canAct ? 1 : 0.4
-                                scale: mediaBtnMouse.pressed ? 0.92 : 1.0
-                                Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutBack; easing.overshoot: 1.15 } }
-                                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                                scale: mediaBtnMouse.pressed ? 0.88 : (mediaBtn.isPlay && mediaBtnMouse.containsMouse ? 1.05 : 1.0)
+                                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -333,8 +337,12 @@ Item {
                             color: LivePalette.color.onSurface
                         }
                         Rectangle {
-                            Layout.preferredWidth: 46; Layout.preferredHeight: 28; radius: 14
+                            Layout.preferredWidth: 46; Layout.preferredHeight: 28
+                            radius: todayMouse.pressed ? 9 : 14
                             color: LivePalette.color.surfaceContainerHigh
+                            scale: todayMouse.pressed ? 0.90 : (todayMouse.containsMouse ? 1.04 : 1.0)
+                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                             Rectangle {
                                 anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
                                 opacity: todayMouse.pressed ? 0.12 : todayMouse.containsMouse ? 0.08 : 0
@@ -344,8 +352,12 @@ Item {
                             MouseArea { id: todayMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goToToday() }
                         }
                         Rectangle {
-                            Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 14
+                            Layout.preferredWidth: 28; Layout.preferredHeight: 28
+                            radius: previousMouse.pressed ? 9 : 14
                             color: LivePalette.color.surfaceContainerHigh
+                            scale: previousMouse.pressed ? 0.88 : (previousMouse.containsMouse ? 1.05 : 1.0)
+                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                             Rectangle {
                                 anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
                                 opacity: previousMouse.pressed ? 0.12 : previousMouse.containsMouse ? 0.08 : 0
@@ -355,8 +367,12 @@ Item {
                             MouseArea { id: previousMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.changeMonth(-1) }
                         }
                         Rectangle {
-                            Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 14
+                            Layout.preferredWidth: 28; Layout.preferredHeight: 28
+                            radius: nextMouse.pressed ? 9 : 14
                             color: LivePalette.color.surfaceContainerHigh
+                            scale: nextMouse.pressed ? 0.88 : (nextMouse.containsMouse ? 1.05 : 1.0)
+                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                             Rectangle {
                                 anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
                                 opacity: nextMouse.pressed ? 0.12 : nextMouse.containsMouse ? 0.08 : 0
@@ -399,11 +415,13 @@ Item {
                                     height: width
                                     morph: dayMouse.containsMouse ? 1.0 : 0.0
                                     rotation: dayMouse.containsMouse ? 40 : 0
+                                    scale: dayMouse.pressed ? 0.88 : (dayMouse.containsMouse ? 1.06 : 1.0)
                                     fillColor: dayCell.selected ? LivePalette.color.primary : LivePalette.color.primaryContainer
                                     strokeColor: dayCell.selected ? "transparent" : LivePalette.color.primary
                                     strokeWidth: dayCell.selected ? 0 : 1.2
-                                    Behavior on morph { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
-                                    Behavior on rotation { NumberAnimation { duration: Theme.motion.emphasized; easing.type: Easing.OutCubic } }
+                                    Behavior on morph { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                                    Behavior on rotation { NumberAnimation { duration: Theme.motion.spatialSlow; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                     Behavior on fillColor { ColorAnimation { duration: Theme.motion.fast } }
                                 }
                                 Rectangle {
@@ -411,9 +429,11 @@ Item {
                                     visible: !dayCell.today
                                     width: Math.min(28, dayCell.width, dayCell.height)
                                     height: width
-                                    radius: dayCell.selected ? width / 2 : 9
+                                    radius: dayMouse.pressed ? 7 : (dayCell.selected ? width / 2 : 9)
+                                    scale: dayMouse.pressed ? 0.88 : (dayMouse.containsMouse ? 1.05 : 1.0)
                                     color: dayCell.selected ? LivePalette.color.primary : dayMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                                    Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                                    Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                     Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
                                 }
                                 Text {

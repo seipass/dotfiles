@@ -13,7 +13,7 @@ Item {
     readonly property real clamped: Math.max(0, Math.min(100, percent))
     property real animatedPercent: clamped
     Behavior on animatedPercent {
-        NumberAnimation { duration: Theme.motion.emphasized; easing.type: Easing.OutCubic }
+        SpringAnimation { spring: 3.6; damping: 0.68; epsilon: 0.2 }
     }
 
     implicitWidth: 68
@@ -56,11 +56,12 @@ Item {
                     ctx.lineCap = "round";
                     ctx.stroke();
 
-                    if (pct <= 0.5) return;
+                    const safePct = Math.max(0, Math.min(100, pct));
+                    if (safePct <= 0.5) return;
 
                     // M3 Expressive Wavy Arc
                     const start = -Math.PI * 0.5;
-                    const span = (pct / 100.0) * Math.PI * 2;
+                    const span = (safePct / 100.0) * Math.PI * 2;
                     const steps = Math.max(12, Math.round(span * 20));
                     const waves = 10;
                     const amp = 1.65;

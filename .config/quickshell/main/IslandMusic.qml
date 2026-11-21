@@ -36,12 +36,14 @@ Item {
         id: playButton
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        width: 24; height: 24; radius: 12
+        width: 24; height: 24
+        radius: playBtnMouse.pressed ? 6 : ((root.player && root.player.isPlaying) ? 8 : 12)
         color: root.player && root.player.isPlaying ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
         opacity: root.player && root.player.canTogglePlaying ? 1 : 0.4
-        scale: playBtnMouse.pressed ? 0.92 : 1.0
+        scale: playBtnMouse.pressed ? 0.88 : (playBtnMouse.containsMouse ? 1.06 : 1.0)
+        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
         Rectangle {
             anchors.fill: parent

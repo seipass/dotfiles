@@ -33,7 +33,7 @@ PanelWindow {
     anchors.bottom: true
     margins.bottom: 24
     implicitWidth: 268
-    implicitHeight: 58
+    implicitHeight: 80
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     focusable: false
@@ -43,13 +43,31 @@ PanelWindow {
 
     Rectangle {
         id: chip
-        anchors.fill: parent
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        height: 58
         radius: height / 2
         color: LivePalette.color.surfaceContainerHigh
         opacity: root.showing ? 1 : 0
-        scale: root.showing ? 1 : 0.94
+        scale: root.showing ? 1 : 0.88
+        transformOrigin: Item.Bottom
+        transform: Translate {
+            y: root.showing ? 0 : 16
+            Behavior on y {
+                NumberAnimation {
+                    duration: root.showing ? Theme.motion.spatial : Theme.motion.exit
+                    easing.type: root.showing ? Easing.OutBack : Easing.OutCubic
+                    easing.overshoot: root.showing ? Theme.motion.overshootStandard : 0
+                }
+            }
+        }
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.showing ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.showing ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.showing ? Theme.motion.overshootStandard : 0
+            }
+        }
 
         RowLayout {
             anchors.fill: parent
@@ -60,8 +78,10 @@ PanelWindow {
             Rectangle {
                 Layout.preferredWidth: 36
                 Layout.preferredHeight: 36
-                radius: 18
+                radius: root.muted ? 11 : 18
                 color: root.muted ? LivePalette.color.surfaceContainer : LivePalette.color.primaryContainer
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                 SymbolIcon {
                     anchors.centerIn: parent
@@ -97,6 +117,7 @@ PanelWindow {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
+                    clip: true
                     color: LivePalette.color.surfaceContainer
 
                     Rectangle {
@@ -104,7 +125,7 @@ PanelWindow {
                         height: parent.height
                         radius: 4
                         color: LivePalette.color.primary
-                        Behavior on width { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+                        Behavior on width { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
                     }
                 }
             }

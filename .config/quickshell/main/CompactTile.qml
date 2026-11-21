@@ -9,12 +9,13 @@ Rectangle {
     signal clicked()
 
     implicitHeight: 48
-    radius: 20
+    radius: cMouse.pressed ? 14 : 20
     color: LivePalette.color.surfaceContainer
-    scale: cMouse.pressed ? 0.97 : 1.0
+    scale: cMouse.pressed ? 0.94 : (cMouse.containsMouse ? 1.02 : 1.0)
 
+    Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
     Rectangle {
         anchors.fill: parent

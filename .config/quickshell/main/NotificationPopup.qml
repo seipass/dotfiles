@@ -33,15 +33,16 @@ PanelWindow {
         opacity: root.selectingScreen || root.fullscreenActive ? 0 : 1
         enabled: !root.fullscreenActive
         add: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.standard; easing.type: Easing.OutCubic }
-            NumberAnimation { property: "x"; from: 24; to: 0; duration: Theme.motion.emphasized; easing.type: Easing.OutQuint }
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: 0.94; to: 1; duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
+            NumberAnimation { property: "x"; from: 28; to: 0; duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
         }
         remove: Transition {
-            NumberAnimation { property: "opacity"; to: 0; duration: Theme.motion.fast; easing.type: Easing.InCubic }
-            NumberAnimation { property: "x"; to: 45; duration: Theme.motion.fast; easing.type: Easing.InCubic }
+            NumberAnimation { property: "opacity"; to: 0; duration: Theme.motion.exit; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "x"; to: 42; duration: Theme.motion.exit; easing.type: Easing.OutCubic }
         }
         displaced: Transition {
-            NumberAnimation { properties: "x,y"; duration: Theme.motion.standard; easing.type: Easing.OutQuint }
+            NumberAnimation { properties: "x,y"; duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
         }
         model: root.notifications
         delegate: Rectangle {
@@ -63,7 +64,7 @@ PanelWindow {
             radius: 24
             color: LivePalette.color.surfaceContainer
 
-            Behavior on height { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.InOutCubic } }
+            Behavior on height { NumberAnimation { duration: Theme.motion.exit; easing.type: Easing.OutCubic } }
             Behavior on opacity { NumberAnimation { duration: Theme.motion.exit; easing.type: Easing.OutCubic } }
 
             Timer {
@@ -115,10 +116,11 @@ PanelWindow {
                     Rectangle {
                         Layout.preferredWidth: 28
                         Layout.preferredHeight: 28
-                        radius: 14
+                        radius: closeMouse.pressed ? 8 : 14
                         color: LivePalette.color.surfaceContainerHigh
-                        scale: closeMouse.pressed ? 0.92 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                        scale: closeMouse.pressed ? 0.88 : (closeMouse.containsMouse ? 1.06 : 1.0)
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                         Rectangle {
                             anchors.fill: parent
@@ -176,10 +178,11 @@ PanelWindow {
                             required property var modelData
                             width: actionText.implicitWidth + 26
                             height: 32
-                            radius: 16
+                            radius: actMouse.pressed ? 10 : 16
                             color: LivePalette.color.primaryContainer
-                            scale: actMouse.pressed ? 0.96 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                            scale: actMouse.pressed ? 0.93 : (actMouse.containsMouse ? 1.03 : 1.0)
+                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                             Rectangle {
                                 anchors.fill: parent

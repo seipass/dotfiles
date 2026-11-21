@@ -72,11 +72,12 @@ PanelWindow {
         focusable: false
         Rectangle {
             anchors.fill: parent
-            radius: height / 2
+            radius: alertMouse.pressed ? 10 : (alerts.opened ? 11 : height / 2)
             color: alerts.opened ? LivePalette.color.primaryContainer : LivePalette.color.surface
-            scale: alertMouse.pressed ? 0.94 : 1.0
+            scale: alertMouse.pressed ? 0.90 : (alertMouse.containsMouse ? 1.04 : 1.0)
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
             Rectangle {
                 anchors.fill: parent
@@ -91,10 +92,13 @@ PanelWindow {
                 tint: alerts.opened ? LivePalette.color.primary : LivePalette.color.onSurface
             }
             Rectangle {
+                readonly property bool hasUnread: (root.shellState?.unreadNotifications ?? 0) > 0
                 anchors { top: parent.top; right: parent.right; margins: 5 }
                 width: 7; height: 7; radius: 4
-                visible: (root.shellState?.unreadNotifications ?? 0) > 0
+                scale: hasUnread ? 1.0 : 0.0
+                visible: scale > 0.01
                 color: LivePalette.color.primary
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
             }
             MouseArea {
                 id: alertMouse
@@ -144,8 +148,8 @@ PanelWindow {
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
 
-                scale: launcherBtnMouse.pressed ? 0.90 : 1.0
-                Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+                scale: launcherBtnMouse.pressed ? 0.88 : (launcherBtnMouse.containsMouse ? 1.05 : 1.0)
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 MaterialCookie {
                     anchors.fill: parent
@@ -157,10 +161,10 @@ PanelWindow {
                             ? LivePalette.color.primaryContainer
                             : LivePalette.color.surfaceContainerHigh)
                     Behavior on morph {
-                        NumberAnimation { duration: Theme.motion.standard + 40; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
                     }
                     Behavior on rotation {
-                        NumberAnimation { duration: Theme.motion.emphasized; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Theme.motion.spatialSlow; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
                     }
                     Behavior on fillColor { ColorAnimation { duration: Theme.motion.fast } }
                 }
@@ -231,15 +235,16 @@ PanelWindow {
                             anchors.centerIn: parent
                             width: 32
                             height: 32
-                            radius: 16
+                            radius: workspaceMouse.pressed ? 11 : 16
                             color: workspaceMouse.containsMouse
                                 ? LivePalette.color.surfaceContainerHigh : "transparent"
+                            scale: workspaceMouse.pressed ? 0.88 : (workspaceMouse.containsMouse ? 1.08 : 1.0)
 
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Theme.motion.standard
-                                    easing.type: Easing.OutCubic
-                                }
+                            Behavior on radius {
+                                NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast }
+                            }
+                            Behavior on scale {
+                                NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast }
                             }
                             Behavior on color {
                                 ColorAnimation {
@@ -284,8 +289,8 @@ PanelWindow {
                     property real headY: targetY
                     property real tailY: targetY
 
-                    Behavior on headY { SpringAnimation { spring: 6.2; damping: 0.44 } }
-                    Behavior on tailY { SpringAnimation { spring: 2.8; damping: 0.50 } }
+                    Behavior on headY { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                    Behavior on tailY { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: Math.min(headY, tailY)
@@ -312,7 +317,8 @@ PanelWindow {
                 Layout.fillWidth: true
 
                 Taskbar {
-                    visible: root.shellState?.showTaskbar ?? true
+                    opacity: (root.shellState?.showTaskbar ?? true) ? 1 : 0
+                    visible: opacity > 0
                     anchors.fill: parent
                     anchors.leftMargin: -8
                     anchors.rightMargin: -8
@@ -321,17 +327,20 @@ PanelWindow {
                     controller: root.taskbarController
                     currentMonitorOnly: root.shellState?.taskbarCurrentMonitorOnly ?? false
                     centerY: rail.height / 2 - taskSpace.mapToItem(rail, 0, 0).y
+                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
                 }
             }
 
             ColumnLayout {
                 id: trayItems
-                visible: root.shellState?.showTray ?? true
+                opacity: (root.shellState?.showTray ?? true) ? 1 : 0
+                visible: opacity > 0
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillWidth: true
                 Layout.topMargin: 4
                 Layout.bottomMargin: 4
                 spacing: Theme.spacing.small
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
 
                 Repeater {
                     model: ScriptModel {
@@ -343,16 +352,30 @@ PanelWindow {
                         required property var modelData
 
                         Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 22
-                        Layout.preferredHeight: 22
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: trayMouse.pressed ? 8 : 14
+                            color: LivePalette.color.surfaceContainerHigh
+                            opacity: trayMouse.pressed ? 1.0 : (trayMouse.containsMouse ? 0.9 : 0)
+                            scale: trayMouse.pressed ? 0.90 : 1.0
+                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                        }
 
                         IconImage {
                             anchors.centerIn: parent
                             source: trayEntry.modelData.icon
                             implicitSize: 22
+                            scale: trayMouse.pressed ? 0.86 : (trayMouse.containsMouse ? 1.10 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         }
 
                         MouseArea {
+                            id: trayMouse
                             anchors.fill: parent
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
@@ -395,11 +418,12 @@ PanelWindow {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
-                radius: 20
+                radius: toolsMouse.pressed ? 11 : (tools.opened ? 13 : 20)
                 color: tools.opened ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
-                scale: toolsMouse.pressed ? 0.94 : 1.0
+                scale: toolsMouse.pressed ? 0.90 : (toolsMouse.containsMouse ? 1.05 : 1.0)
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                 Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 Rectangle {
                     anchors.fill: parent
@@ -430,13 +454,14 @@ PanelWindow {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
-                radius: 20
+                radius: powerMouse.pressed ? 11 : (powerMenu.opened ? 13 : 20)
                 color: powerMenu.opened ? LivePalette.color.errorContainer : LivePalette.color.surfaceContainer
-                scale: powerMouse.pressed ? 0.94 : 1.0
+                scale: powerMouse.pressed ? 0.90 : (powerMouse.containsMouse ? 1.05 : 1.0)
                 border.width: 0
 
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                 Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 Rectangle {
                     anchors.fill: parent

@@ -246,8 +246,8 @@ PanelWindow {
         clip: true
         Behavior on width {
             NumberAnimation {
-                duration: root.opened ? Theme.motion.standard : Theme.motion.exit
-                easing.type: root.opened ? Easing.OutCubic : Easing.InOutCubic
+                duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: Easing.OutCubic
             }
         }
     }
@@ -383,8 +383,8 @@ PanelWindow {
                             }
                             NumberAnimation {
                                 target: pageOffset; property: "x"
-                                from: root.detailPage ? 16 : -10; to: 0
-                                duration: Theme.motion.standard; easing.type: Easing.OutQuint
+                                from: root.detailPage ? 20 : -14; to: 0
+                                duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle
                             }
                         }
 
@@ -526,12 +526,14 @@ PanelWindow {
                                                 onClicked: if (root.activePlayer) root.activePlayer.previous()
                                             }
                                             Rectangle {
-                                                width: 34; height: 34; radius: 17
+                                                width: 34; height: 34
+                                                radius: playMouse.pressed ? 9 : (root.activePlayer?.isPlaying ? 10 : 17)
                                                 color: playMouse.pressed ? Qt.darker(LivePalette.color.primary, 1.12)
                                                      : playMouse.containsMouse ? Qt.lighter(LivePalette.color.primary, 1.08)
                                                      : LivePalette.color.primary
-                                                scale: playMouse.pressed ? 0.94 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                                                scale: playMouse.pressed ? 0.90 : (playMouse.containsMouse ? 1.05 : 1.0)
+                                                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                                                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                                 SymbolIcon {
                                                     anchors.centerIn: parent
@@ -811,11 +813,12 @@ PanelWindow {
                                         readonly property bool selected: root.cfg && root.cfg.paletteMode === modelData.mode
                                         Layout.fillWidth: true
                                         implicitHeight: 112
-                                        radius: 22
+                                        radius: pMouse.pressed ? 14 : (selected ? 26 : 18)
                                         color: selected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
-                                        scale: pMouse.pressed ? 0.97 : 1.0
+                                        scale: pMouse.pressed ? 0.95 : 1.0
+                                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                                         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-                                        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                         Rectangle {
                                             anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
@@ -833,11 +836,13 @@ PanelWindow {
                                                 color: palTile.modelData.color
                                                 Text {
                                                     anchors.centerIn: parent
-                                                    visible: palTile.selected
+                                                    visible: scale > 0.01
+                                                    scale: palTile.selected ? 1.0 : 0.0
                                                     text: "✓"
                                                     font.pixelSize: 15
                                                     font.weight: Font.Bold
                                                     color: "#1b2636"
+                                                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                                 }
                                             }
                                             Text {
@@ -993,15 +998,19 @@ PanelWindow {
                                             id: aiChip
                                             required property var modelData
                                             readonly property bool selected: root.cfg && root.cfg.quotaProvider === modelData.value
-                                            height: 32; radius: 16; width: aiChipRow.implicitWidth + 20
+                                            height: 32; radius: aiChipMouse.pressed ? 8 : (selected ? 10 : 16); width: aiChipRow.implicitWidth + 20
                                             color: selected ? LivePalette.color.primaryContainer : "transparent"
                                             border.width: selected ? 0 : 1; border.color: LivePalette.color.outlineVariant
+                                            scale: aiChipMouse.pressed ? 0.92 : 1.0
+                                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                             Row {
                                                 id: aiChipRow; anchors.centerIn: parent; spacing: 6
                                                 ProviderIcon { width: 13; height: 13; anchors.verticalCenter: parent.verticalCenter; providerId: aiChip.modelData.value; tint: aiChip.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant }
                                                 Text { anchors.verticalCenter: parent.verticalCenter; text: aiChip.modelData.label; font.pixelSize: 12; font.weight: aiChip.selected ? Font.DemiBold : Font.Medium; color: aiChip.selected ? LivePalette.color.primary : LivePalette.color.onSurface }
                                             }
-                                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.cfg) root.cfg.setQuotaProvider(aiChip.modelData.value) }
+                                            MouseArea { id: aiChipMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (root.cfg) root.cfg.setQuotaProvider(aiChip.modelData.value) }
                                         }
                                     }
                                 }
@@ -1018,11 +1027,15 @@ PanelWindow {
                                             id: qiChip
                                             required property var modelData
                                             readonly property bool selected: root.cfg && root.cfg.quotaInterval === modelData.value
-                                            height: 30; radius: 15; width: qiTxt.implicitWidth + 22
+                                            height: 30; radius: qiChipMouse.pressed ? 8 : (selected ? 9 : 15); width: qiTxt.implicitWidth + 22
                                             color: selected ? LivePalette.color.primaryContainer : "transparent"
                                             border.width: selected ? 0 : 1; border.color: LivePalette.color.outlineVariant
+                                            scale: qiChipMouse.pressed ? 0.92 : 1.0
+                                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                             Text { id: qiTxt; anchors.centerIn: parent; text: qiChip.modelData.label; font.pixelSize: 11; font.weight: qiChip.selected ? Font.DemiBold : Font.Medium; color: qiChip.selected ? LivePalette.color.primary : LivePalette.color.onSurface }
-                                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.cfg) root.cfg.setQuotaInterval(qiChip.modelData.value) }
+                                            MouseArea { id: qiChipMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (root.cfg) root.cfg.setQuotaInterval(qiChip.modelData.value) }
                                         }
                                     }
                                 }
@@ -1047,11 +1060,15 @@ PanelWindow {
                                             id: eqChip
                                             required property var modelData
                                             readonly property bool selected: root.cfg && root.cfg.earthquakeInterval === modelData.value
-                                            height: 32; radius: 16; width: eqTxt.implicitWidth + 22
+                                            height: 32; radius: eqChipMouse.pressed ? 8 : (selected ? 10 : 16); width: eqTxt.implicitWidth + 22
                                             color: selected ? LivePalette.color.primaryContainer : "transparent"
                                             border.width: selected ? 0 : 1; border.color: LivePalette.color.outlineVariant
+                                            scale: eqChipMouse.pressed ? 0.92 : 1.0
+                                            Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                                            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                             Text { id: eqTxt; anchors.centerIn: parent; text: (eqChip.selected ? "✓ " : "") + eqChip.modelData.label; font.pixelSize: 12; font.weight: eqChip.selected ? Font.DemiBold : Font.Medium; color: eqChip.selected ? LivePalette.color.primary : LivePalette.color.onSurface }
-                                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.cfg) root.cfg.setEarthquakeInterval(eqChip.modelData.value) }
+                                            MouseArea { id: eqChipMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (root.cfg) root.cfg.setEarthquakeInterval(eqChip.modelData.value) }
                                         }
                                     }
                                 }
@@ -1218,9 +1235,12 @@ PanelWindow {
                                     Rectangle {
                                         anchors.fill: parent
                                         anchors.margins: 4
-                                        radius: 16
+                                        radius: winMouse.pressed ? 11 : 16
                                         color: LivePalette.color.surfaceContainer
                                         clip: true
+                                        scale: winMouse.pressed ? 0.94 : (winMouse.containsMouse ? 1.03 : 1.0)
+                                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                                         ColumnLayout {
                                             anchors.fill: parent
@@ -1250,7 +1270,9 @@ PanelWindow {
                                         }
 
                                         MouseArea {
+                                            id: winMouse
                                             anchors.fill: parent
+                                            hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
                                                 const raw = windowTile.modelData.address;
@@ -1302,10 +1324,10 @@ PanelWindow {
                             opacity: root.notificationsOpen ? 1 : 0
                             enabled: root.notificationsOpen
                             visible: opacity > 0
-                            y: root.notificationsOpen ? 0 : 8
+                            y: root.notificationsOpen ? 0 : 12
 
-                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                            Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 30; easing.type: Easing.OutCubic } }
+                            Behavior on y { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
 
                             ToggleRow {
                                 Layout.fillWidth: true

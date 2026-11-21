@@ -239,13 +239,14 @@ PanelWindow {
 
     Rectangle {
         id: launcherCard
+        readonly property int bottomOvershootPad: 28
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: -slideOffset * height
+        anchors.bottomMargin: -bottomOvershootPad - slideOffset * height
         property real slideOffset: launcherWindow.launcherOpen ? 0 : 1
         width: Math.min(560, parent.width - 32)
         height: Math.min(launcherWindow.mode && !launcherWindow.emojiMode
-                         ? (launcherWindow.toolResult.image ? 360 : 230) : 540, parent.height)
+                         ? (launcherWindow.toolResult.image ? 360 : 230) : 540, parent.height) + bottomOvershootPad
         radius: Theme.shape.dialogRadius
         bottomLeftRadius: 0
         bottomRightRadius: 0
@@ -255,17 +256,19 @@ PanelWindow {
 
         Behavior on slideOffset {
             NumberAnimation {
-                duration: launcherWindow.launcherOpen ? Theme.motion.emphasized : Theme.motion.exit
-                easing.type: launcherWindow.launcherOpen ? Easing.OutQuint : Easing.InOutCubic
+                duration: launcherWindow.launcherOpen ? Theme.motion.spatialSlow : Theme.motion.exit
+                easing.type: launcherWindow.launcherOpen ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: launcherWindow.launcherOpen ? Theme.motion.overshootGentle : 0
             }
         }
         Behavior on height {
-            NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
         }
 
         GridLayout {
             anchors.fill: parent
             anchors.margins: 18
+            anchors.bottomMargin: 18 + launcherCard.bottomOvershootPad
             columns: 1
             rowSpacing: Theme.spacing.medium
 
@@ -385,10 +388,10 @@ PanelWindow {
                     property real headBot: targetBot
                     property real tailBot: targetBot
 
-                    Behavior on headTop { SpringAnimation { spring: 6.4; damping: 0.46 } }
-                    Behavior on tailTop { SpringAnimation { spring: 2.9; damping: 0.52 } }
-                    Behavior on headBot { SpringAnimation { spring: 6.4; damping: 0.46 } }
-                    Behavior on tailBot { SpringAnimation { spring: 2.9; damping: 0.52 } }
+                    Behavior on headTop { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                    Behavior on tailTop { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
+                    Behavior on headBot { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                    Behavior on tailBot { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
 
                     width: appList.width
                     y: Math.min(headTop, tailTop)
@@ -401,15 +404,16 @@ PanelWindow {
                 onCountChanged: if (count && currentIndex < 0) currentIndex = 0
 
                 add: Transition {
-                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "scale"; from: 0.94; to: 1; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
                 }
 
                 remove: Transition {
-                    NumberAnimation { property: "opacity"; to: 0; duration: 160; easing.type: Easing.OutQuad }
+                    NumberAnimation { property: "opacity"; to: 0; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
                 }
 
                 displaced: Transition {
-                    NumberAnimation { properties: "y"; duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "y"; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
                 }
 
                 delegate: Rectangle {

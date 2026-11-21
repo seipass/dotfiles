@@ -32,6 +32,9 @@ Row {
             width: Math.ceil(isDigit ? Math.max(digitMetrics.advanceWidth, currTxt.implicitWidth) + 1 : Math.max(currTxt.implicitWidth, 4))
             height: Math.ceil(Math.max(digitMetrics.height, currTxt.implicitHeight) + 4)
             clip: true
+            Behavior on width {
+                NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
+            }
 
             onTargetCharChanged: {
                 if (!ready) {
@@ -56,7 +59,15 @@ Row {
                     property: "yOffset"
                     from: 0
                     to: -slot.height * 0.72
-                    duration: Theme.motion.standard
+                    duration: Theme.motion.spatial
+                    easing.type: Easing.OutCubic
+                }
+                NumberAnimation {
+                    target: outTxt
+                    property: "scale"
+                    from: 1.0
+                    to: 0.85
+                    duration: Theme.motion.fast
                     easing.type: Easing.OutCubic
                 }
                 NumberAnimation {
@@ -72,16 +83,25 @@ Row {
                     property: "yOffset"
                     from: slot.height * 0.72
                     to: 0
-                    duration: Theme.motion.standard + 40
+                    duration: Theme.motion.spatial
                     easing.type: Easing.OutBack
-                    easing.overshoot: 1.15
+                    easing.overshoot: Theme.motion.overshootStandard
+                }
+                NumberAnimation {
+                    target: currTxt
+                    property: "scale"
+                    from: 0.88
+                    to: 1.0
+                    duration: Theme.motion.spatial
+                    easing.type: Easing.OutBack
+                    easing.overshoot: Theme.motion.overshootStandard
                 }
                 NumberAnimation {
                     target: currTxt
                     property: "opacity"
                     from: 0
                     to: 1
-                    duration: Theme.motion.fast + 40
+                    duration: Theme.motion.fast + 30
                     easing.type: Easing.OutCubic
                 }
                 onFinished: slot.outgoingChar = ""

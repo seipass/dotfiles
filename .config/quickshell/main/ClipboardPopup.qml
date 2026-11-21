@@ -158,7 +158,13 @@ PanelWindow {
         transformOrigin: Item.TopLeft
 
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: root.opened ? Theme.motion.standard : Theme.motion.fast; easing.type: Easing.OutQuint } }
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.opened ? Theme.motion.overshootStandard : 0
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -202,9 +208,12 @@ PanelWindow {
                 Rectangle {
                     visible: root.rawHistory.length > 0
                     height: 30
-                    radius: 15
+                    radius: clearMouse.pressed ? 10 : 15
                     color: LivePalette.color.surfaceContainerHigh
                     width: clearLabel.implicitWidth + 20
+                    scale: clearMouse.pressed ? 0.90 : (clearMouse.containsMouse ? 1.04 : 1.0)
+                    Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                     Rectangle {
                         anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
                         opacity: clearMouse.pressed ? 0.14 : clearMouse.containsMouse ? 0.08 : 0
@@ -317,10 +326,10 @@ PanelWindow {
                     property real headBot: targetBot
                     property real tailBot: targetBot
 
-                    Behavior on headTop { SpringAnimation { spring: 6.4; damping: 0.46 } }
-                    Behavior on tailTop { SpringAnimation { spring: 2.9; damping: 0.52 } }
-                    Behavior on headBot { SpringAnimation { spring: 6.4; damping: 0.46 } }
-                    Behavior on tailBot { SpringAnimation { spring: 2.9; damping: 0.52 } }
+                    Behavior on headTop { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                    Behavior on tailTop { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
+                    Behavior on headBot { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                    Behavior on tailBot { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
 
                     width: clipList.width - 4
                     y: Math.min(headTop, tailTop)
@@ -341,8 +350,9 @@ PanelWindow {
                     implicitHeight: isImage ? 88 : Math.min(68, clipText.implicitHeight + 24)
                     radius: selected ? 18 : 16
                     color: selected ? "transparent" : LivePalette.color.surfaceContainerHigh
-                    scale: rowMouse.pressed ? 0.98 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                    scale: rowMouse.pressed ? 0.97 : 1.0
+                    Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                     Rectangle {
                         anchors.fill: parent

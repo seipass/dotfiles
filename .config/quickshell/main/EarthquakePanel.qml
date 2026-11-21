@@ -170,12 +170,14 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 62
                         Layout.preferredHeight: 62
-                        radius: 20
+                        radius: root.current && Number(root.current.maxScale) >= 30 ? 24 : 18
                         color: root.current && Number(root.current.maxScale) >= 45
                             ? LivePalette.color.error
                             : root.current && Number(root.current.maxScale) >= 30
                                 ? LivePalette.color.primary
                                 : LivePalette.color.surfaceContainerHigh
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                         Column {
                             anchors.centerIn: parent
@@ -289,12 +291,38 @@ Item {
 
         // History List
         ListView {
+            id: eqList
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
             spacing: 6
             model: root.history
+            currentIndex: root.selectedIndex
+            highlightFollowsCurrentItem: false
             ScrollBar.vertical: ScrollBar { active: true }
+
+            highlight: Rectangle {
+                readonly property Item cur: eqList.currentItem
+                readonly property real targetTop: cur ? cur.y : 0
+                readonly property real targetBot: cur ? (cur.y + cur.height) : 0
+                property real headTop: targetTop
+                property real tailTop: targetTop
+                property real headBot: targetBot
+                property real tailBot: targetBot
+
+                Behavior on headTop { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                Behavior on tailTop { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
+                Behavior on headBot { SpringAnimation { spring: Theme.motion.springLead; damping: Theme.motion.dampingLead } }
+                Behavior on tailBot { SpringAnimation { spring: Theme.motion.springTrail; damping: Theme.motion.dampingTrail } }
+
+                width: eqList.width - 4
+                y: Math.min(headTop, tailTop)
+                height: Math.max(0, Math.max(headBot, tailBot) - y)
+                radius: 18
+                visible: !!cur && eqList.count > 0
+                color: LivePalette.color.primaryContainer
+                z: -1
+            }
 
             delegate: Rectangle {
                 id: eqRow
@@ -303,11 +331,12 @@ Item {
                 readonly property bool isSelected: root.selectedIndex === index
                 width: ListView.view.width - 4
                 height: 54
-                radius: 18
-                color: isSelected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
-                scale: rowMouse.pressed ? 0.98 : 1.0
+                radius: isSelected ? 18 : 16
+                color: isSelected ? "transparent" : LivePalette.color.surfaceContainer
+                scale: rowMouse.pressed ? 0.96 : 1.0
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                 Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 Rectangle {
                     anchors.fill: parent

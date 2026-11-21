@@ -37,10 +37,25 @@ var spacing = {
 };
 
 var motion = {
+    // Effects (opacity / color: no overshoot)
     fast: 150,
-    standard: 280,
-    emphasized: 380,
-    exit: 240
+    standard: 260,
+    emphasized: 360,
+    exit: 200,
+
+    // Spatial (M3 Expressive Spring-like OutBack physics)
+    spatialFast: 210,
+    spatial: 340,
+    spatialSlow: 440,
+    overshootFast: 1.35,
+    overshootStandard: 1.18,
+    overshootGentle: 0.72,
+
+    // 2-Spring stretch highlight parameters
+    springLead: 6.4,
+    dampingLead: 0.46,
+    springTrail: 2.9,
+    dampingTrail: 0.52
 };
 
 function resolveEmojiFont() {

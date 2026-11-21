@@ -97,7 +97,13 @@ PanelWindow {
         focus: root.opened
 
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: root.opened ? Theme.motion.standard : Theme.motion.exit; easing.type: Easing.OutQuint } }
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.opened ? Theme.motion.overshootStandard : 0
+            }
+        }
 
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Escape) {
@@ -178,9 +184,9 @@ PanelWindow {
                 Accessible.name: confirming ? "シャットダウンを実行する" : "シャットダウン"
                 Accessible.description: "システムの電源を切ります。誤操作防止のため2回押して実行します。"
 
-                Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                 Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-                Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                 // M3 State Layer
                 Rectangle {
@@ -238,11 +244,15 @@ PanelWindow {
                     }
 
                     Rectangle {
-                        visible: shutdownBtn.confirming
+                        visible: scale > 0.65 || shutdownBtn.confirming
                         radius: 999
                         color: Qt.alpha("#1a0607", 0.18)
                         implicitWidth: confirmChip.implicitWidth + 16
                         implicitHeight: 24
+                        opacity: shutdownBtn.confirming ? 1.0 : 0.0
+                        scale: shutdownBtn.confirming ? 1.0 : 0.6
+                        Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         Text {
                             id: confirmChip
                             anchors.centerIn: parent
@@ -290,9 +300,9 @@ PanelWindow {
                         Accessible.name: confirming ? (modelData.label + "を実行する") : modelData.label
                         Accessible.description: modelData.desc
 
-                        Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
                         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-                        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                         Rectangle {
                             anchors.fill: parent

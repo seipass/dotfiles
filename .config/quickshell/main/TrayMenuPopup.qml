@@ -71,7 +71,7 @@ PanelWindow {
     margins.top: Math.max(0, Math.min(targetY - implicitHeight / 2, (screen ? screen.height : 1080) - implicitHeight))
     Behavior on margins.top {
         enabled: root.shown
-        NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutQuint }
+        NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
     }
     anchors { left: true; top: true }
     color: "transparent"
@@ -103,7 +103,16 @@ PanelWindow {
     Item {
         anchors.fill: parent
         opacity: root.shown ? 1 : 0
+        scale: root.shown ? 1.0 : 0.92
+        transformOrigin: Item.Left
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.shown ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.shown ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.shown ? Theme.motion.overshootStandard : 0
+            }
+        }
         HoverHandler { id: hover }
         Shape {
             anchors.fill: parent
@@ -142,7 +151,10 @@ PanelWindow {
         ColumnLayout {
             id: menuLayout
             opacity: root.contentShown ? 1 : 0
+            scale: root.contentShown ? 1.0 : 0.96
+            transformOrigin: Item.Left
             Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
@@ -154,8 +166,11 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: visible ? 38 : 0
                 visible: root.menuPath.length > 1
-                radius: 19
+                radius: backMouse.pressed ? 11 : 19
                 color: LivePalette.color.surfaceContainerHigh
+                scale: backMouse.pressed ? 0.95 : 1.0
+                Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                 Rectangle {
                     anchors.fill: parent; radius: parent.radius; color: LivePalette.color.onSurface
                     opacity: backMouse.pressed ? 0.12 : backMouse.containsMouse ? 0.08 : 0
@@ -191,9 +206,12 @@ PanelWindow {
                     Rectangle {
                         visible: !menuRow.modelData.isSeparator
                         anchors.fill: parent
-                        radius: height / 2
+                        radius: rowMouse.pressed ? 11 : height / 2
                         color: rowMouse.containsMouse && menuRow.modelData.enabled ? LivePalette.color.primaryContainer : "transparent"
+                        scale: rowMouse.pressed && menuRow.modelData.enabled ? 0.96 : 1.0
+                        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                         Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
                         RowLayout {
                             anchors.fill: parent

@@ -12,15 +12,17 @@ Rectangle {
     signal clicked()
 
     implicitHeight: 70
-    radius: active ? height / 2 : 18
+    radius: qMouse.pressed ? 14 : (active ? height / 2 : 18)
     color: active ? LivePalette.color.primary : LivePalette.color.surfaceContainer
-    scale: qMouse.pressed ? 0.96 : 1.0
+    scale: qMouse.pressed ? 0.95 : 1.0
 
     Behavior on radius {
-        NumberAnimation { duration: Theme.motion.standard + 40; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+        NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
     }
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-    Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+    Behavior on scale {
+        NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast }
+    }
 
     // M3 State Layer
     Rectangle {
@@ -44,7 +46,7 @@ Rectangle {
             color: qTile.active
                 ? Qt.alpha(LivePalette.color.onPrimary, 0.16)
                 : LivePalette.color.surfaceContainerHigh
-            Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             SymbolIcon {

@@ -13,16 +13,18 @@ Rectangle {
     signal clicked()
 
     implicitHeight: subtitle ? 64 : 52
-    radius: active ? height / 2 : 18
+    radius: tMouse.pressed ? 14 : (active ? height / 2 : 18)
     color: active ? LivePalette.color.primary : LivePalette.color.surfaceContainer
     opacity: enabled ? 1.0 : 0.5
-    scale: tMouse.pressed ? 0.97 : 1.0
+    scale: tMouse.pressed ? 0.96 : 1.0
 
     Behavior on radius {
-        NumberAnimation { duration: Theme.motion.standard + 40; easing.type: Easing.OutBack; easing.overshoot: 1.12 }
+        NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
     }
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+    Behavior on scale {
+        NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -46,7 +48,7 @@ Rectangle {
             color: tCard.active
                 ? Qt.alpha(LivePalette.color.onPrimary, 0.16)
                 : LivePalette.color.surfaceContainerHigh
-            Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             SymbolIcon {
@@ -84,12 +86,14 @@ Rectangle {
 
         Rectangle {
             visible: tCard.badge !== ""
-            radius: 12
+            radius: tCard.active ? 12 : 8
             color: tCard.active
                 ? Qt.alpha(LivePalette.color.onPrimary, 0.16)
                 : LivePalette.color.surfaceContainerHigh
             implicitWidth: badgeText.implicitWidth + 16
             implicitHeight: 24
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             Text {
                 id: badgeText

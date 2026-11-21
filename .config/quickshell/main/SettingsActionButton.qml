@@ -36,16 +36,17 @@ Button {
     }
 
     background: Rectangle {
-        radius: height / 2
+        radius: action.down ? 12 : height / 2
         color: !action.enabled
             ? Qt.alpha(LivePalette.color.onSurface, 0.12)
             : action.primary
                 ? LivePalette.color.primary
                 : LivePalette.color.surfaceContainerHigh
-        scale: action.down ? 0.97 : 1.0
+        scale: action.down ? 0.94 : (action.hovered ? 1.02 : 1.0)
 
+        Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
         // M3 State Layer
         Rectangle {

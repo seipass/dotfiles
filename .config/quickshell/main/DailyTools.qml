@@ -46,9 +46,10 @@ ColumnLayout {
     // Focus Timer Card
     Rectangle {
         Layout.fillWidth: true
-        radius: 22
+        radius: root.started > 0 ? 28 : 20
         color: root.started > 0 ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
         implicitHeight: timerCol.implicitHeight + 28
+        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
         ColumnLayout {
@@ -101,9 +102,10 @@ ColumnLayout {
     // Stopwatch Card
     Rectangle {
         Layout.fillWidth: true
-        radius: 22
+        radius: root.stopwatchStarted > 0 ? 28 : 20
         color: root.stopwatchStarted > 0 ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
         implicitHeight: swRow.implicitHeight + 28
+        Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
         RowLayout {

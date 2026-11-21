@@ -11,12 +11,14 @@ Rectangle {
     signal toggled()
 
     implicitHeight: subtitle ? 64 : 54
-    radius: checked ? 26 : 18
+    radius: tgMouse.pressed ? 14 : (checked ? 26 : 18)
     color: LivePalette.color.surfaceContainer
     opacity: enabled ? 1.0 : 0.5
+    scale: tgMouse.pressed ? 0.985 : 1.0
 
-    Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+    Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
 
     Rectangle {
         anchors.fill: parent
@@ -38,7 +40,7 @@ Rectangle {
             Layout.preferredHeight: 36
             radius: tgRow.checked ? 18 : 12
             color: tgRow.checked ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh
-            Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+            Behavior on radius { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             SymbolIcon {

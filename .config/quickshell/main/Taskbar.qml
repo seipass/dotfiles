@@ -173,7 +173,7 @@ Item {
                         width: 40
                         height: 40
                         readonly property color activeContainerColor: LivePalette.color.surface.hslLightness < 0.5
-                            ? Qt.tint(LivePalette.color.primaryContainer, Qt.alpha(LivePalette.color.primary, 0.55))
+                            ? Qt.tint(LivePalette.color.primaryContainer, Qt.alpha(LivePalette.color.primary, 0.40))
                             : LivePalette.color.primaryContainer
                         radius: entry.active ? 13 : ((mouse.containsMouse || entry.isDragging) ? 15 : 20)
                         color: entry.active
@@ -181,8 +181,6 @@ Item {
                             : ((mouse.containsMouse || entry.isDragging)
                                 ? LivePalette.color.surfaceContainerHigh
                                 : "transparent")
-                        border.width: entry.active ? 1 : 0
-                        border.color: entry.active ? LivePalette.color.primary : "transparent"
                         scale: entry.isDragging ? 1.07
                             : (mouse.pressed || middleBounce.running ? 0.90 : (mouse.containsMouse ? 1.04 : 1.0))
 

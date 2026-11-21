@@ -134,7 +134,54 @@ PanelWindow {
             anchors.rightMargin: 10
             anchors.topMargin: 10
             anchors.bottomMargin: 10
-                spacing: Theme.spacing.small
+            spacing: Theme.spacing.small
+
+            // M3 Expressive Morphing Cookie Launcher Button
+            Item {
+                id: launcherCookieBtn
+                readonly property bool isOpen: root.launcherController?.launcherOpen ?? false
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+
+                scale: launcherBtnMouse.pressed ? 0.90 : 1.0
+                Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+
+                MaterialCookie {
+                    anchors.fill: parent
+                    morph: launcherCookieBtn.isOpen ? 2.0 : (launcherBtnMouse.containsMouse ? 1.0 : 0.0)
+                    rotation: launcherCookieBtn.isOpen ? 90 : (launcherBtnMouse.containsMouse ? 40 : 0)
+                    fillColor: launcherCookieBtn.isOpen
+                        ? LivePalette.color.primary
+                        : (launcherBtnMouse.containsMouse
+                            ? LivePalette.color.primaryContainer
+                            : LivePalette.color.surfaceContainerHigh)
+                    Behavior on morph {
+                        NumberAnimation { duration: Theme.motion.standard + 40; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on rotation {
+                        NumberAnimation { duration: Theme.motion.emphasized; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on fillColor { ColorAnimation { duration: Theme.motion.fast } }
+                }
+
+                SymbolIcon {
+                    anchors.centerIn: parent
+                    implicitWidth: 18
+                    implicitHeight: 18
+                    iconName: "view-app-grid-symbolic"
+                    tint: launcherCookieBtn.isOpen ? LivePalette.color.onPrimary : LivePalette.color.primary
+                }
+
+                MouseArea {
+                    id: launcherBtnMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    Accessible.name: "App Launcher"
+                    onClicked: if (root.launcherController) root.launcherController.toggleLauncher(false)
+                }
+            }
 
             Rectangle {
                 id: workspaceRail
@@ -146,6 +193,19 @@ PanelWindow {
                 Layout.preferredHeight: 184
                 radius: 20
                 color: LivePalette.color.surfaceContainer
+
+                WheelHandler {
+                    onWheel: event => {
+                        const step = event.angleDelta.y > 0 ? -1 : 1;
+                        const nextId = Math.max(1, Math.min(10, workspaceRail.activeId + step));
+                        if (nextId !== workspaceRail.activeId) {
+                            if (Hyprland.usingLua)
+                                Hyprland.dispatch("hl.dsp.focus({ workspace = " + nextId + " })");
+                            else
+                                Hyprland.dispatch("workspace " + nextId);
+                        }
+                    }
+                }
 
             ColumnLayout {
                 id: workspaceList
@@ -216,21 +276,25 @@ PanelWindow {
                     }
                 }
             }
+                // M3 Expressive 2-spring stretch workspace marker
                 Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: 4 + Math.max(0, workspaceRail.activeId - workspaceRail.pageStart)
+                    id: wsMarker
+                    readonly property real targetY: 4 + Math.max(0, workspaceRail.activeId - workspaceRail.pageStart)
                         * (workspaceRail.slotSize + workspaceList.spacing)
+                    property real headY: targetY
+                    property real tailY: targetY
+
+                    Behavior on headY { SpringAnimation { spring: 6.2; damping: 0.44 } }
+                    Behavior on tailY { SpringAnimation { spring: 2.8; damping: 0.50 } }
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: Math.min(headY, tailY)
                     width: workspaceRail.slotSize
-                    height: width
+                    height: workspaceRail.slotSize + Math.abs(headY - tailY)
                     radius: width / 2
                     visible: workspaceRail.activeId > 0
                     color: LivePalette.color.primary
-                    Behavior on y {
-                        NumberAnimation {
-                            duration: Theme.motion.standard
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+
                     Text {
                         anchors.centerIn: parent
                         text: "◆"

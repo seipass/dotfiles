@@ -302,12 +302,16 @@ PanelWindow {
                             launcherWindow.closeLauncher();
                             event.accepted = true;
                         } else if (event.key === Qt.Key_Down) {
-                            if (appList.count > 0)
+                            if (appList.count > 0) {
                                 appList.currentIndex = Math.min(appList.count - 1, appList.currentIndex + 1);
+                                appList.positionViewAtIndex(appList.currentIndex, ListView.Contain);
+                            }
                             event.accepted = true;
                         } else if (event.key === Qt.Key_Up) {
-                            if (appList.count > 0)
+                            if (appList.count > 0) {
                                 appList.currentIndex = Math.max(0, appList.currentIndex - 1);
+                                appList.positionViewAtIndex(appList.currentIndex, ListView.Contain);
+                            }
                             event.accepted = true;
                         }
                     }
@@ -371,9 +375,29 @@ PanelWindow {
                 model: launcherWindow.commandPicker ? launcherWindow.commandResults
                     : launcherWindow.emojiMode ? (launcherWindow.toolResult.emoji || []) : appListModel
                 currentIndex: 0
-                highlight: Rectangle { radius: height / 2; color: LivePalette.color.primaryContainer }
-                highlightMoveDuration: 180
-                highlightMoveVelocity: -1
+                highlightFollowsCurrentItem: false
+                highlight: Rectangle {
+                    readonly property Item cur: appList.currentItem
+                    readonly property real targetTop: cur ? cur.y : 0
+                    readonly property real targetBot: cur ? (cur.y + cur.height) : 0
+                    property real headTop: targetTop
+                    property real tailTop: targetTop
+                    property real headBot: targetBot
+                    property real tailBot: targetBot
+
+                    Behavior on headTop { SpringAnimation { spring: 6.4; damping: 0.46 } }
+                    Behavior on tailTop { SpringAnimation { spring: 2.9; damping: 0.52 } }
+                    Behavior on headBot { SpringAnimation { spring: 6.4; damping: 0.46 } }
+                    Behavior on tailBot { SpringAnimation { spring: 2.9; damping: 0.52 } }
+
+                    width: appList.width
+                    y: Math.min(headTop, tailTop)
+                    height: Math.max(0, Math.max(headBot, tailBot) - y)
+                    radius: height / 2
+                    visible: !!cur && appList.count > 0
+                    color: LivePalette.color.primaryContainer
+                    z: -1
+                }
                 onCountChanged: if (count && currentIndex < 0) currentIndex = 0
 
                 add: Transition {

@@ -95,12 +95,12 @@ PanelWindow {
         Column {
             anchors.centerIn: parent
             spacing: 2
-            Text {
+            RollingClock {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Qt.formatTime(root.clockDate, "HH:mm")
-                font.family: Theme.font.display
-                font.pixelSize: 52
-                color: LivePalette.color.onSurface
+                fontFamily: Theme.font.display
+                fontPixelSize: 52
+                textColor: LivePalette.color.onSurface
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter

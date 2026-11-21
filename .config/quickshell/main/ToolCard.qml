@@ -13,19 +13,22 @@ Rectangle {
     signal clicked()
 
     implicitHeight: subtitle ? 64 : 52
-    radius: 20
-    color: active ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainer
+    radius: active ? height / 2 : 18
+    color: active ? LivePalette.color.primary : LivePalette.color.surfaceContainer
     opacity: enabled ? 1.0 : 0.5
-    scale: tMouse.pressed ? 0.98 : 1.0
+    scale: tMouse.pressed ? 0.97 : 1.0
 
+    Behavior on radius {
+        NumberAnimation { duration: Theme.motion.standard + 40; easing.type: Easing.OutBack; easing.overshoot: 1.12 }
+    }
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
     Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
     Rectangle {
         anchors.fill: parent
         radius: parent.radius
-        color: LivePalette.color.onSurface
-        opacity: tMouse.pressed ? 0.12 : tMouse.containsMouse ? 0.07 : 0
+        color: tCard.active ? LivePalette.color.onPrimary : LivePalette.color.onSurface
+        opacity: tMouse.pressed ? 0.14 : tMouse.containsMouse ? 0.08 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
     }
 
@@ -39,8 +42,12 @@ Rectangle {
             visible: tCard.iconName !== ""
             Layout.preferredWidth: 38
             Layout.preferredHeight: 38
-            radius: 19
-            color: tCard.active ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh
+            radius: tCard.active ? 19 : 13
+            color: tCard.active
+                ? Qt.alpha(LivePalette.color.onPrimary, 0.16)
+                : LivePalette.color.surfaceContainerHigh
+            Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             SymbolIcon {
                 anchors.centerIn: parent
@@ -59,8 +66,8 @@ Rectangle {
                 Layout.fillWidth: true
                 text: tCard.title
                 font.pixelSize: 13
-                font.weight: Font.Medium
-                color: LivePalette.color.onSurface
+                font.weight: tCard.active ? Font.DemiBold : Font.Medium
+                color: tCard.active ? LivePalette.color.onPrimary : LivePalette.color.onSurface
                 elide: Text.ElideRight
             }
             Text {
@@ -68,7 +75,9 @@ Rectangle {
                 visible: tCard.subtitle !== ""
                 text: tCard.subtitle
                 font.pixelSize: 11
-                color: LivePalette.color.onSurfaceVariant
+                color: tCard.active
+                    ? Qt.alpha(LivePalette.color.onPrimary, 0.80)
+                    : LivePalette.color.onSurfaceVariant
                 elide: Text.ElideRight
             }
         }
@@ -76,7 +85,9 @@ Rectangle {
         Rectangle {
             visible: tCard.badge !== ""
             radius: 12
-            color: tCard.active ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh
+            color: tCard.active
+                ? Qt.alpha(LivePalette.color.onPrimary, 0.16)
+                : LivePalette.color.surfaceContainerHigh
             implicitWidth: badgeText.implicitWidth + 16
             implicitHeight: 24
 

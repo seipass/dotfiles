@@ -300,14 +300,14 @@ PanelWindow {
             }
         }
 
-        Text {
+        RollingClock {
             anchors.horizontalCenter: parent.horizontalCenter
             y: (Theme.shape.islandHeight - height) / 2
             text: Qt.formatDateTime(root.panelDate, "HH:mm")
-            color: LivePalette.color.onSurface
-            font.family: root.clockFontFamily
-            font.pixelSize: 20
-            font.weight: Font.Normal
+            fontFamily: root.clockFontFamily
+            fontPixelSize: 20
+            fontWeight: Font.Normal
+            textColor: LivePalette.color.onSurface
         }
 
         Row {
@@ -464,11 +464,11 @@ PanelWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
-                    Text {
+                    RollingClock {
                         text: Qt.formatDateTime(root.panelDate, "HH:mm")
-                        font.family: root.clockFontFamily
-                        font.pixelSize: 34
-                        color: LivePalette.color.onSurface
+                        fontFamily: root.clockFontFamily
+                        fontPixelSize: 34
+                        textColor: LivePalette.color.onSurface
                     }
                     Text {
                         text: Qt.formatDateTime(root.panelDate, "dddd, d MMMM")

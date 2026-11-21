@@ -294,7 +294,7 @@ PanelWindow {
                 }
             }
 
-            // History List (Text + Image Thumbnails)
+            // History List (Text + Image Thumbnails with 2-spring stretch highlight)
             ListView {
                 id: clipList
                 Layout.fillWidth: true
@@ -303,7 +303,33 @@ PanelWindow {
                 spacing: 6
                 model: root.filteredHistory
                 currentIndex: root.selectedIndex
+                highlightFollowsCurrentItem: false
                 ScrollBar.vertical: ScrollBar { active: true }
+
+                onCurrentIndexChanged: if (currentIndex >= 0) positionViewAtIndex(currentIndex, ListView.Contain)
+
+                highlight: Rectangle {
+                    readonly property Item cur: clipList.currentItem
+                    readonly property real targetTop: cur ? cur.y : 0
+                    readonly property real targetBot: cur ? (cur.y + cur.height) : 0
+                    property real headTop: targetTop
+                    property real tailTop: targetTop
+                    property real headBot: targetBot
+                    property real tailBot: targetBot
+
+                    Behavior on headTop { SpringAnimation { spring: 6.4; damping: 0.46 } }
+                    Behavior on tailTop { SpringAnimation { spring: 2.9; damping: 0.52 } }
+                    Behavior on headBot { SpringAnimation { spring: 6.4; damping: 0.46 } }
+                    Behavior on tailBot { SpringAnimation { spring: 2.9; damping: 0.52 } }
+
+                    width: clipList.width - 4
+                    y: Math.min(headTop, tailTop)
+                    height: Math.max(0, Math.max(headBot, tailBot) - y)
+                    radius: 18
+                    visible: !!cur && clipList.count > 0
+                    color: LivePalette.color.primaryContainer
+                    z: -1
+                }
 
                 delegate: Rectangle {
                     id: clipRow
@@ -313,10 +339,9 @@ PanelWindow {
                     readonly property bool selected: root.selectedIndex === index
                     width: clipList.width - 4
                     implicitHeight: isImage ? 88 : Math.min(68, clipText.implicitHeight + 24)
-                    radius: 16
-                    color: selected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
+                    radius: selected ? 18 : 16
+                    color: selected ? "transparent" : LivePalette.color.surfaceContainerHigh
                     scale: rowMouse.pressed ? 0.98 : 1.0
-                    Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
                     Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
                     Rectangle {

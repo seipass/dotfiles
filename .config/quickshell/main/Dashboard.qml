@@ -64,7 +64,12 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 50
             spacing: 0
-            Text { text: Qt.formatDateTime(root.panelDate, "HH:mm"); font.pixelSize: 32; font.family: Theme.font.display; color: LivePalette.color.onSurface }
+            RollingClock {
+                text: Qt.formatDateTime(root.panelDate, "HH:mm")
+                fontPixelSize: 32
+                fontFamily: Theme.font.display
+                textColor: LivePalette.color.onSurface
+            }
             ColumnLayout {
                 Layout.leftMargin: 18
                 spacing: 1
@@ -232,15 +237,18 @@ Item {
                                 required property string modelData
                                 readonly property bool isPlay: index === 1
                                 readonly property bool canAct: !!root.player && (index === 0 ? root.player.canGoPrevious : index === 1 ? root.player.canTogglePlaying : root.player.canGoNext)
-                                width: isPlay ? 40 : 34
+                                width: isPlay ? 42 : 34
                                 height: width
-                                radius: width / 2
+                                radius: isPlay
+                                    ? ((root.player && root.player.isPlaying) ? width / 2 : 12)
+                                    : width / 2
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: isPlay
                                     ? (canAct ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh)
                                     : LivePalette.color.surfaceContainerHigh
                                 opacity: canAct ? 1 : 0.4
-                                scale: mediaBtnMouse.pressed ? 0.94 : 1.0
+                                scale: mediaBtnMouse.pressed ? 0.92 : 1.0
+                                Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutBack; easing.overshoot: 1.15 } }
                                 Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
                                 Rectangle {
@@ -279,6 +287,8 @@ Item {
                 BarSlider {
                     id: seek
                     Layout.fillWidth: true
+                    wavy: true
+                    waveAnimated: !!(root.player && root.player.isPlaying && root.visible)
                     from: 0; to: root.player ? Math.max(1, root.player.length) : 1
                     value: root.player ? root.player.position : 0
                     enabled: root.player && root.player.canSeek && root.player.positionSupported
@@ -302,7 +312,7 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: 5
+                Layout.preferredWidth: 4
                 Layout.fillHeight: true
                 radius: 24
                 color: LivePalette.color.surfaceContainer
@@ -382,14 +392,28 @@ Item {
                                 readonly property bool today: root.sameDay(date, root.panelDate)
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                MaterialCookie {
+                                    anchors.centerIn: parent
+                                    visible: dayCell.today
+                                    width: Math.min(30, dayCell.width, dayCell.height)
+                                    height: width
+                                    morph: dayMouse.containsMouse ? 1.0 : 0.0
+                                    rotation: dayMouse.containsMouse ? 40 : 0
+                                    fillColor: dayCell.selected ? LivePalette.color.primary : LivePalette.color.primaryContainer
+                                    strokeColor: dayCell.selected ? "transparent" : LivePalette.color.primary
+                                    strokeWidth: dayCell.selected ? 0 : 1.2
+                                    Behavior on morph { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
+                                    Behavior on rotation { NumberAnimation { duration: Theme.motion.emphasized; easing.type: Easing.OutCubic } }
+                                    Behavior on fillColor { ColorAnimation { duration: Theme.motion.fast } }
+                                }
                                 Rectangle {
                                     anchors.centerIn: parent
+                                    visible: !dayCell.today
                                     width: Math.min(28, dayCell.width, dayCell.height)
                                     height: width
-                                    radius: width / 2
+                                    radius: dayCell.selected ? width / 2 : 9
                                     color: dayCell.selected ? LivePalette.color.primary : dayMouse.containsMouse ? LivePalette.color.surfaceContainerHigh : "transparent"
-                                    border.width: dayCell.today && !dayCell.selected ? 1.5 : 0
-                                    border.color: LivePalette.color.primary
+                                    Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
                                     Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
                                 }
                                 Text {
@@ -437,37 +461,33 @@ Item {
 
                     Text { text: "SYSTEM"; font.family: Theme.font.display; font.pixelSize: 15; color: LivePalette.color.onSurfaceVariant }
 
-                    Repeater {
-                        model: ["CPU", "RAM", "DISK"]
-                        delegate: ColumnLayout {
-                            required property int index
-                            required property string modelData
-                            readonly property int pct: Math.max(0, Math.min(100, Number(root.resources.split("|")[index]) || 0))
+                    GridLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        columns: 2
+                        rowSpacing: 8
+                        columnSpacing: 6
+
+                        WavyRing {
+                            Layout.columnSpan: 2
+                            Layout.alignment: Qt.AlignHCenter
+                            label: "CPU"
+                            percent: Math.max(0, Math.min(100, Number(root.resources.split("|")[0]) || 0))
+                        }
+
+                        WavyRing {
                             Layout.fillWidth: true
-                            spacing: 6
+                            label: "RAM"
+                            percent: Math.max(0, Math.min(100, Number(root.resources.split("|")[1]) || 0))
+                        }
 
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: modelData; color: LivePalette.color.onSurface; font.pixelSize: 12; font.weight: Font.Medium }
-                                Item { Layout.fillWidth: true }
-                                Text { text: root.resources.split("|")[index] + "%"; color: LivePalette.color.primary; font.pixelSize: 12; font.weight: Font.DemiBold }
-                            }
-
-                            Rectangle {
-                                Layout.fillWidth: true
-                                height: 8
-                                radius: 4
-                                color: LivePalette.color.surfaceContainerHigh
-                                Rectangle {
-                                    width: parent.width * pct / 100
-                                    height: parent.height
-                                    radius: 4
-                                    color: LivePalette.color.primary
-                                    Behavior on width { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
-                                }
-                            }
+                        WavyRing {
+                            Layout.fillWidth: true
+                            label: "DISK"
+                            percent: Math.max(0, Math.min(100, Number(root.resources.split("|")[2]) || 0))
                         }
                     }
+
                     Item { Layout.fillHeight: true }
                 }
             }

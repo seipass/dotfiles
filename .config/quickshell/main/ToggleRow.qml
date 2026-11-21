@@ -11,10 +11,11 @@ Rectangle {
     signal toggled()
 
     implicitHeight: subtitle ? 64 : 54
-    radius: 20
+    radius: checked ? 26 : 18
     color: LivePalette.color.surfaceContainer
     opacity: enabled ? 1.0 : 0.5
 
+    Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
     Rectangle {
@@ -35,8 +36,9 @@ Rectangle {
             visible: tgRow.iconName !== ""
             Layout.preferredWidth: 36
             Layout.preferredHeight: 36
-            radius: 18
-            color: tgRow.checked ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
+            radius: tgRow.checked ? 18 : 12
+            color: tgRow.checked ? LivePalette.color.primary : LivePalette.color.surfaceContainerHigh
+            Behavior on radius { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
             SymbolIcon {
@@ -44,7 +46,7 @@ Rectangle {
                 implicitWidth: 18
                 implicitHeight: 18
                 iconName: tgRow.iconName
-                tint: tgRow.checked ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                tint: tgRow.checked ? LivePalette.color.onPrimary : LivePalette.color.onSurfaceVariant
             }
         }
 
@@ -70,7 +72,7 @@ Rectangle {
             }
         }
 
-        // Authentic Material 3 Switch (52x32)
+        // Authentic Material 3 Expressive Switch (52x32)
         Rectangle {
             width: 52
             height: 32
@@ -81,16 +83,16 @@ Rectangle {
             Behavior on color { ColorAnimation { duration: 180 } }
 
             Rectangle {
-                readonly property real knobSize: tgMouse.pressed ? 26 : (tgRow.checked ? 24 : 16)
+                readonly property real knobSize: tgMouse.pressed ? 27 : (tgRow.checked ? 24 : 16)
                 x: tgRow.checked ? parent.width - width - 4 : (32 - width) / 2
                 anchors.verticalCenter: parent.verticalCenter
                 width: knobSize
                 height: knobSize
                 radius: width / 2
                 color: tgRow.checked ? LivePalette.color.onPrimary : LivePalette.color.onSurfaceVariant
-                Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                Behavior on height { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.25 } }
+                Behavior on width { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                 Behavior on color { ColorAnimation { duration: 180 } }
             }
         }

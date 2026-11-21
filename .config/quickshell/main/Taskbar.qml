@@ -149,16 +149,16 @@ Item {
                             delegate: Rectangle {
                                 required property int index
                                 readonly property bool isMain: index === 0
-                                width: entry.active && isMain ? 3.5 : 3
+                                width: entry.active && isMain ? 4 : 3.5
                                 height: entry.active
                                     ? (isMain ? (entry.winCount > 1 ? 14 : 18) : 4)
-                                    : (entry.winCount > 1 ? 5 : 6)
+                                    : (entry.winCount > 1 ? 5 : 8)
                                 radius: width / 2
                                 color: entry.active
                                     ? (isMain ? LivePalette.color.primary : Qt.alpha(LivePalette.color.primary, 0.75))
                                     : (entry.onCurrentMonitor
-                                        ? LivePalette.color.onSurfaceVariant
-                                        : Qt.alpha(LivePalette.color.primary, 0.45))
+                                        ? LivePalette.color.primary
+                                        : Qt.alpha(LivePalette.color.primary, 0.7))
 
                                 Behavior on height { NumberAnimation { duration: Theme.motion.standard; easing.type: Easing.OutBack } }
                                 Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
@@ -166,20 +166,23 @@ Item {
                         }
                     }
 
-                    // M3 Expressive Morphing Icon Container (20 unlaunched -> 17 running -> 13 active)
+                    // M3 Expressive Morphing Icon Container (20 unlaunched/running -> 15 hover -> 13 active)
                     Rectangle {
                         id: bgPill
                         anchors.centerIn: parent
                         width: 40
                         height: 40
-                        radius: entry.active ? 13 : ((mouse.containsMouse || entry.isDragging) ? 15 : (entry.winCount > 0 ? 17 : 20))
+                        readonly property color activeContainerColor: LivePalette.color.surface.hslLightness < 0.5
+                            ? Qt.tint(LivePalette.color.primaryContainer, Qt.alpha(LivePalette.color.primary, 0.55))
+                            : LivePalette.color.primaryContainer
+                        radius: entry.active ? 13 : ((mouse.containsMouse || entry.isDragging) ? 15 : 20)
                         color: entry.active
-                            ? LivePalette.color.primaryContainer
+                            ? activeContainerColor
                             : ((mouse.containsMouse || entry.isDragging)
                                 ? LivePalette.color.surfaceContainerHigh
-                                : (entry.winCount > 0 ? LivePalette.color.surfaceContainer : "transparent"))
+                                : "transparent")
                         border.width: entry.active ? 1 : 0
-                        border.color: entry.active ? Qt.alpha(LivePalette.color.primary, 0.45) : "transparent"
+                        border.color: entry.active ? LivePalette.color.primary : "transparent"
                         scale: entry.isDragging ? 1.07
                             : (mouse.pressed || middleBounce.running ? 0.90 : (mouse.containsMouse ? 1.04 : 1.0))
 

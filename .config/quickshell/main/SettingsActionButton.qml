@@ -6,10 +6,11 @@ Button {
     id: action
     property bool primary: false
     property string iconName: ""
+    font.family: "Google Sans Flex"
     font.pixelSize: 13
     font.weight: Font.Medium
-    horizontalPadding: 16
-    implicitHeight: 38
+    horizontalPadding: 20
+    implicitHeight: 40
 
     contentItem: Row {
         spacing: 8
@@ -18,37 +19,41 @@ Button {
         SymbolIcon {
             visible: action.iconName !== ""
             anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: 16
-            implicitHeight: 16
+            implicitWidth: 18
+            implicitHeight: 18
             iconName: action.iconName
-            tint: action.primary ? LivePalette.color.onPrimary : action.hovered ? LivePalette.color.primary : LivePalette.color.onSurface
+            tint: action.primary ? LivePalette.color.onPrimary : LivePalette.color.onSurface
         }
 
         Text {
             text: action.text
             font: action.font
             anchors.verticalCenter: parent.verticalCenter
-            color: action.primary ? LivePalette.color.onPrimary : action.hovered ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
+            color: action.primary ? LivePalette.color.onPrimary : LivePalette.color.onSurface
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
     }
 
     background: Rectangle {
-        radius: 10
-        color: {
-            if (!action.enabled) return Qt.alpha(LivePalette.color.surfaceContainerHigh, 0.4);
-            if (action.primary) {
-                return action.down ? Qt.darker(LivePalette.color.primary, 1.15) :
-                       action.hovered ? Qt.lighter(LivePalette.color.primary, 1.08) : LivePalette.color.primary;
-            }
-            return action.down ? LivePalette.color.surfaceContainer :
-                   action.hovered ? LivePalette.color.surfaceContainerHigh : Qt.alpha(LivePalette.color.surfaceContainerHigh, 0.6);
-        }
-        border.width: action.primary ? 0 : 1
-        border.color: action.hovered ? Qt.alpha(LivePalette.color.primary, 0.4) : Qt.alpha(LivePalette.color.onSurface, 0.1)
+        radius: height / 2
+        color: !action.enabled
+            ? Qt.alpha(LivePalette.color.onSurface, 0.12)
+            : action.primary
+                ? LivePalette.color.primary
+                : LivePalette.color.surfaceContainerHigh
+        scale: action.down ? 0.97 : 1.0
 
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
-        Behavior on border.color { ColorAnimation { duration: Theme.motion.fast } }
+        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+        // M3 State Layer
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: action.primary ? LivePalette.color.onPrimary : LivePalette.color.onSurface
+            opacity: !action.enabled ? 0 : action.down ? 0.12 : action.hovered ? 0.08 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+        }
     }
 }

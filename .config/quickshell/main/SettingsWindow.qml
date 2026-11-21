@@ -251,41 +251,31 @@ Window {
         anchors.fill: parent
         spacing: 0
 
-        // ================= Sidebar (Responsive width) =================
+        // ================= Sidebar (M3 Navigation Drawer / Rail) =================
         Rectangle {
-            Layout.preferredWidth: root.isCompact ? 68 : 236
+            Layout.preferredWidth: root.isCompact ? 80 : 248
             Layout.fillHeight: true
             color: LivePalette.color.surfaceContainer
 
             Behavior on Layout.preferredWidth { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
-            Rectangle {
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 1
-                color: Qt.alpha(LivePalette.color.onSurface, 0.08)
-            }
-
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: root.isCompact ? 10 : 16
+                anchors.margins: root.isCompact ? 12 : 16
                 spacing: 6
 
                 // App Branding Header
                 RowLayout {
-                    Layout.topMargin: 4
-                    Layout.bottomMargin: 14
+                    Layout.topMargin: 6
+                    Layout.bottomMargin: 16
                     Layout.alignment: root.isCompact ? Qt.AlignHCenter : Qt.AlignLeft
                     spacing: 12
 
                     Rectangle {
-                        width: 38
-                        height: 38
-                        radius: 12
-                        color: Qt.alpha(LivePalette.color.primary, 0.16)
-                        border.color: Qt.alpha(LivePalette.color.primary, 0.3)
-                        border.width: 1
+                        width: 40
+                        height: 40
+                        radius: 20
+                        color: LivePalette.color.primaryContainer
 
                         SymbolIcon {
                             anchors.centerIn: parent
@@ -303,7 +293,7 @@ Window {
                             font.family: root.uiFont
                             text: "Settings"
                             color: LivePalette.color.onSurface
-                            font.pixelSize: 17
+                            font.pixelSize: 18
                             font.weight: Font.DemiBold
                         }
                         Text {
@@ -315,7 +305,7 @@ Window {
                     }
                 }
 
-                // Nav Items
+                // Nav Items (M3 Pill Indicator)
                 Repeater {
                     model: [
                         { name: "Dashboard", icon: "view-grid-symbolic" },
@@ -325,67 +315,82 @@ Window {
                         { name: "Top Bar", icon: "view-more-symbolic" },
                         { name: "About", icon: "help-about-symbolic" }
                     ]
-                    delegate: Rectangle {
+                    delegate: Item {
                         id: nav
                         required property int index
                         required property var modelData
+                        readonly property bool selected: root.page === nav.index
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 44
-                        radius: 10
-                        color: root.page === nav.index
-                            ? Qt.alpha(LivePalette.color.primary, 0.15)
-                            : navMouse.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05) : "transparent"
-                        border.width: root.page === nav.index ? 1 : 0
-                        border.color: Qt.alpha(LivePalette.color.primary, 0.25)
+                        Layout.preferredHeight: root.isCompact ? 52 : 48
 
-                        Behavior on color { ColorAnimation { duration: 150 } }
-
-                        // Active Indicator pill
+                        // Full Navigation Drawer Pill
                         Rectangle {
-                            anchors.left: parent.left
-                            anchors.leftMargin: root.isCompact ? 2 : 4
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 3.5
-                            height: root.page === nav.index ? 20 : 0
-                            radius: 2
-                            color: LivePalette.color.primary
-                            Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        }
-
-                        // Compact icon center / Full row
-                        Item {
+                            visible: !root.isCompact
                             anchors.fill: parent
+                            radius: height / 2
+                            color: nav.selected ? LivePalette.color.primaryContainer : "transparent"
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
-                            SymbolIcon {
-                                visible: root.isCompact
-                                anchors.centerIn: parent
-                                implicitWidth: 19
-                                implicitHeight: 19
-                                iconName: nav.modelData.icon
-                                tint: root.page === nav.index ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: parent.radius
+                                color: LivePalette.color.onSurface
+                                opacity: navMouse.pressed ? 0.12 : navMouse.containsMouse ? 0.08 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
                             }
 
                             RowLayout {
-                                visible: !root.isCompact
                                 anchors.fill: parent
                                 anchors.leftMargin: 16
-                                anchors.rightMargin: 12
+                                anchors.rightMargin: 16
                                 spacing: 12
 
                                 SymbolIcon {
-                                    implicitWidth: 17
-                                    implicitHeight: 17
+                                    implicitWidth: 18
+                                    implicitHeight: 18
                                     iconName: nav.modelData.icon
-                                    tint: root.page === nav.index ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                                    tint: nav.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     font.family: root.uiFont
                                     text: nav.modelData.name
-                                    color: root.page === nav.index ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
-                                    font.pixelSize: 13
-                                    font.weight: root.page === nav.index ? Font.DemiBold : Font.Normal
+                                    color: nav.selected ? LivePalette.color.onSurface : LivePalette.color.onSurfaceVariant
+                                    font.pixelSize: 14
+                                    font.weight: nav.selected ? Font.DemiBold : Font.Medium
+                                }
+                            }
+                        }
+
+                        // Compact M3 Navigation Rail Indicator Pill (56x32)
+                        ColumnLayout {
+                            visible: root.isCompact
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Rectangle {
+                                Layout.alignment: Qt.AlignHCenter
+                                width: 56
+                                height: 32
+                                radius: 16
+                                color: nav.selected ? LivePalette.color.primaryContainer : "transparent"
+                                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: parent.radius
+                                    color: LivePalette.color.onSurface
+                                    opacity: navMouse.pressed ? 0.12 : navMouse.containsMouse ? 0.08 : 0
+                                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                }
+
+                                SymbolIcon {
+                                    anchors.centerIn: parent
+                                    implicitWidth: 20
+                                    implicitHeight: 20
+                                    iconName: nav.modelData.icon
+                                    tint: nav.selected ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
                                 }
                             }
                         }
@@ -470,10 +475,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: dashQuickCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -485,10 +488,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         SymbolIcon {
                                             anchors.centerIn: parent
                                             implicitWidth: 18
@@ -548,10 +551,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: dashGuideCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -563,10 +564,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         SymbolIcon {
                                             anchors.centerIn: parent
                                             implicitWidth: 18
@@ -646,10 +647,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: weatherCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -661,10 +660,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         SymbolIcon {
                                             anchors.centerIn: parent
                                             implicitWidth: 18
@@ -698,7 +697,7 @@ Window {
                                     TextField {
                                         id: cityInput
                                         Layout.fillWidth: true
-                                        Layout.preferredHeight: 40
+                                        Layout.preferredHeight: 48
                                         font.family: root.uiFont
                                         font.pixelSize: 13
                                         placeholderText: "Type a city (e.g. Tokyo, Nagoya, London, Paris)..."
@@ -709,10 +708,10 @@ Window {
                                         rightPadding: 14
 
                                         background: Rectangle {
-                                            radius: 10
-                                            color: cityInput.activeFocus ? LivePalette.color.surface : Qt.alpha(LivePalette.color.surface, 0.6)
+                                            radius: 16
+                                            color: LivePalette.color.surfaceContainerHigh
                                             border.width: cityInput.activeFocus ? 2 : 1
-                                            border.color: cityInput.activeFocus ? LivePalette.color.primary : Qt.alpha(LivePalette.color.onSurface, 0.12)
+                                            border.color: cityInput.activeFocus ? LivePalette.color.primary : LivePalette.color.outlineVariant
                                             Behavior on border.color { ColorAnimation { duration: 150 } }
                                         }
 
@@ -858,10 +857,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: wallCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -873,10 +870,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         SymbolIcon {
                                             anchors.centerIn: parent
                                             implicitWidth: 18
@@ -909,11 +906,9 @@ Window {
                                 Rectangle {
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: root.isCompact ? 160 : 220
-                                    radius: 12
+                                    radius: 20
                                     clip: true
-                                    color: LivePalette.color.surface
-                                    border.color: Qt.alpha(LivePalette.color.onSurface, 0.1)
-                                    border.width: 1
+                                    color: LivePalette.color.surfaceContainerHigh
 
                                     Image {
                                         anchors.fill: parent
@@ -996,10 +991,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: colCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -1011,10 +1004,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         SymbolIcon {
                                             anchors.centerIn: parent
                                             implicitWidth: 18
@@ -1042,7 +1035,7 @@ Window {
                                     }
                                 }
 
-                                // Responsive Color Tiles Flow
+                                // Responsive M3 Color Swatch Cards
                                 Flow {
                                     Layout.fillWidth: true
                                     spacing: 12
@@ -1060,39 +1053,44 @@ Window {
                                         delegate: Rectangle {
                                             id: paletteOption
                                             required property var modelData
+                                            readonly property bool selected: saved.paletteMode === modelData.mode
                                             width: parent.colTileW
-                                            height: 104
-                                            radius: 12
-                                            color: saved.paletteMode === modelData.mode ? Qt.alpha(LivePalette.color.primary, 0.12) :
-                                                   palMouse.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05) : LivePalette.color.surface
-                                            border.width: saved.paletteMode === modelData.mode ? 2 : 1
-                                            border.color: saved.paletteMode === modelData.mode ? LivePalette.color.primary : Qt.alpha(LivePalette.color.onSurface, 0.08)
+                                            height: 118
+                                            radius: 22
+                                            color: selected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
+                                            scale: palMouse.pressed ? 0.97 : 1.0
 
-                                            Behavior on color { ColorAnimation { duration: 150 } }
-                                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: parent.radius
+                                                color: LivePalette.color.onSurface
+                                                opacity: palMouse.pressed ? 0.12 : palMouse.containsMouse ? 0.08 : 0
+                                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                            }
 
                                             ColumnLayout {
                                                 anchors.fill: parent
-                                                anchors.margins: 14
-                                                spacing: 6
+                                                anchors.margins: 16
+                                                spacing: 8
 
                                                 RowLayout {
                                                     Layout.fillWidth: true
                                                     spacing: 8
                                                     Rectangle {
-                                                        width: 24
-                                                        height: 24
-                                                        radius: 12
+                                                        width: 36
+                                                        height: 36
+                                                        radius: 18
                                                         color: paletteOption.modelData.color
-                                                        border.color: Qt.alpha(paletteOption.modelData.color, 0.4)
-                                                        border.width: 2
 
                                                         Text {
                                                             anchors.centerIn: parent
-                                                            visible: saved.paletteMode === paletteOption.modelData.mode
+                                                            visible: paletteOption.selected
                                                             text: "✓"
                                                             font.family: root.uiFont
-                                                            font.pixelSize: 12
+                                                            font.pixelSize: 16
                                                             font.weight: Font.Bold
                                                             color: "#1b2636"
                                                         }
@@ -1105,7 +1103,7 @@ Window {
                                                     text: paletteOption.modelData.label
                                                     color: LivePalette.color.onSurface
                                                     font.pixelSize: 13
-                                                    font.weight: saved.paletteMode === paletteOption.modelData.mode ? Font.DemiBold : Font.Normal
+                                                    font.weight: paletteOption.selected ? Font.DemiBold : Font.Medium
                                                 }
 
                                                 Text {
@@ -1138,10 +1136,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: topBarCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -1153,10 +1149,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         SymbolIcon {
                                             anchors.centerIn: parent
                                             implicitWidth: 18
@@ -1196,15 +1192,23 @@ Window {
                                         delegate: Rectangle {
                                             id: islandOpt
                                             required property var modelData
+                                            readonly property bool selected: saved.islandDisplay === modelData.mode
                                             Layout.fillWidth: true
-                                            Layout.preferredHeight: 64
-                                            radius: 12
-                                            color: saved.islandDisplay === modelData.mode ? Qt.alpha(LivePalette.color.primary, 0.12) :
-                                                   islandMouse.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05) : LivePalette.color.surface
-                                            border.width: saved.islandDisplay === modelData.mode ? 1.5 : 1
-                                            border.color: saved.islandDisplay === modelData.mode ? LivePalette.color.primary : Qt.alpha(LivePalette.color.onSurface, 0.08)
+                                            Layout.preferredHeight: 68
+                                            radius: 20
+                                            color: selected ? LivePalette.color.primaryContainer : LivePalette.color.surfaceContainerHigh
+                                            scale: islandMouse.pressed ? 0.99 : 1.0
 
-                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                                            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: parent.radius
+                                                color: LivePalette.color.onSurface
+                                                opacity: islandMouse.pressed ? 0.12 : islandMouse.containsMouse ? 0.07 : 0
+                                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                            }
 
                                             RowLayout {
                                                 anchors.fill: parent
@@ -1212,16 +1216,16 @@ Window {
                                                 spacing: 14
 
                                                 Rectangle {
-                                                    width: 32
-                                                    height: 32
-                                                    radius: 8
-                                                    color: saved.islandDisplay === islandOpt.modelData.mode ? Qt.alpha(LivePalette.color.primary, 0.2) : Qt.alpha(LivePalette.color.onSurface, 0.05)
+                                                    width: 38
+                                                    height: 38
+                                                    radius: 19
+                                                    color: islandOpt.selected ? LivePalette.color.primary : LivePalette.color.surfaceContainer
                                                     SymbolIcon {
                                                         anchors.centerIn: parent
-                                                        implicitWidth: 16
-                                                        implicitHeight: 16
+                                                        implicitWidth: 18
+                                                        implicitHeight: 18
                                                         iconName: islandOpt.modelData.icon
-                                                        tint: saved.islandDisplay === islandOpt.modelData.mode ? LivePalette.color.primary : LivePalette.color.onSurfaceVariant
+                                                        tint: islandOpt.selected ? LivePalette.color.onPrimary : LivePalette.color.onSurfaceVariant
                                                     }
                                                 }
 
@@ -1232,25 +1236,25 @@ Window {
                                                         font.family: root.uiFont
                                                         text: islandOpt.modelData.title
                                                         color: LivePalette.color.onSurface
-                                                        font.pixelSize: 13
-                                                        font.weight: saved.islandDisplay === islandOpt.modelData.mode ? Font.DemiBold : Font.Normal
+                                                        font.pixelSize: 14
+                                                        font.weight: islandOpt.selected ? Font.DemiBold : Font.Medium
                                                     }
                                                     Text {
                                                         font.family: root.uiFont
                                                         text: islandOpt.modelData.detail
                                                         color: LivePalette.color.onSurfaceVariant
-                                                        font.pixelSize: 11
+                                                        font.pixelSize: 12
                                                         elide: Text.ElideRight
                                                         Layout.fillWidth: true
                                                     }
                                                 }
 
                                                 Rectangle {
-                                                    width: 20
-                                                    height: 20
-                                                    radius: 10
+                                                    width: 22
+                                                    height: 22
+                                                    radius: 11
                                                     color: "transparent"
-                                                    border.color: saved.islandDisplay === islandOpt.modelData.mode ? LivePalette.color.primary : Qt.alpha(LivePalette.color.onSurface, 0.2)
+                                                    border.color: islandOpt.selected ? LivePalette.color.primary : LivePalette.color.outlineVariant
                                                     border.width: 2
 
                                                     Rectangle {
@@ -1259,7 +1263,7 @@ Window {
                                                         height: 10
                                                         radius: 5
                                                         color: LivePalette.color.primary
-                                                        visible: saved.islandDisplay === islandOpt.modelData.mode
+                                                        visible: islandOpt.selected
                                                     }
                                                 }
                                             }
@@ -1284,10 +1288,8 @@ Window {
 
                                 Rectangle {
                                     Layout.fillWidth: true
-                                    radius: 12
-                                    color: Qt.alpha(LivePalette.color.surface, 0.7)
-                                    border.color: Qt.alpha(LivePalette.color.onSurface, 0.08)
-                                    border.width: 1
+                                    radius: 20
+                                    color: LivePalette.color.surfaceContainerHigh
                                     implicitHeight: customPlugCol.implicitHeight + 24
                                     visible: saved.islandDisplay === "custom"
 
@@ -1342,10 +1344,8 @@ Window {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            radius: 14
+                            radius: 24
                             color: LivePalette.color.surfaceContainer
-                            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                            border.width: 1
                             implicitHeight: quotaCol.implicitHeight + 36
 
                             ColumnLayout {
@@ -1357,10 +1357,10 @@ Window {
                                 RowLayout {
                                     spacing: 12
                                     Rectangle {
-                                        width: 36
-                                        height: 36
-                                        radius: 10
-                                        color: Qt.alpha(LivePalette.color.primary, 0.12)
+                                        width: 40
+                                        height: 40
+                                        radius: 20
+                                        color: LivePalette.color.primaryContainer
                                         Image {
                                             anchors.centerIn: parent
                                             width: 20
@@ -1408,24 +1408,29 @@ Window {
                                             id: quotaOption
                                             required property var modelData
                                             readonly property bool selected: saved.quotaInterval === modelData.value
-                                            width: quotaOptionText.implicitWidth + 28
+                                            width: quotaOptionText.implicitWidth + 30
                                             height: 36
                                             radius: 18
-                                            color: selected ? Qt.alpha(LivePalette.color.primary, 0.15)
-                                                : quotaOptionMouse.containsMouse ? Qt.alpha(LivePalette.color.onSurface, 0.05)
-                                                : LivePalette.color.surface
-                                            border.width: selected ? 1.5 : 1
-                                            border.color: selected ? LivePalette.color.primary : Qt.alpha(LivePalette.color.onSurface, 0.08)
-                                            Behavior on color { ColorAnimation { duration: 150 } }
-                                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                                            color: selected ? LivePalette.color.primaryContainer : "transparent"
+                                            border.width: selected ? 0 : 1
+                                            border.color: LivePalette.color.outlineVariant
+                                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: parent.radius
+                                                color: LivePalette.color.onSurface
+                                                opacity: quotaOptionMouse.pressed ? 0.12 : quotaOptionMouse.containsMouse ? 0.08 : 0
+                                                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                            }
 
                                             Text {
                                                 id: quotaOptionText
                                                 anchors.centerIn: parent
-                                                text: quotaOption.modelData.label
+                                                text: (quotaOption.selected ? "✓  " : "") + quotaOption.modelData.label
                                                 font.family: root.uiFont
-                                                font.pixelSize: 12
-                                                font.weight: quotaOption.selected ? Font.DemiBold : Font.Normal
+                                                font.pixelSize: 13
+                                                font.weight: quotaOption.selected ? Font.DemiBold : Font.Medium
                                                 color: quotaOption.selected ? LivePalette.color.primary : LivePalette.color.onSurface
                                             }
 

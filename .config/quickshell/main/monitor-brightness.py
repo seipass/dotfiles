@@ -6,16 +6,24 @@ import subprocess
 import sys
 
 
-def main(connector, action):
-    if action not in ("read", "up", "down") or not re.fullmatch(r"[A-Za-z0-9-]+", connector):
+def main(connector, action, value_arg=None):
+    if action not in ("read", "up", "down", "set") or not re.fullmatch(r"[A-Za-z0-9-]+", connector):
         raise ValueError("Invalid screen or action")
+    target = None
+    if action == "set":
+        if value_arg is None or not re.fullmatch(r"\d+", value_arg):
+            raise ValueError("Invalid brightness value")
+        target = max(1, min(100, int(value_arg)))
     if shutil.which("ddcutil"):
         for link in Path("/sys/class/drm").glob(f"card*-{connector}/ddc"):
             bus = re.fullmatch(r"i2c-(\d+)", link.resolve().name)
             if not bus:
                 continue
             base = ["ddcutil", "--bus", bus[1]]
-            if action != "read":
+            if action == "set":
+                subprocess.run([*base, "setvcp", "10", str(target)], timeout=6,
+                               check=True, stdout=subprocess.DEVNULL)
+            elif action != "read":
                 subprocess.run([*base, "setvcp", "10", "+" if action == "up" else "-", "5"], timeout=6,
                                check=True, stdout=subprocess.DEVNULL)
             output = subprocess.check_output([*base, "--terse", "getvcp", "10"], text=True, timeout=6)
@@ -25,7 +33,10 @@ def main(connector, action):
                 return
     if connector.startswith(("eDP-", "LVDS-", "DSI-")) and shutil.which("brightnessctl"):
         base = ["brightnessctl", "-c", "backlight"]
-        if action != "read":
+        if action == "set":
+            subprocess.run([*base, "--min-value=1", "set", f"{target}%"],
+                           timeout=3, check=True, stdout=subprocess.DEVNULL)
+        elif action != "read":
             subprocess.run([*base, "--min-value=1", "set", "+5%" if action == "up" else "5%-"],
                            timeout=3, check=True, stdout=subprocess.DEVNULL)
         output = subprocess.check_output([*base, "-m", "info"], text=True, timeout=3)

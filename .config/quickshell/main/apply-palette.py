@@ -108,5 +108,110 @@ if "--sync-desktop" in sys.argv[3:]:
                 "org.fcitx.Fcitx.Controller1", "ReloadAddonConfig", "s", "classicui")
     except OSError as error:
         print(error, file=sys.stderr)
+    try:
+        def argb(hex_color, alpha="ff"):
+            return f"#{alpha}{hex_color[1:]}"
+
+        c = colors
+        qt_active = [
+            argb(c["onSurface"]), argb(c["surfaceContainerHigh"]), argb(c["outlineVariant"]),
+            argb(c["surfaceContainerHigh"]), argb(c["surface"]), argb(c["outlineVariant"]),
+            argb(c["onSurface"]), argb(c["onSurface"]), argb(c["onSurface"]),
+            argb(c["surfaceContainer"]), argb(c["surface"]), "#ff0b0e12",
+            argb(c["primary"]), argb(c["onPrimary"]), argb(c["primary"]), argb(c["onSurfaceVariant"]),
+            argb(c["surfaceContainerHigh"]), argb(c["surface"]), argb(c["surfaceContainerHigh"]),
+            argb(c["onSurface"]), argb(c["onSurfaceVariant"], "80"), argb(c["primary"]),
+        ]
+        qt_disabled = [
+            argb(c["onSurfaceVariant"]), argb(c["surfaceContainer"]), argb(c["outlineVariant"]),
+            argb(c["surfaceContainerHigh"]), argb(c["surface"]), argb(c["outlineVariant"]),
+            argb(c["onSurfaceVariant"]), argb(c["onSurfaceVariant"]), argb(c["onSurfaceVariant"]),
+            argb(c["surfaceContainer"]), argb(c["surface"]), "#ff0b0e12",
+            argb(c["primaryContainer"]), argb(c["onSurfaceVariant"]), argb(c["onSurfaceVariant"]),
+            argb(c["onSurfaceVariant"]), argb(c["surfaceContainerHigh"]), argb(c["surface"]),
+            argb(c["surfaceContainerHigh"]), argb(c["onSurfaceVariant"]), argb(c["onSurfaceVariant"], "66"),
+            argb(c["primaryContainer"]),
+        ]
+        qt_inactive = list(qt_active)
+        qt_inactive[12] = argb(c["primaryContainer"])
+        qt_inactive[13] = argb(c["onSurface"])
+        qt_inactive[21] = argb(c["primaryContainer"])
+        qt_scheme = (
+            "[ColorScheme]\n"
+            f"active_colors={', '.join(qt_active)}\n"
+            f"disabled_colors={', '.join(qt_disabled)}\n"
+            f"inactive_colors={', '.join(qt_inactive)}\n"
+        )
+        update(home / ".config/qt6ct/colors/shell-live.conf", qt_scheme)
+
+        gtk3_css = "\n".join([
+            f"@define-color accent_bg_color {c['primary']};",
+            f"@define-color accent_fg_color {c['onPrimary']};",
+            f"@define-color accent_color {c['primary']};",
+            f"@define-color theme_bg_color {c['surface']};",
+            f"@define-color theme_fg_color {c['onSurface']};",
+            f"@define-color theme_base_color {c['surfaceContainer']};",
+            f"@define-color theme_text_color {c['onSurface']};",
+            f"@define-color theme_selected_bg_color {c['primaryContainer']};",
+            f"@define-color theme_selected_fg_color {c['onSurface']};",
+            f"@define-color insensitive_bg_color {c['surface']};",
+            f"@define-color insensitive_fg_color {c['onSurfaceVariant']};",
+            f"@define-color insensitive_base_color {c['surfaceContainer']};",
+            f"@define-color theme_unfocused_bg_color {c['surface']};",
+            f"@define-color theme_unfocused_fg_color {c['onSurfaceVariant']};",
+            f"@define-color theme_unfocused_base_color {c['surfaceContainer']};",
+            f"@define-color theme_unfocused_text_color {c['onSurface']};",
+            f"@define-color theme_unfocused_selected_bg_color {c['primaryContainer']};",
+            f"@define-color theme_unfocused_selected_fg_color {c['onSurface']};",
+            f"@define-color borders {c['outlineVariant']};",
+            f"@define-color unfocused_borders {c['outlineVariant']};",
+            f"@define-color content_view_bg {c['surfaceContainer']};",
+            f"@define-color text_view_bg {c['surfaceContainer']};",
+            f"@define-color headerbar_bg_color {c['surface']};",
+            f"@define-color headerbar_fg_color {c['onSurface']};",
+            f"@define-color headerbar_border_color {c['outlineVariant']};",
+            f"@define-color popover_bg_color {c['surfaceContainerHigh']};",
+            f"@define-color popover_fg_color {c['onSurface']};",
+        ]) + "\n"
+        gtk4_css = "\n".join([
+            f"@define-color accent_bg_color {c['primary']};",
+            f"@define-color accent_fg_color {c['onPrimary']};",
+            f"@define-color accent_color {c['primary']};",
+            f"@define-color window_bg_color {c['surface']};",
+            f"@define-color window_fg_color {c['onSurface']};",
+            f"@define-color view_bg_color {c['surfaceContainer']};",
+            f"@define-color view_fg_color {c['onSurface']};",
+            f"@define-color headerbar_bg_color {c['surface']};",
+            f"@define-color headerbar_fg_color {c['onSurface']};",
+            f"@define-color headerbar_border_color {c['outlineVariant']};",
+            f"@define-color headerbar_backdrop_color {c['surface']};",
+            "@define-color headerbar_shade_color rgba(0, 0, 0, 0.36);",
+            f"@define-color card_bg_color {c['surfaceContainer']};",
+            f"@define-color card_fg_color {c['onSurface']};",
+            f"@define-color dialog_bg_color {c['surfaceContainer']};",
+            f"@define-color dialog_fg_color {c['onSurface']};",
+            f"@define-color popover_bg_color {c['surfaceContainerHigh']};",
+            f"@define-color popover_fg_color {c['onSurface']};",
+            f"@define-color sidebar_bg_color {c['surfaceContainer']};",
+            f"@define-color sidebar_fg_color {c['onSurface']};",
+            f"@define-color sidebar_backdrop_color {c['surface']};",
+            f"@define-color secondary_sidebar_bg_color {c['surfaceContainer']};",
+            f"@define-color secondary_sidebar_fg_color {c['onSurface']};",
+            "@define-color shade_color rgba(0, 0, 0, 0.36);",
+            f"@define-color scrollbar_outline_color {c['outlineVariant']};",
+        ]) + "\n"
+        for version, css in (("gtk-3.0", gtk3_css), ("gtk-4.0", gtk4_css)):
+            gtk_dir = home / ".config" / version
+            update(gtk_dir / "shell-palette.css", css)
+            gtk_main = gtk_dir / "gtk.css"
+            if not gtk_main.exists():
+                update(gtk_main, '@import url("shell-palette.css");\n')
+        run("gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-dark")
+        run("gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "Adwaita-dark")
+        run("gsettings", "set", "org.gnome.desktop.interface", "icon-theme", "Adwaita")
+        run("gsettings", "set", "org.gnome.desktop.interface", "font-name", "Adwaita Sans 10")
+        run("gsettings", "set", "org.gnome.desktop.interface", "monospace-font-name", "Ioskeley Mono Term 10")
+    except OSError as error:
+        print(error, file=sys.stderr)
 
 print(json.dumps(colors))

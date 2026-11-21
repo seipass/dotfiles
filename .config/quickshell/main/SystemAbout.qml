@@ -32,14 +32,12 @@ ColumnLayout {
         onExited: code => { if (code !== 0) root.failed = true; }
     }
 
-    // ================= Hero Banner Card =================
+    // ================= Hero Banner Card (M3 Extra Large) =================
     Rectangle {
         Layout.fillWidth: true
-        implicitHeight: heroLayout.implicitHeight + 36
-        radius: 18
+        implicitHeight: heroLayout.implicitHeight + 40
+        radius: 24
         color: LivePalette.color.surfaceContainer
-        border.color: Qt.alpha(LivePalette.color.onSurface, 0.08)
-        border.width: 1
         clip: true
 
         // Ambient subtle background gradient
@@ -196,10 +194,8 @@ ColumnLayout {
         Rectangle {
             width: parent.tileWidth
             height: 72
-            radius: 14
+            radius: 22
             color: LivePalette.color.surfaceContainer
-            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-            border.width: 1
 
             RowLayout {
                 anchors.fill: parent
@@ -207,10 +203,10 @@ ColumnLayout {
                 spacing: 12
 
                 Rectangle {
-                    width: 36
-                    height: 36
-                    radius: 10
-                    color: Qt.alpha(LivePalette.color.primary, 0.12)
+                    width: 40
+                    height: 40
+                    radius: 20
+                    color: LivePalette.color.primaryContainer
                     SymbolIcon {
                         anchors.centerIn: parent
                         implicitWidth: 18
@@ -245,10 +241,8 @@ ColumnLayout {
         Rectangle {
             width: parent.tileWidth
             height: 72
-            radius: 14
+            radius: 22
             color: LivePalette.color.surfaceContainer
-            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-            border.width: 1
 
             RowLayout {
                 anchors.fill: parent
@@ -256,10 +250,10 @@ ColumnLayout {
                 spacing: 12
 
                 Rectangle {
-                    width: 36
-                    height: 36
-                    radius: 10
-                    color: Qt.alpha(LivePalette.color.primary, 0.12)
+                    width: 40
+                    height: 40
+                    radius: 20
+                    color: LivePalette.color.primaryContainer
                     SymbolIcon {
                         anchors.centerIn: parent
                         implicitWidth: 18
@@ -294,10 +288,8 @@ ColumnLayout {
         Rectangle {
             width: parent.tileWidth
             height: 72
-            radius: 14
+            radius: 22
             color: LivePalette.color.surfaceContainer
-            border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-            border.width: 1
 
             RowLayout {
                 anchors.fill: parent
@@ -305,10 +297,10 @@ ColumnLayout {
                 spacing: 12
 
                 Rectangle {
-                    width: 36
-                    height: 36
-                    radius: 10
-                    color: Qt.alpha(LivePalette.color.primary, 0.12)
+                    width: 40
+                    height: 40
+                    radius: 20
+                    color: LivePalette.color.primaryContainer
                     SymbolIcon {
                         anchors.centerIn: parent
                         implicitWidth: 18
@@ -372,10 +364,8 @@ ColumnLayout {
             // Card Container
             Rectangle {
                 Layout.fillWidth: true
-                radius: 14
+                radius: 22
                 color: LivePalette.color.surfaceContainer
-                border.color: Qt.alpha(LivePalette.color.onSurface, 0.07)
-                border.width: 1
                 implicitHeight: rowsCol.implicitHeight + 16
 
                 ColumnLayout {

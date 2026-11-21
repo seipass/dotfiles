@@ -12,9 +12,10 @@ PanelWindow {
     readonly property var hyprMonitor: Hyprland.monitorFor(root.screen)
     readonly property bool fullscreenActive: !!(hyprMonitor && hyprMonitor.activeWorkspace && hyprMonitor.activeWorkspace.hasFullscreen)
     anchors { top: true; right: true }
+    margins { top: Theme.shape.islandReservation; right: 8 }
     implicitWidth: 410
     // Keep the layer surface stable while the notification stack animates.
-    implicitHeight: root.screen ? root.screen.height : 1080
+    implicitHeight: Math.max(1, (root.screen ? root.screen.height : 1080) - Theme.shape.islandReservation)
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
@@ -25,7 +26,7 @@ PanelWindow {
     ListView {
         id: content
         x: 0; y: 0; width: parent.width
-        height: Math.min(contentHeight, root.screen ? root.screen.height : 1080)
+        height: Math.min(contentHeight, root.implicitHeight)
         implicitHeight: height
         spacing: 0
         clip: true
@@ -70,7 +71,8 @@ PanelWindow {
                     }
                 }
                 color: LivePalette.color.surfaceContainer
-                topRightRadius: 0; topLeftRadius: 0
+                topLeftRadius: index === 0 ? 22 : 0
+                topRightRadius: index === 0 ? 22 : 0
                 bottomLeftRadius: index === content.count - 1 ? 22 : 0
                 bottomRightRadius: index === content.count - 1 ? 22 : 0
                 Rectangle {

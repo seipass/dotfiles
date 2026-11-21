@@ -26,6 +26,8 @@
 
 ## Gallery
 
+### Full-Screen Views
+
 <table>
   <tr>
     <td width="50%" align="center">
@@ -47,6 +49,39 @@
       <br/>
       <b>System Settings — Fastfetch × Material 3 About</b><br/>
       <sub>Unix-porn-inspired hardware & rice overview featuring live hwmon temps, load/RAM/root telemetry, monitor topology cards, clickable live palette swatches, and one-click fetch copy.</sub>
+    </td>
+  </tr>
+</table>
+
+### Component Spotlight
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="screenshots/07-dynamic-island.png" alt="Expanded Dynamic Island Dashboard" height="360"/>
+      <br/>
+      <b>Dynamic Island Dashboard</b><br/>
+      <sub>Expanded pill with P2PQuake alert strip, weather, volume slider, MPRIS artwork player, interactive calendar, and live CPU/RAM/Disk meters.</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="screenshots/05-ai-indicator.png" alt="Multi-Provider AI Quota Indicator" height="360"/>
+      <br/>
+      <b>Multi-Provider AI Usage HUD</b><br/>
+      <sub>Live 5h/7d quota tracking and Reset Bank credits across Codex, Antigravity, OpenCode, Claude Code, Mistral, Command Code, and Gemini CLI.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="screenshots/08-clipboard.png" alt="Image and Text Clipboard Popup" height="360"/>
+      <br/>
+      <b>Wayland Image + Text Clipboard</b><br/>
+      <sub>Cursor-side popup powered by pure-Python <code>ext_data_control_v1</code> with live image thumbnails, format/dimension badges, search, and text history.</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="screenshots/06-notification-center.png" alt="Notification Center Drawer" height="360"/>
+      <br/>
+      <b>Notification Center</b><br/>
+      <sub>Grouped notification history with Do Not Disturb toggle and quick dismiss/clear actions.</sub>
     </td>
   </tr>
 </table>

@@ -419,6 +419,7 @@ PanelWindow {
                         Text {
                             visible: launcherWindow.emojiMode
                             text: visible ? (appRow.modelData ? appRow.modelData[0] : "") : ""
+                            font.family: Theme.font.emoji
                             font.pixelSize: 24
                         }
 

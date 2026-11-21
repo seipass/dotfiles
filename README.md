@@ -163,7 +163,7 @@ sudo pacman -S --needed \
   qt6ct qt6-declarative qt6-svg qt6-5compat \
   xdg-desktop-portal xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   python python-dbus glib2 curl grim slurp flameshot htop dolphin wofi \
-  breeze-icons adwaita-icon-theme noto-fonts-cjk
+  breeze-icons adwaita-icon-theme noto-fonts-cjk noto-fonts-emoji
 ```
 
 **Optional packages** (enable extra Quick Tools / Maintenance features if present):

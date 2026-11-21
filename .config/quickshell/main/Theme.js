@@ -43,8 +43,19 @@ var motion = {
     exit: 240
 };
 
+function resolveEmojiFont() {
+    if (typeof Qt === "undefined") return "emoji";
+    var families = Qt.fontFamilies();
+    var candidates = ["Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Twemoji", "EmojiOne Color", "Noto Emoji"];
+    for (var i = 0; i < candidates.length; ++i) {
+        if (families.indexOf(candidates[i]) >= 0) return candidates[i];
+    }
+    return "emoji";
+}
+
 var font = {
     display: (typeof Qt !== "undefined" && Qt.fontFamilies().indexOf("Ndot 55") >= 0) ? "Ndot 55" : "Doto",
     ui: "Google Sans Flex",
-    mono: "Ioskeley Mono Term"
+    mono: "Ioskeley Mono Term",
+    emoji: resolveEmojiFont()
 };

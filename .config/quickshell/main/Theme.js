@@ -42,3 +42,9 @@ var motion = {
     emphasized: 380,
     exit: 240
 };
+
+var font = {
+    display: (typeof Qt !== "undefined" && Qt.fontFamilies().indexOf("Ndot 55") >= 0) ? "Ndot 55" : "Doto",
+    ui: "Google Sans Flex",
+    mono: "Ioskeley Mono Term"
+};

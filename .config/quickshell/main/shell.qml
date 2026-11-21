@@ -9,7 +9,7 @@ import QtQuick
 
 ShellRoot {
     id: root
-    FontLoader { id: headingFont; source: "Ndot55-Regular.otf" }
+    FontLoader { id: headingFont; source: "fonts/Doto.ttf" }
     FontLoader { id: mainFont; source: "fonts/GoogleSansFlex.ttf" }
     property var codexQuota: ({})
     property alias quotaProvider: settings.quotaProvider

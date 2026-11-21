@@ -177,7 +177,7 @@ PanelWindow {
 
                 Text {
                     text: "Clipboard"
-                    font.family: "Ndot 55"
+                    font.family: Theme.font.display
                     font.pixelSize: 20
                     color: LivePalette.color.onSurface
                 }

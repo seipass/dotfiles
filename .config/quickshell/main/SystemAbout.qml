@@ -12,8 +12,8 @@ ColumnLayout {
     property bool failed: false
     property string copiedBadge: ""
 
-    readonly property string monoFont: "Ioskeley Mono Term"
-    readonly property string displayFont: "Ndot 55"
+    readonly property string monoFont: Theme.font.mono
+    readonly property string displayFont: Theme.font.display
     readonly property bool isNarrow: width < 560
 
     readonly property string archAscii:

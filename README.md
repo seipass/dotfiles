@@ -105,7 +105,7 @@ Changing your wallpaper or preset (`auto`, `pink`, `blue`, `green`) in Quick Too
 - **Screenshots & OCR**: `flameshot`, `grim`, `slurp`, `tesseract` + `tesseract-data-eng`
 - **Display Brightness & Audio UI**: `ddcutil`, `brightnessctl`, `pavucontrol`, `playerctl`, `network-manager-applet` (`nm-connection-editor`)
 - **Maintenance & Apps**: `htop`, `pacman-contrib` (`checkupdates`), `dolphin`, `wofi`, `sddm`
-- **Fonts**: `Google Sans Flex` (bundled under SIL OFL 1.1), `Ioskeley Mono Term` (monospaced UI/terminal), `Adwaita Sans`, `Noto Sans CJK JP`
+- **Fonts**: `Doto` & `Google Sans Flex` (both bundled under SIL OFL 1.1; uses `Ndot 55` automatically if installed locally), `Ioskeley Mono Term`, `Adwaita Sans`, `Noto Sans CJK JP`
 
 ---
 
@@ -135,7 +135,7 @@ To also install the Afterglow SDDM greeter theme:
 ## Third-Party Assets & Licensing
 
 - Dotfiles & original QML/Python code: [MIT License](LICENSE).
+- `Doto.ttf`: Licensed under SIL Open Font License 1.1 (see `Doto-OFL.txt`).
 - `GoogleSansFlex.ttf`: Licensed under SIL Open Font License 1.1 (see `OFL.txt`).
 - `codex-badge.svg`: Mozilla Public License 2.0 (see `.config/quickshell/main/codex-badge-LICENSE`).
 - `launcher-data/emoji.json` & `launcher-data/qrcode/`: See `emoji-LICENSE` and `qrcode-LICENSE`.
-- **`Ndot 55` (`Ndot55-Regular.otf`)**: Used for display headings (`Ndot 55`); subject to Nothing / Colophon Foundry font terms — check before commercial or third-party redistribution.

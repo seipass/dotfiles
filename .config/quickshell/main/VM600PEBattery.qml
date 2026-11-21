@@ -81,7 +81,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight
-        font.family: "Ndot 55"
+        font.family: Theme.font.display
         font.pixelSize: 13
         font.weight: Font.DemiBold
         color: root.errorMessage ? root.paletteColors.error : root.paletteColors.onSurface

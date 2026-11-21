@@ -335,7 +335,7 @@ PanelWindow {
                         Text {
                             Layout.fillWidth: true
                             text: root.detailPage || (root.notificationsOpen ? "Notifications" : "Quick Tools")
-                            font.family: "Ndot 55"
+                            font.family: Theme.font.display
                             color: LivePalette.color.onSurface
                             font.pixelSize: 20
                             elide: Text.ElideRight

@@ -575,7 +575,7 @@ Window {
                     ColumnLayout {
                         spacing: 4
                         Text {
-                            font.family: "Ndot 55"
+                            font.family: Theme.font.display
                             text: ["Network", "Bluetooth", "Sound & Display", "Maintenance", "About"][root.safePage]
                             color: LivePalette.color.onSurface
                             font.pixelSize: root.isCompact ? 22 : 26

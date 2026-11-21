@@ -83,7 +83,7 @@ Item {
                     spacing: 8
                     Text {
                         text: "Earthquake"
-                        font.family: "Ndot 55"
+                        font.family: Theme.font.display
                         font.pixelSize: 24
                         color: LivePalette.color.onSurface
                         elide: Text.ElideRight
@@ -190,7 +190,7 @@ Item {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: root.current ? root.scaleText(root.current.maxScale) : "—"
-                                font.family: "Ndot 55"
+                                font.family: Theme.font.display
                                 font.pixelSize: 24
                                 color: root.current && Number(root.current.maxScale) >= 30
                                     ? LivePalette.color.onPrimary : LivePalette.color.onSurface

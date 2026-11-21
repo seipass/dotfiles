@@ -163,7 +163,7 @@ PanelWindow {
 
                 Text {
                     text: root.activeProvider ? root.activeProvider.name : "AI Usage"
-                    font.family: "Ndot 55"
+                    font.family: Theme.font.display
                     font.pixelSize: 18
                     color: LivePalette.color.onSurface
                 }

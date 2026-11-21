@@ -64,7 +64,7 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 50
             spacing: 0
-            Text { text: Qt.formatDateTime(root.panelDate, "HH:mm"); font.pixelSize: 32; font.family: "Ndot 55"; color: LivePalette.color.onSurface }
+            Text { text: Qt.formatDateTime(root.panelDate, "HH:mm"); font.pixelSize: 32; font.family: Theme.font.display; color: LivePalette.color.onSurface }
             ColumnLayout {
                 Layout.leftMargin: 18
                 spacing: 1
@@ -120,7 +120,7 @@ Item {
                         Text { Layout.fillWidth: true; text: root.weatherCity || "都市未設定"; font.pixelSize: 11; color: LivePalette.color.onSurfaceVariant; elide: Text.ElideRight }
                         Text { Layout.fillWidth: true; text: root.weatherDescription || (root.weatherCity ? "天気を取得できません" : "設定から都市を選択"); font.pixelSize: 12; font.weight: Font.Medium; color: LivePalette.color.onSurface; elide: Text.ElideRight }
                     }
-                    Text { text: root.weatherTemp || "—"; font.family: "Ndot 55"; font.pixelSize: 22; color: LivePalette.color.primary }
+                    Text { text: root.weatherTemp || "—"; font.family: Theme.font.display; font.pixelSize: 22; color: LivePalette.color.primary }
                 }
             }
 
@@ -435,7 +435,7 @@ Item {
                     anchors.margins: 16
                     spacing: 12
 
-                    Text { text: "SYSTEM"; font.family: "Ndot 55"; font.pixelSize: 15; color: LivePalette.color.onSurfaceVariant }
+                    Text { text: "SYSTEM"; font.family: Theme.font.display; font.pixelSize: 15; color: LivePalette.color.onSurfaceVariant }
 
                     Repeater {
                         model: ["CPU", "RAM", "DISK"]

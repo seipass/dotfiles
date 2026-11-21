@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
+import "Theme.js" as Theme
 
 PanelWindow {
     id: root
@@ -97,7 +98,7 @@ PanelWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Qt.formatTime(root.clockDate, "HH:mm")
-                font.family: "Ndot 55"
+                font.family: Theme.font.display
                 font.pixelSize: 52
                 color: LivePalette.color.onSurface
             }

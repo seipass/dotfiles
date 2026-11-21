@@ -23,6 +23,9 @@ DEALINGS IN THE SOFTWARE.
 ---
 
 Third-party bundled assets retain their respective licenses:
+- .config/quickshell/main/fonts/Doto.ttf &
+  .local/share/sddm/themes/afterglow/fonts/Doto.ttf:
+  SIL Open Font License 1.1 (see Doto-OFL.txt)
 - .config/quickshell/main/fonts/GoogleSansFlex.ttf &
   .local/share/sddm/themes/afterglow/fonts/GoogleSansFlex.ttf:
   SIL Open Font License 1.1 (see OFL.txt)

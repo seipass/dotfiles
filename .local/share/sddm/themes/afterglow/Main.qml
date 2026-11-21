@@ -20,10 +20,13 @@ Item {
     readonly property color cError: config.error || "#ffb4ab"
     readonly property color cErrorContainer: config.errorContainer || "#93000a"
 
-    FontLoader { id: headingFont; source: "fonts/Ndot55-Regular.otf" }
+    FontLoader { id: headingFont; source: "fonts/Doto.ttf" }
     FontLoader { id: bodyFont; source: "fonts/GoogleSansFlex.ttf" }
+    readonly property bool hasSystemNdot: Qt.fontFamilies().indexOf("Ndot 55") >= 0
     readonly property string uiFont: bodyFont.status === FontLoader.Ready ? bodyFont.name : "sans-serif"
-    readonly property string displayFont: headingFont.status === FontLoader.Ready ? headingFont.name : uiFont
+    readonly property string displayFont: hasSystemNdot
+        ? "Ndot 55"
+        : (headingFont.status === FontLoader.Ready ? headingFont.name : uiFont)
 
     property bool isTestMode: Qt.application.arguments.indexOf("--test-mode") !== -1
     property string errorText: ""

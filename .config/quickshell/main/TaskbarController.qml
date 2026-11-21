@@ -18,20 +18,22 @@ Scope {
     readonly property var pinnedIds: parse(saved.pinned)
     readonly property var orderIds: parse(saved.order)
     readonly property var entries: {
-        const grouped = {};
-        const workspaces = Hyprland.workspaces.values;
-        for (let i = 0; i < workspaces.length; ++i) {
-            const windows = workspaces[i].toplevels.values;
-            for (let j = 0; j < windows.length; ++j) {
-                const win = windows[j];
-                if (!win || !win.address) continue;
-                const appId = win.handle ? win.handle.appId : (win.lastIpcObject.class || "");
-                if (!appId) continue;
-                const desktop = DesktopEntries.heuristicLookup(appId);
-                const id = desktop ? desktop.id : appId;
-                if (!grouped[id]) grouped[id] = { id: id, desktop: desktop, appId: appId, windows: [] };
-                grouped[id].windows.push(win);
+        const grouped = Object.create(null);
+        for (const win of Hyprland.toplevels.values) {
+            if (!win || !win.address) continue;
+            const ipc = win.lastIpcObject;
+            const candidates = [win.wayland?.appId, ipc?.class, ipc?.initialClass].filter(Boolean);
+            if (!candidates.length) continue;
+            const appId = candidates[0];
+            let desktop = null;
+            for (const candidate of candidates) {
+                desktop = DesktopEntries.heuristicLookup(candidate)
+                    || DesktopEntries.heuristicLookup(candidate.toLowerCase());
+                if (desktop) break;
             }
+            const id = desktop ? desktop.id : appId.toLowerCase();
+            if (!grouped[id]) grouped[id] = { id: id, desktop: desktop, appId: appId, windows: [] };
+            grouped[id].windows.push(win);
         }
         for (const id of pinnedIds) {
             if (!grouped[id]) {
@@ -85,9 +87,10 @@ Scope {
         if (!entry) return;
         const win = entry.windows.find(w => w.activated) || entry.windows[0];
         if (win) {
+            const address = win.address.startsWith("0x") ? win.address : "0x" + win.address;
             if (Hyprland.usingLua)
-                Hyprland.dispatch("hl.dsp.focus({ window = 'address:" + win.address + "' })");
-            else Hyprland.dispatch("focuswindow address:" + win.address);
+                Hyprland.dispatch("hl.dsp.focus({ window = 'address:" + address + "' })");
+            else Hyprland.dispatch("focuswindow address:" + address);
         } else if (entry.desktop) entry.desktop.execute();
     }
 }

@@ -13,3 +13,6 @@ __pycache__/
 .config/quickshell/main/dashboard.ini
 .config/quickshell/main/taskbar.ini
 .config/quickshell/main/daily-tools.ini
+
+# Proprietary font (installed locally outside repo; repo uses OFL Doto)
+**/Ndot55-Regular.otf

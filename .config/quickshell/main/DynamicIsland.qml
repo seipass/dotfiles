@@ -105,10 +105,7 @@ PanelWindow {
         && root.hyprMonitor.activeWorkspace !== null
         ? root.hyprMonitor.activeWorkspace.id : 1
 
-    FontLoader {
-        id: clockFont
-        source: "Ndot55-Regular.otf"
-    }
+    readonly property string clockFontFamily: Theme.font.display
 
     Component.onCompleted: Qt.callLater(function() {
         root.entered = true;
@@ -308,7 +305,7 @@ PanelWindow {
             y: (Theme.shape.islandHeight - height) / 2
             text: Qt.formatDateTime(root.panelDate, "HH:mm")
             color: LivePalette.color.onSurface
-            font.family: clockFont.status === FontLoader.Ready ? clockFont.name : "sans-serif"
+            font.family: root.clockFontFamily
             font.pixelSize: 20
             font.weight: Font.Normal
         }
@@ -333,7 +330,7 @@ PanelWindow {
                 Text {
                     text: root.weatherTemp || "—"
                     color: LivePalette.color.onSurface
-                    font.family: clockFont.name
+                    font.family: root.clockFontFamily
                     font.pixelSize: 14
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { root.expandedView = "dashboard"; root.expanded = true; } }
                 }
@@ -365,7 +362,7 @@ PanelWindow {
                         text: root.volumeMuted ? "MUTE"
                             : root.volumeAvailable ? root.volumePercent + "%" : "—"
                         color: LivePalette.color.onSurface
-                        font.family: clockFont.name
+                        font.family: root.clockFontFamily
                         font.pixelSize: 14
                     }
                 }
@@ -469,7 +466,7 @@ PanelWindow {
                     spacing: 2
                     Text {
                         text: Qt.formatDateTime(root.panelDate, "HH:mm")
-                        font.family: clockFont.name
+                        font.family: root.clockFontFamily
                         font.pixelSize: 34
                         color: LivePalette.color.onSurface
                     }
@@ -622,9 +619,9 @@ PanelWindow {
                     anchors.fill: parent
                     anchors.leftMargin: 16
                     anchors.rightMargin: 16
-                    Text { text: "NETWORK"; font.family: clockFont.name; font.pixelSize: 15; color: LivePalette.color.onSurfaceVariant }
+                    Text { text: "NETWORK"; font.family: root.clockFontFamily; font.pixelSize: 15; color: LivePalette.color.onSurfaceVariant }
                     Item { Layout.fillWidth: true }
-                    Text { text: root.networkLabel; font.family: clockFont.name; font.pixelSize: 15; color: LivePalette.color.primary }
+                    Text { text: root.networkLabel; font.family: root.clockFontFamily; font.pixelSize: 15; color: LivePalette.color.primary }
                 }
             }
         }

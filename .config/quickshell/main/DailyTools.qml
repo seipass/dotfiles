@@ -69,7 +69,7 @@ ColumnLayout {
                 Item { Layout.fillWidth: true }
                 Text {
                     text: root.clockText(root.seconds)
-                    font.family: "Ndot 55"
+                    font.family: Theme.font.display
                     font.pixelSize: 28
                     color: root.started > 0 ? LivePalette.color.primary : LivePalette.color.onSurface
                 }
@@ -124,7 +124,7 @@ ColumnLayout {
                 }
                 Text {
                     text: root.clockText(root.stopwatchSeconds)
-                    font.family: "Ndot 55"
+                    font.family: Theme.font.display
                     font.pixelSize: 22
                     color: root.stopwatchStarted > 0 ? LivePalette.color.primary : LivePalette.color.onSurface
                 }

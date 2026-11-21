@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 184" width="760" height="184" role="img" aria-label="HaDE - Hasilan's Desktop Environment">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#11151a"/>
+      <stop offset="55%" stop-color="#181d25"/>
+      <stop offset="100%" stop-color="#1c222d"/>
+    </linearGradient>
+    <radialGradient id="ambientGlow" cx="18%" cy="45%" r="58%">
+      <stop offset="0%" stop-color="#b6c8e2" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#374c6c" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#11151a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#222834"/>
+      <stop offset="100%" stop-color="#171b22"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d2e0f5"/>
+      <stop offset="100%" stop-color="#8eb1df"/>
+    </linearGradient>
+    <linearGradient id="subTileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4d678f"/>
+      <stop offset="100%" stop-color="#374c6c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer M3 Expressive Banner Card -->
+  <rect x="2" y="2" width="756" height="180" rx="34" fill="url(#bgGrad)" stroke="#333b48" stroke-width="1.5"/>
+  <rect x="2" y="2" width="756" height="180" rx="34" fill="url(#ambientGlow)"/>
+
+  <!-- Left HaDE Emblem Tile -->
+  <rect x="28" y="26" width="132" height="132" rx="30" fill="url(#tileGrad)" stroke="#3c4657" stroke-width="1.2"/>
+
+  <!-- Mini Left Rail (Workspace Indicators + Launcher Anchor) -->
+  <rect x="44" y="42" width="16" height="100" rx="8" fill="#11151a" stroke="#303846" stroke-width="1"/>
+  <circle cx="52" cy="54" r="3.2" fill="#b6c8e2"/>
+  <circle cx="52" cy="65" r="2.2" fill="#5e6a7d"/>
+  <circle cx="52" cy="74" r="2.2" fill="#5e6a7d"/>
+  <rect x="48" y="122" width="8" height="12" rx="4" fill="#374c6c"/>
+
+  <!-- Dynamic Island Pill on Top -->
+  <rect x="68" y="42" width="76" height="16" rx="8" fill="#11151a" stroke="#3a4556" stroke-width="1"/>
+  <circle cx="77" cy="50" r="3" fill="#b6c8e2"/>
+  <rect x="84" y="48" width="22" height="4" rx="2" fill="#e1e5ea" opacity="0.85"/>
+  <rect x="122" y="48" width="14" height="4" rx="2" fill="#b6c8e2" opacity="0.65"/>
+
+  <!-- Stylized Hyprland Tiling "H" Monogram -->
+  <rect x="68" y="66" width="22" height="76" rx="10" fill="url(#accentGrad)"/>
+  <rect x="82" y="92" width="46" height="16" rx="8" fill="#b6c8e2" opacity="0.92"/>
+  <rect x="122" y="66" width="22" height="24" rx="9" fill="url(#subTileGrad)"/>
+  <rect x="122" y="95" width="22" height="47" rx="9" fill="url(#accentGrad)"/>
+
+  <!-- Top-Right Status Pill Badge -->
+  <g transform="translate(580, 34)">
+    <rect x="0" y="0" width="146" height="28" rx="14" fill="#222935" stroke="#394456" stroke-width="1"/>
+    <circle cx="16" cy="14" r="4" fill="#a6d0a0"/>
+    <text x="82" y="18" text-anchor="middle" fill="#d5dce7" font-family="DejaVu Sans Mono, monospace" font-size="11" font-weight="700" letter-spacing="1.0">ARCH × WAYLAND</text>
+  </g>
+
+  <!-- Dot-Matrix "HaDE" Wordmark -->
+  <g>
+    <circle cx="201.7" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="201.7" cy="47.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="47.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="201.7" cy="56.5" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="56.5" r="3.7" fill="#e1e5ea"/>
+    <circle cx="201.7" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="211.1" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="220.5" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="229.9" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="201.7" cy="75.3" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="75.3" r="3.7" fill="#e1e5ea"/>
+    <circle cx="201.7" cy="84.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="84.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="201.7" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="239.3" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="273.1" cy="56.5" r="3.7" fill="#b6c8e2"/>
+    <circle cx="282.5" cy="56.5" r="3.7" fill="#b6c8e2"/>
+    <circle cx="291.9" cy="56.5" r="3.7" fill="#b6c8e2"/>
+    <circle cx="301.3" cy="65.9" r="3.7" fill="#b6c8e2"/>
+    <circle cx="273.1" cy="75.3" r="3.7" fill="#b6c8e2"/>
+    <circle cx="282.5" cy="75.3" r="3.7" fill="#b6c8e2"/>
+    <circle cx="291.9" cy="75.3" r="3.7" fill="#b6c8e2"/>
+    <circle cx="301.3" cy="75.3" r="3.7" fill="#b6c8e2"/>
+    <circle cx="263.7" cy="84.7" r="3.7" fill="#b6c8e2"/>
+    <circle cx="301.3" cy="84.7" r="3.7" fill="#b6c8e2"/>
+    <circle cx="273.1" cy="94.1" r="3.7" fill="#b6c8e2"/>
+    <circle cx="282.5" cy="94.1" r="3.7" fill="#b6c8e2"/>
+    <circle cx="291.9" cy="94.1" r="3.7" fill="#b6c8e2"/>
+    <circle cx="301.3" cy="94.1" r="3.7" fill="#b6c8e2"/>
+    <circle cx="325.7" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="335.1" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="344.5" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="353.9" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="325.7" cy="47.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="363.3" cy="47.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="325.7" cy="56.5" r="3.7" fill="#e1e5ea"/>
+    <circle cx="363.3" cy="56.5" r="3.7" fill="#e1e5ea"/>
+    <circle cx="325.7" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="363.3" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="325.7" cy="75.3" r="3.7" fill="#e1e5ea"/>
+    <circle cx="363.3" cy="75.3" r="3.7" fill="#e1e5ea"/>
+    <circle cx="325.7" cy="84.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="363.3" cy="84.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="325.7" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="335.1" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="344.5" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="353.9" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="397.1" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="406.5" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="415.9" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="425.3" cy="37.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="47.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="56.5" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="397.1" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="406.5" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="415.9" cy="65.9" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="75.3" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="84.7" r="3.7" fill="#e1e5ea"/>
+    <circle cx="387.7" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="397.1" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="406.5" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="415.9" cy="94.1" r="3.7" fill="#e1e5ea"/>
+    <circle cx="425.3" cy="94.1" r="3.7" fill="#e1e5ea"/>
+  </g>
+
+  <!-- Subtitle -->
+  <text x="198" y="126" fill="#bbc3ce" font-family="DejaVu Sans, Noto Sans, sans-serif" font-size="14" font-weight="600" letter-spacing="3.2">HASILAN&apos;S DESKTOP ENVIRONMENT</text>
+
+  <!-- Accent Rule -->
+  <rect x="198" y="139" width="528" height="1.5" rx="0.75" fill="#2d3440"/>
+
+  <!-- Bottom Meta & Live Palette Swatches -->
+  <text x="198" y="159" fill="#8fa3bf" font-family="DejaVu Sans Mono, monospace" font-size="11.5" font-weight="600" letter-spacing="1.2">HYPRLAND LUA  ·  QUICKSHELL  ·  MATERIAL 3</text>
+
+  <g transform="translate(614, 149)">
+    <rect x="0"  y="0" width="20" height="10" rx="5" fill="#374c6c"/>
+    <rect x="25" y="0" width="20" height="10" rx="5" fill="#b6c8e2"/>
+    <rect x="50" y="0" width="20" height="10" rx="5" fill="#ffb0ca"/>
+    <rect x="75" y="0" width="20" height="10" rx="5" fill="#a6d0a0"/>
+    <rect x="100" y="0" width="12" height="10" rx="5" fill="#e1e5ea"/>
+  </g>
+</svg>

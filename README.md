@@ -1,8 +1,8 @@
 <div align="center">
 
-# HaDE
+<img src="assets/hade-logo.svg" alt="HaDE — Hasilan's Desktop Environment" width="760"/>
 
-### **Hasilan's Desktop Environment**
+<br/><br/>
 
 *A wallpaper-reactive **Material Design 3 Expressive** desktop built from scratch in **QML**, **Python**, and **Hyprland Lua** — zero `waybar`, zero `wl-clipboard`, zero external color generators.*
 
@@ -261,6 +261,7 @@ To build your own left-slot **Dynamic Island** widget, read [`ISLAND-EXTENSIONS.
 ├── .local/share/
 │   ├── fcitx5/themes/         # caelestia-shell & shell-live Fcitx5 themes
 │   └── sddm/themes/afterglow/ # M3 Qt6 SDDM theme & theme.conf
+├── assets/                    # HaDE banner logo & emblem icon (SVG)
 ├── screenshots/               # Showcase captures
 ├── install.sh                 # Backup-safe installer (--copy / --link / --with-sddm)
 ├── LICENSE

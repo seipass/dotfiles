@@ -172,8 +172,8 @@ Item {
                         anchors.centerIn: parent
                         width: 40
                         height: 40
-                        readonly property color activeContainerColor: LivePalette.color.surface.hslLightness < 0.5
-                            ? Qt.tint(LivePalette.color.primaryContainer, Qt.alpha(LivePalette.color.primary, 0.40))
+                        readonly property color activeContainerColor: Qt.color(LivePalette.color.surface).hslLightness < 0.5
+                            ? Qt.tint(LivePalette.color.primaryContainer, Qt.alpha(LivePalette.color.primary, 0.58))
                             : LivePalette.color.primaryContainer
                         radius: entry.active ? 13 : ((mouse.containsMouse || entry.isDragging) ? 15 : 20)
                         color: entry.active

@@ -237,14 +237,15 @@ PanelWindow {
 
     Item {
         id: reveal
-        x: root.alertsOnly ? parent.width - width : Theme.shape.railWidth
+        readonly property real panelWidth: Math.min(392, Math.max(1, parent.width - Theme.shape.railWidth - (root.alertsOnly ? 16 : 0)))
+        x: root.alertsOnly ? (parent.width - panelWidth - 8) : Theme.shape.railWidth
         anchors.top: parent.top
         anchors.topMargin: root.alertsOnly ? Theme.shape.islandReservation : 0
-        height: root.alertsOnly ? Math.min(560, parent.height - y) : parent.height
-        readonly property real panelWidth: Math.min(392, Math.max(1, parent.width - Theme.shape.railWidth))
-        width: root.opened ? panelWidth : 0
-        clip: true
+        height: root.alertsOnly ? Math.min(560, parent.height - y - 12) : parent.height
+        width: root.alertsOnly ? panelWidth : (root.opened ? panelWidth : 0)
+        clip: !root.alertsOnly
         Behavior on width {
+            enabled: !root.alertsOnly
             NumberAnimation {
                 duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
                 easing.type: Easing.OutCubic
@@ -262,10 +263,45 @@ PanelWindow {
         radius: Theme.shape.dialogRadius
         topLeftRadius: root.alertsOnly ? radius : 0
         bottomLeftRadius: root.alertsOnly ? radius : 0
-        topRightRadius: root.alertsOnly ? 0 : radius
-        bottomRightRadius: root.alertsOnly ? 0 : radius
+        topRightRadius: radius
+        bottomRightRadius: radius
         color: LivePalette.color.surface
         clip: true
+        opacity: root.alertsOnly ? (root.opened ? 1.0 : 0.0) : 1.0
+        scale: root.alertsOnly ? (root.opened ? 1.0 : 0.86) : 1.0
+        transformOrigin: root.alertsOnly ? Item.TopRight : Item.Left
+        transform: Translate {
+            x: root.alertsOnly ? (root.opened ? 0 : 18) : 0
+            y: root.alertsOnly ? (root.opened ? 0 : -14) : 0
+            Behavior on x {
+                enabled: root.alertsOnly
+                NumberAnimation {
+                    duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                    easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                    easing.overshoot: root.opened ? Theme.motion.overshootGentle : 0
+                }
+            }
+            Behavior on y {
+                enabled: root.alertsOnly
+                NumberAnimation {
+                    duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                    easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                    easing.overshoot: root.opened ? Theme.motion.overshootGentle : 0
+                }
+            }
+        }
+        Behavior on opacity {
+            enabled: root.alertsOnly
+            NumberAnimation { duration: root.opened ? Theme.motion.fast : Theme.motion.exit; easing.type: Easing.OutCubic }
+        }
+        Behavior on scale {
+            enabled: root.alertsOnly
+            NumberAnimation {
+                duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                easing.overshoot: root.opened ? Theme.motion.overshootStandard : 0
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -1321,13 +1357,19 @@ PanelWindow {
                             id: alertsView
                             anchors.fill: parent
                             spacing: 10
-                            opacity: root.notificationsOpen ? 1 : 0
-                            enabled: root.notificationsOpen
-                            visible: opacity > 0
-                            y: root.notificationsOpen ? 0 : 12
+                            opacity: root.notificationsOpen && root.opened ? 1 : 0
+                            enabled: root.notificationsOpen && root.opened
+                            visible: root.notificationsOpen
+                            y: root.notificationsOpen && root.opened ? 0 : 14
 
-                            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 30; easing.type: Easing.OutCubic } }
-                            Behavior on y { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle } }
+                            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast + 40; easing.type: Easing.OutCubic } }
+                            Behavior on y {
+                                NumberAnimation {
+                                    duration: root.opened ? Theme.motion.spatial : Theme.motion.exit
+                                    easing.type: root.opened ? Easing.OutBack : Easing.OutCubic
+                                    easing.overshoot: root.opened ? Theme.motion.overshootGentle : 0
+                                }
+                            }
 
                             ToggleRow {
                                 Layout.fillWidth: true
@@ -1345,9 +1387,14 @@ PanelWindow {
                                 Text { text: "RECENT"; font.pixelSize: 11; font.weight: Font.DemiBold; font.letterSpacing: 1.2; color: LivePalette.color.onSurfaceVariant }
                                 Item { Layout.fillWidth: true }
                                 SettingsActionButton {
-                                    visible: history.count > 0
+                                    visible: opacity > 0.01
+                                    enabled: history.count > 0
+                                    opacity: history.count > 0 ? 1 : 0
+                                    scale: history.count > 0 ? 1 : 0.85
                                     implicitHeight: 30; horizontalPadding: 12
                                     text: "Clear All"
+                                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
                                     onClicked: {
                                         if (root.shellState) {
                                             root.shellState.notificationHistory = [];
@@ -1358,30 +1405,68 @@ PanelWindow {
                             }
 
                             Item {
-                                visible: history.count === 0
-                                Layout.fillWidth: true; Layout.fillHeight: true
-                                ColumnLayout {
-                                    anchors.centerIn: parent; spacing: 8
-                                    SymbolIcon { Layout.alignment: Qt.AlignHCenter; implicitWidth: 28; implicitHeight: 28; iconName: "notifications-disabled-symbolic"; tint: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.4) }
-                                    Text { text: "All caught up"; color: LivePalette.color.onSurfaceVariant; font.pixelSize: 13 }
-                                }
-                            }
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
 
-                            ListView {
-                                id: history
-                                visible: count > 0
-                                Layout.fillWidth: true; Layout.fillHeight: true
-                                clip: true; spacing: 8
-                                model: root.groupNotifications(root.shellState?.notificationHistory ?? [])
-                                ScrollBar.vertical: ScrollBar { active: true }
+                                Item {
+                                    anchors.fill: parent
+                                    visible: opacity > 0.01
+                                    opacity: history.count === 0 ? 1 : 0
+                                    scale: history.count === 0 ? 1 : 0.90
+                                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatial; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard } }
+                                    ColumnLayout {
+                                        anchors.centerIn: parent; spacing: 8
+                                        SymbolIcon { Layout.alignment: Qt.AlignHCenter; implicitWidth: 28; implicitHeight: 28; iconName: "notifications-disabled-symbolic"; tint: Qt.alpha(LivePalette.color.onSurfaceVariant, 0.4) }
+                                        Text { text: "All caught up"; color: LivePalette.color.onSurfaceVariant; font.pixelSize: 13 }
+                                    }
+                                }
+
+                                ListView {
+                                    id: history
+                                    anchors.fill: parent
+                                    visible: count > 0
+                                    clip: true; spacing: 8
+                                    model: root.groupNotifications(root.shellState?.notificationHistory ?? [])
+                                    ScrollBar.vertical: ScrollBar { active: true }
+                                add: Transition {
+                                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast; easing.type: Easing.OutCubic }
+                                    NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootStandard }
+                                    NumberAnimation { property: "x"; from: 20; to: 0; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
+                                }
+                                remove: Transition {
+                                    NumberAnimation { property: "opacity"; to: 0; duration: Theme.motion.exit; easing.type: Easing.OutCubic }
+                                    NumberAnimation { property: "x"; to: 32; duration: Theme.motion.exit; easing.type: Easing.OutCubic }
+                                }
+                                displaced: Transition {
+                                    NumberAnimation { properties: "y"; duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootGentle }
+                                }
 
                                 delegate: Rectangle {
+                                    id: notifItem
                                     required property var modelData
                                     required property int index
                                     width: history.width - 8
                                     implicitHeight: notifCol.implicitHeight + 22
-                                    radius: 20
+                                    radius: notifMouse.pressed ? 14 : 20
                                     color: LivePalette.color.surfaceContainer
+                                    scale: notifMouse.pressed ? 0.97 : 1.0
+                                    Behavior on radius { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.motion.spatialFast; easing.type: Easing.OutBack; easing.overshoot: Theme.motion.overshootFast } }
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: parent.radius
+                                        color: LivePalette.color.onSurface
+                                        opacity: notifMouse.pressed ? 0.10 : (notifMouse.containsMouse ? 0.06 : 0)
+                                        Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+                                    }
+
+                                    MouseArea {
+                                        id: notifMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                    }
 
                                     ColumnLayout {
                                         id: notifCol
@@ -1401,6 +1486,7 @@ PanelWindow {
                                         Text { Layout.fillWidth: true; visible: !!text; text: modelData.body; textFormat: Text.PlainText; color: LivePalette.color.onSurfaceVariant; font.pixelSize: 12; wrapMode: Text.Wrap; maximumLineCount: 4; elide: Text.ElideRight }
                                     }
                                 }
+                            }
                             }
                         }
                     }

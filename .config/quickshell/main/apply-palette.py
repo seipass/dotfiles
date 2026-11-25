@@ -66,6 +66,179 @@ def run(*args):
         print(error, file=sys.stderr)
 
 
+def build_fcitx5_theme(c, name="Shell Live", description="Borderless Material 3 Expressive theme matching HaDE"):
+    theme_conf = f"""[Metadata]
+Name={name}
+Name[ja]={name}
+Version=2
+Author=HaDE
+Description={description}
+ScaleWithDPI=True
+
+[InputPanel]
+NormalColor={c['onSurface']}
+HighlightCandidateColor={c['onSurface']}
+CandidateLabelColor={c['onSurfaceVariant']}
+HighlightCandidateLabelColor={c['primary']}
+LabelTextSizeFactor=88
+CandidateCommentColor={c['onSurfaceVariant']}
+HighlightCandidateCommentColor={c['onSurfaceVariant']}
+CommentTextSizeFactor=86
+HighlightColor={c['onPrimary']}
+HighlightBackgroundColor={c['primary']}
+FullWidthHighlight=True
+PageButtonAlignment=Last Candidate
+
+[InputPanel/TextMargin]
+Left=14
+Right=14
+Top=6
+Bottom=6
+
+[InputPanel/ContentMargin]
+Left=8
+Right=8
+Top=8
+Bottom=8
+
+[InputPanel/ShadowMargin]
+Left=0
+Right=0
+Top=0
+Bottom=0
+
+[InputPanel/Background]
+Image=background.svg
+Color={c['surfaceContainerHigh']}
+BorderColor={c['surfaceContainerHigh']}
+BorderWidth=0
+
+[InputPanel/Background/Margin]
+Left=20
+Right=20
+Top=20
+Bottom=20
+
+[InputPanel/Highlight]
+Image=highlight.svg
+Color={c['primaryContainer']}
+
+[InputPanel/Highlight/Margin]
+Left=14
+Right=14
+Top=14
+Bottom=14
+
+[InputPanel/Highlight/HighlightClickMargin]
+Left=0
+Right=0
+Top=0
+Bottom=0
+
+[InputPanel/PrevPage]
+Image=prev.svg
+
+[InputPanel/PrevPage/ClickMargin]
+Left=6
+Right=6
+Top=4
+Bottom=4
+
+[InputPanel/NextPage]
+Image=next.svg
+
+[InputPanel/NextPage/ClickMargin]
+Left=6
+Right=6
+Top=4
+Bottom=4
+
+[Menu]
+NormalColor={c['onSurface']}
+HighlightCandidateColor={c['onSurface']}
+Spacing=2
+
+[Menu/Background]
+Image=background.svg
+Color={c['surfaceContainerHigh']}
+BorderColor={c['surfaceContainerHigh']}
+BorderWidth=0
+
+[Menu/Background/Margin]
+Left=20
+Right=20
+Top=20
+Bottom=20
+
+[Menu/ContentMargin]
+Left=8
+Right=8
+Top=8
+Bottom=8
+
+[Menu/Highlight]
+Image=highlight.svg
+Color={c['primaryContainer']}
+
+[Menu/Highlight/Margin]
+Left=14
+Right=14
+Top=14
+Bottom=14
+
+[Menu/CheckBox]
+Image=check.svg
+
+[Menu/SubMenu]
+Image=next.svg
+
+[Menu/TextMargin]
+Left=12
+Right=12
+Top=6
+Bottom=6
+
+[Menu/Separator]
+Color={c['outlineVariant']}
+"""
+    background_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">\n'
+        f'  <rect x="0" y="0" width="64" height="64" rx="20" ry="20" fill="{c["surfaceContainerHigh"]}"/>\n'
+        "</svg>\n"
+    )
+    highlight_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">\n'
+        f'  <rect x="0" y="0" width="48" height="48" rx="14" ry="14" fill="{c["primaryContainer"]}"/>\n'
+        "</svg>\n"
+    )
+    prev_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">\n'
+        f'  <path d="M10 3.75 5.75 8 10 12.25" fill="none" stroke="{c["onSurfaceVariant"]}" '
+        'stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>\n'
+        "</svg>\n"
+    )
+    next_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">\n'
+        f'  <path d="M6 3.75 10.25 8 6 12.25" fill="none" stroke="{c["onSurfaceVariant"]}" '
+        'stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>\n'
+        "</svg>\n"
+    )
+    check_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">\n'
+        f'  <path d="M3.2 8.4 6.5 11.6 12.8 4.8" fill="none" stroke="{c["primary"]}" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n'
+        "</svg>\n"
+    )
+    return {
+        "theme.conf": theme_conf,
+        "background.svg": background_svg,
+        "highlight.svg": highlight_svg,
+        "prev.svg": prev_svg,
+        "next.svg": next_svg,
+        "check.svg": check_svg,
+    }
+
+
 if sync_desktop:
     home = Path.home()
     try:
@@ -96,15 +269,9 @@ if sync_desktop:
                 config.write_text(text.replace("\ninclude shell-palette.conf\n",
                                                 f"\n# Shell palette revision: {revision}\ninclude shell-palette.conf\n", 1))
         themes = Path(os.environ.get("XDG_DATA_HOME", home / ".local/share")) / "fcitx5/themes"
-        tokens = dict(zip(
-            ("#191114", "#514347", "#541d34", "#d5c2c6", "#efdfe2", "#ffb0ca"),
-            (colors[k] for k in ("surface", "outlineVariant", "onPrimary", "onSurfaceVariant", "onSurface", "primary")),
-        ))
         changed = False
-        for source in (themes / "caelestia-shell").iterdir():
-            if source.suffix in (".svg", ".conf"):
-                text = re.sub(r"#[0-9a-fA-F]{6}", lambda m: tokens.get(m[0].lower(), m[0]), source.read_text())
-                changed |= update(themes / "shell-live" / source.name, text.replace("Caelestia Shell", "Shell Live"))
+        for filename, content in build_fcitx5_theme(colors).items():
+            changed |= update(themes / "shell-live" / filename, content)
         if changed:
             run("busctl", "--user", "call", "org.fcitx.Fcitx5", "/controller",
                 "org.fcitx.Fcitx.Controller1", "ReloadAddonConfig", "s", "classicui")
